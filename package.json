@@ -1,0 +1,13 @@
+{
+  "name": "sibling-pds",
+  "version": "1.0.0",
+  "description": "User-centric Personal Data Store (PDS)",
+  "scripts": {
+    "start:backend": "cd src/backend && npx ts-node index.ts",
+    "start:frontend": "cd src/frontend && npm start",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
