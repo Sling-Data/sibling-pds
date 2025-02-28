@@ -1,0 +1,13 @@
+services:
+  mongodb:
+    image: mongo:5.0.6-focal
+    ports:
+      - "27018:27017"
+    command: ["--bind_ip_all"]
+    volumes:
+      - sibling_mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: sibling
+
+volumes:
+  sibling_mongodb_data: 

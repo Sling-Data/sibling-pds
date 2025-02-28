@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "User-centric Personal Data Store (PDS)",
   "scripts": {
-    "start:backend": "cd src/backend && npx ts-node index.ts",
+    "start:backend": "cd src/backend && npx nodemon -r dotenv/config index.ts",
     "start:frontend": "cd src/frontend && npm start",
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.9"
   }
 }

@@ -1,0 +1,28 @@
+### Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Test root endpoint
+# @name root
+GET {{baseUrl}}/
+Content-Type: {{contentType}}
+
+### Create a new user
+# @name createUser
+POST {{baseUrl}}/users
+Content-Type: {{contentType}}
+
+{
+    "name": "Test User",
+    "email": "test@example.com"
+}
+
+### Get user by ID (replace ID with the _id from the createUser response)
+# @name getUser
+GET {{baseUrl}}/users/67c21643af94a814cdcbb770
+Content-Type: {{contentType}}
+
+### Test invalid user ID (should return 404)
+# @name getUserNotFound
+GET {{baseUrl}}/users/123456789012345678901234
+Content-Type: {{contentType}}
