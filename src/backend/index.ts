@@ -1,24 +1,29 @@
-import express, { Request, Response, RequestHandler } from "express";
+import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import User from "./user.model";
-require("dotenv").config();
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-mongoose
-  .connect(process.env.MONGO_URI as string)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+let isConnected = false;
 
-const getRoot: RequestHandler = (req, res) => {
-  res.json({ message: "Hello, Sibling!" });
+export const connectDb = async (uri: string) => {
+  if (!isConnected) {
+    await mongoose.connect(uri);
+    isConnected = true;
+    console.log("Connected to MongoDB");
+  }
 };
 
-const createUser: RequestHandler = async (req, res) => {
+export const disconnectDb = async () => {
+  await mongoose.connection.dropDatabase();
+  await mongoose.connection.close();
+  isConnected = false;
+};
+
+app.post("/users", async (req, res) => {
   try {
     const { name, email } = req.body;
     if (!name || !email) {
@@ -31,9 +36,9 @@ const createUser: RequestHandler = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to create user" });
   }
-};
+});
 
-const getUserById: RequestHandler = async (req, res) => {
+app.get("/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -44,12 +49,17 @@ const getUserById: RequestHandler = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve user" });
   }
-};
-
-app.get("/", getRoot);
-app.post("/users", createUser);
-app.get("/users/:id", getUserById);
-
-app.listen(3000, () => {
-  console.log("Backend running on port 3000");
 });
+
+// Only start server if run directly
+if (require.main === module) {
+  require("dotenv").config();
+  connectDb(process.env.MONGO_URI as string).catch((err) =>
+    console.error("MongoDB connection error:", err)
+  );
+  app.listen(3000, () => {
+    console.log("Backend running on port 3000");
+  });
+}
+
+export default app;

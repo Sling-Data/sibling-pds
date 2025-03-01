@@ -15,7 +15,7 @@
   - [Documentation](#documentation)
 
 ## Project Overview
-Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual’s comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing user autonomy, transparency, and security.
+Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing user autonomy, transparency, and security.
 
 ### Mission
 Enable individuals to own their data, refine it, and unlock tailored AI assistance.
@@ -34,10 +34,12 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 └── README.md      # This file
 
 
+
 ## Build, Run, Test, Deploy Instructions
 ### Prerequisites
 - Node.js (v18 or later)
 - npm
+- Docker (for MongoDB)
 
 ### Build and Run
 1. Clone the repository: `git clone <repo-url>`
@@ -45,13 +47,22 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 3. Install dependencies:
    - Root: `npm install`
    - Frontend: `cd src/frontend && npm install && cd ../..`
-4. Start the app: `npm start`
+4. Set up MongoDB via Docker:
+   - Run: `docker run -d -p 27018:27017 --name sibling-mongo mongo`
+   - (MongoDB runs on port 27018 locally)
+5. Configure environment variables:
+   - Create a `.env` file in `/src/backend` with: `MONGODB_URI=mongodb://localhost:27018/sibling`
+6. Start the app: `npm start`
    - Backend runs on `http://localhost:3000`
    - Frontend runs on `http://localhost:3001`
-5. Open `http://localhost:3001` in your browser to see "Hello, Sibling!"
+7. Open `http://localhost:3001` in your browser to see "Hello, Sibling!"
 
 ### Test
-*(To be added as tests are implemented.)*
+To run the API tests, no additional setup (e.g., Docker container) is required as tests use an in-memory MongoDB instance. Simply execute the following command in the root directory:
+```
+npm test
+```
+This will run Jest tests to verify the POST /users and GET /users/:id endpoints.
 
 ### Deploy
 *(To be added as deployment is planned.)*
