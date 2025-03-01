@@ -9,6 +9,8 @@
   - [File Structure](#file-structure)
   - [Build, Run, Test, Deploy Instructions](#build-run-test-deploy-instructions)
     - [Prerequisites](#prerequisites)
+  - [Build, Run, Test, Deploy Instructions](#build-run-test-deploy-instructions-1)
+    - [Prerequisites](#prerequisites-1)
     - [Build and Run](#build-and-run)
     - [Test](#test)
     - [Deploy](#deploy)
@@ -41,6 +43,13 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 - npm
 - Docker (for MongoDB)
 
+
+## Build, Run, Test, Deploy Instructions
+### Prerequisites
+- Node.js (v18 or later)
+- npm
+- Docker (for MongoDB)
+
 ### Build and Run
 1. Clone the repository: `git clone <repo-url>`
 2. Navigate to the project root: `cd sibling-pds`
@@ -55,17 +64,18 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 6. Start the app: `npm start`
    - Backend runs on `http://localhost:3000`
    - Frontend runs on `http://localhost:3001`
-7. Open `http://localhost:3001` in your browser to see "Hello, Sibling!"
+7. Open `http://localhost:3001` in your browser to interact with the user profile form.
 
 ### Test
-To run the API tests, no additional setup (e.g., Docker container) is required as tests use an in-memory MongoDB instance. Simply execute the following command in the root directory:
-```
-npm test
-```
-This will run Jest tests to verify the POST /users and GET /users/:id endpoints.
+1. Ensure root dependencies are installed: `npm install`
+2. Run tests: `npm test`
+   - Uses Jest with `mongodb-memory-server` for in-memory MongoDB testing.
+   - Verifies POST `/users` and GET `/users/:id` endpoints (success and 404 cases).
 
 ### Deploy
 *(To be added as deployment is planned.)*
 
 ## Documentation
-*(Links to be added as Worker Groks complete tasks.)*
+- [User Profile Wireframes (Designer Dana, 2025-03-01)](docs/user_profile_wireframes.md)
+- [GDPR/CCPA Compliance Requirements (Compliance Clara, 2025-03-01)](docs/gdpr_ccpa_requirements_sibling.md)
+*(More to be added as tasks complete.)*

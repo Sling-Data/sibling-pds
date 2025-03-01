@@ -1,0 +1,48 @@
+{
+  "task": {
+    "objective": "Draft wireframes for user profile interface",
+    "domain": "Design",
+    "sub_context": "Sibling’s frontend is React. Users need to view, edit, and manage privacy for their data (volunteered, behavioral, external).",
+    "deliverable": "A JSON object with wireframe descriptions for view, edit, and privacy settings screens (fields, layout, interactions).",
+    "notes": "Keep it simple, text-based descriptions—no images yet."
+  },
+  "results": {
+    "wireframes": [
+      {
+        "screen": "View Profile",
+        "fields": [
+          "Name",
+          "Email",
+          "Data Summary (volunteered, behavioral, external)"
+        ],
+        "layout": "Vertical list with labeled sections",
+        "interactions": "None (static display)"
+      },
+      {
+        "screen": "Edit Profile",
+        "fields": [
+          "Name (editable text)",
+          "Email (editable text)",
+          "Data Upload (file input for volunteered data)"
+        ],
+        "layout": "Vertical form with input fields and submit button",
+        "interactions": "Text inputs editable, file upload clickable, submit button saves changes"
+      },
+      {
+        "screen": "Privacy Settings",
+        "fields": [
+          "Data Visibility (dropdown: Public, Private, Custom)",
+          "Behavioral Tracking (toggle: On/Off)",
+          "External Data Access (checkboxes: App1, App2, App3)"
+        ],
+        "layout": "Vertical list with grouped controls",
+        "interactions": "Dropdown selectable, toggle switchable, checkboxes checkable, save button applies settings"
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Designer Dana",
+    "date": "2025-03-01",
+    "filename": "user_profile_wireframes_2025-03-01.json"
+  }
+}
