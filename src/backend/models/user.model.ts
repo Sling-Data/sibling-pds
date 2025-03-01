@@ -1,15 +1,28 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
+interface EncryptedData {
+  iv: string;
+  content: string;
+}
+
 interface User extends Document {
-  name: string;
+  name: EncryptedData;
   email: string;
   volunteeredData: Types.ObjectId[];
   behavioralData: Types.ObjectId[];
   externalData: Types.ObjectId[];
 }
 
+const EncryptedDataSchema = new Schema(
+  {
+    iv: { type: String, required: true },
+    content: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const UserSchema: Schema = new Schema({
-  name: { type: String, required: true },
+  name: { type: EncryptedDataSchema, required: true },
   email: { type: String, required: true },
   volunteeredData: [{ type: Schema.Types.ObjectId, ref: "VolunteeredData" }],
   behavioralData: [{ type: Schema.Types.ObjectId, ref: "BehavioralData" }],

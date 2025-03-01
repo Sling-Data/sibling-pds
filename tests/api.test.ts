@@ -1,6 +1,5 @@
 import request from "supertest";
 import { Express } from "express";
-import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import path from "path";
 import dotenv from "dotenv";
@@ -8,8 +7,6 @@ import app, { connectDb, disconnectDb } from "../src/backend/index";
 
 // Load test environment variables
 dotenv.config({ path: path.join(__dirname, ".env.test") });
-
-jest.setTimeout(30000); // Set global timeout to 30 seconds
 
 describe("User API", () => {
   let server: Express;

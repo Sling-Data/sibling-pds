@@ -16,6 +16,9 @@
     - [Deploy](#deploy)
   - [Documentation](#documentation)
   - [Tech Stack](#tech-stack)
+  - [Encryption](#encryption)
+    - [Encrypted Fields](#encrypted-fields)
+    - [Implementation Details](#implementation-details)
 
 ## Project Overview
 Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing user autonomy, transparency, and security.
@@ -104,3 +107,19 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
   - Nodemon for auto-restarting the backend.
   - Docker for containerized MongoDB deployment.
   - Git for version control.
+
+## Encryption
+Sibling implements encryption using Node.js native `crypto` module with AES-256-CBC to comply with GDPR/CCPA requirements. Due to compatibility issues with CSFLE on Windows, encrypted fields (name, value, context, data) are stored as hex strings in MongoDB. Initialization vectors (IVs) are randomly generated per encryption operation to enhance security. Key management is handled via a local `.encryption_key` file in /src/backend.
+
+### Encrypted Fields
+- User: name
+- Volunteered Data: value
+- Behavioral Data: context
+- External Data: data
+
+### Implementation Details
+- Algorithm: AES-256-CBC
+- Key Size: 32 bytes (256 bits)
+- IV Size: 16 bytes (128 bits)
+- Storage Format: Hex strings for both IV and encrypted content
+- Key Storage: Local file (.encryption_key) with hex-encoded key

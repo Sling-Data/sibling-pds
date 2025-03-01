@@ -6,7 +6,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true
+    "strict": true,
+    "typeRoots": ["./node_modules/@types", "./src/backend/types"],
+    "baseUrl": ".",
+    "moduleResolution": "node"
   },
   "include": [
     "src/**/*",
