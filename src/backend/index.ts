@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import User from "./user.model";
+import User from "./models/user.model";
+import VolunteeredData from "./models/volunteeredData.model";
+import BehavioralData from "./models/behavioralData.model";
+import ExternalData from "./models/externalData.model";
 
 const app = express();
 app.use(cors());
@@ -48,6 +51,83 @@ app.get("/users/:id", async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: "Failed to retrieve user" });
+  }
+});
+
+// New data type routes
+app.post("/volunteered-data", async (req, res) => {
+  try {
+    const { userId, type, value } = req.body;
+    if (!userId || !type || value === undefined) {
+      res.status(400).json({ error: "userId, type, and value are required" });
+      return;
+    }
+    const volunteeredData = new VolunteeredData({ userId, type, value });
+    const savedData = await volunteeredData.save();
+    await User.findByIdAndUpdate(userId, {
+      $push: { volunteeredData: savedData._id },
+    });
+    res.status(201).json(savedData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create volunteered data" });
+  }
+});
+
+app.post("/behavioral-data", async (req, res) => {
+  try {
+    const { userId, action, context } = req.body;
+    if (!userId || !action || context === undefined) {
+      res
+        .status(400)
+        .json({ error: "userId, action, and context are required" });
+      return;
+    }
+    const behavioralData = new BehavioralData({ userId, action, context });
+    const savedData = await behavioralData.save();
+    await User.findByIdAndUpdate(userId, {
+      $push: { behavioralData: savedData._id },
+    });
+    res.status(201).json(savedData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create behavioral data" });
+  }
+});
+
+app.post("/external-data", async (req, res) => {
+  try {
+    const { userId, source, data } = req.body;
+    if (!userId || !source || data === undefined) {
+      res.status(400).json({ error: "userId, source, and data are required" });
+      return;
+    }
+    const externalData = new ExternalData({ userId, source, data });
+    const savedData = await externalData.save();
+    await User.findByIdAndUpdate(userId, {
+      $push: { externalData: savedData._id },
+    });
+    res.status(201).json(savedData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create external data" });
+  }
+});
+
+app.get("/user-data/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate(
+      "volunteeredData behavioralData externalData"
+    );
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json({
+      user: { name: user.name, email: user.email },
+      volunteeredData: user.volunteeredData,
+      behavioralData: user.behavioralData,
+      externalData: user.externalData,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve user data" });
   }
 });
 
