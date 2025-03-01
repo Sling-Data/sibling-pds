@@ -1,0 +1,29 @@
+{
+  "task": {
+    "objective": "Draft wireframes for user data input interface",
+    "domain": "Design",
+    "sub_context": "Sibling’s frontend is React. Users need to input volunteered data (e.g., interests, goals) tied to the VolunteeredData schema Carl is building.",
+    "deliverable": "A JSON object with wireframe descriptions for a data input screen (fields: type, value; layout; interactions like submit/clear).",
+    "notes": "Keep it simple, text-based descriptions—no images yet. Align with the VolunteeredData schema (userId, type, value, timestamp)."
+  },
+  "results": {
+    "wireframes": [
+      {
+        "screen": "Data Input",
+        "fields": [
+          "Type (dropdown: Interests, Goals, Other)",
+          "Value (text input: e.g., 'Reading', 'Run a marathon')",
+          "userId (hidden: auto-populated)",
+          "timestamp (hidden: auto-generated)"
+        ],
+        "layout": "Vertical form with labeled inputs and action buttons",
+        "interactions": "Dropdown selectable, text input editable, Submit button saves data, Clear button resets fields"
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Designer Dana",
+    "date": "2025-03-01",
+    "filename": "user_data_input_wireframes_2025-03-01.json"
+  }
+}

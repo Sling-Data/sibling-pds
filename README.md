@@ -78,4 +78,7 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 ## Documentation
 - [User Profile Wireframes (Designer Dana, 2025-03-01)](docs/user_profile_wireframes.md)
 - [GDPR/CCPA Compliance Requirements (Compliance Clara, 2025-03-01)](docs/gdpr_ccpa_requirements_sibling.md)
+- [External Data APIs (Researcher Rita, 2025-03-01)](docs/external_data_apis.md)
+- [User Data Input Wireframes (Designer Dana, 2025-03-01)](docs/user_data_input_wireframes.md)
+- [MongoDB Encryption Options (Compliance Clara, 2025-03-01)](docs/mongodb_encryption_options_sibling.md)
 *(More to be added as tasks complete.)*
