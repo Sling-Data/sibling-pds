@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import UserForm from './UserForm';
+import UserDetail from './UserDetail';
 
 function App() {
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    fetch('http://localhost:3000')
-      .then(res => res.json())
-      .then(data => setMessage(data.message));
-  }, []);
-
   return (
     <div>
-      <h1>{message}</h1>
+      <h1>Hello, Sibling!</h1>
+      <UserForm />
+      <UserDetail id="67c2234c131ab8eea7fd814d" />
     </div>
   );
 }
