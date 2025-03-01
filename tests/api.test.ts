@@ -40,21 +40,120 @@ describe("User API", () => {
     expect(response.body.email).toBe("test@example.com");
   });
 
-  it("should retrieve a user with GET /users/:id", async () => {
-    const postResponse = await request(server)
+  it("should return 400 for invalid user data with POST /users", async () => {
+    const response = await request(server)
       .post("/users")
-      .send({ name: "Fetch User", email: "fetch@example.com" })
-      .expect(201);
-    const getResponse = await request(server)
-      .get(`/users/${postResponse.body._id}`)
-      .expect(200);
-    expect(getResponse.body.name).toBe("Fetch User");
-    expect(getResponse.body.email).toBe("fetch@example.com");
+      .send({ name: "" }) // Missing email
+      .expect(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "Name and email are required"
+    );
   });
 
-  it("should return 404 for non-existent user with GET /users/:id", async () => {
+  it("should create volunteered data with POST /volunteered-data", async () => {
+    const userResponse = await request(server)
+      .post("/users")
+      .send({ name: "Vol User", email: "vol@example.com" })
+      .expect(201);
     const response = await request(server)
-      .get("/users/123456789012345678901234")
+      .post("/volunteered-data")
+      .send({
+        userId: userResponse.body._id,
+        type: "personal",
+        value: "some data",
+      })
+      .expect(201);
+    expect(response.body).toHaveProperty("_id");
+    expect(response.body.type).toBe("personal");
+  });
+
+  it("should return 400 for invalid volunteered data with POST /volunteered-data", async () => {
+    const response = await request(server)
+      .post("/volunteered-data")
+      .send({ userId: "invalid", type: "" }) // Missing value
+      .expect(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "userId, type, and value are required"
+    );
+  });
+
+  it("should create behavioral data with POST /behavioral-data", async () => {
+    const userResponse = await request(server)
+      .post("/users")
+      .send({ name: "Beh User", email: "beh@example.com" })
+      .expect(201);
+    const response = await request(server)
+      .post("/behavioral-data")
+      .send({
+        userId: userResponse.body._id,
+        action: "login",
+        context: { device: "desktop" },
+      })
+      .expect(201);
+    expect(response.body).toHaveProperty("_id");
+    expect(response.body.action).toBe("login");
+  });
+
+  it("should return 400 for invalid behavioral data with POST /behavioral-data", async () => {
+    const response = await request(server)
+      .post("/behavioral-data")
+      .send({ userId: "invalid", action: "" }) // Missing context
+      .expect(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "userId, action, and context are required"
+    );
+  });
+
+  it("should create external data with POST /external-data", async () => {
+    const userResponse = await request(server)
+      .post("/users")
+      .send({ name: "Ext User", email: "ext@example.com" })
+      .expect(201);
+    const response = await request(server)
+      .post("/external-data")
+      .send({
+        userId: userResponse.body._id,
+        source: "api",
+        data: { key: "value" },
+      })
+      .expect(201);
+    expect(response.body).toHaveProperty("_id");
+    expect(response.body.source).toBe("api");
+  });
+
+  it("should return 400 for invalid external data with POST /external-data", async () => {
+    const response = await request(server)
+      .post("/external-data")
+      .send({ userId: "invalid", source: "" }) // Missing data
+      .expect(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "userId, source, and data are required"
+    );
+  });
+
+  it("should retrieve user data with GET /user-data/:id", async () => {
+    const userResponse = await request(server)
+      .post("/users")
+      .send({ name: "Data User", email: "data@example.com" })
+      .expect(201);
+    await request(server)
+      .post("/volunteered-data")
+      .send({ userId: userResponse.body._id, type: "personal", value: "test" })
+      .expect(201);
+    const getResponse = await request(server)
+      .get(`/user-data/${userResponse.body._id}`)
+      .expect(200);
+    expect(getResponse.body.user.name).toBe("Data User");
+    expect(getResponse.body.volunteeredData).toBeDefined();
+  });
+
+  it("should return 404 for non-existent user with GET /user-data/:id", async () => {
+    const response = await request(server)
+      .get("/user-data/123456789012345678901234")
       .expect(404);
     expect(response.body).toHaveProperty("error", "User not found");
   });

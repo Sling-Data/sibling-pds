@@ -1,6 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:3000
 @contentType = application/json
+@userId = 67c32e87ade88199db0e0b65
 
 ### Test root endpoint
 # @name root
@@ -19,10 +20,90 @@ Content-Type: {{contentType}}
 
 ### Get user by ID (replace ID with the _id from the createUser response)
 # @name getUser
-GET {{baseUrl}}/users/67c21643af94a814cdcbb770
+GET {{baseUrl}}/users/{{userId}}
 Content-Type: {{contentType}}
 
 ### Test invalid user ID (should return 404)
 # @name getUserNotFound
 GET {{baseUrl}}/users/123456789012345678901234
 Content-Type: {{contentType}}
+
+### Create volunteered data
+# @name createVolunteeredData
+POST {{baseUrl}}/volunteered-data
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "type": "personal_info",
+    "value": {
+        "age": 30,
+        "occupation": "Software Engineer"
+    }
+}
+
+### Create behavioral data
+# @name createBehavioralData
+POST {{baseUrl}}/behavioral-data
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "action": "page_view",
+    "context": {
+        "page": "/dashboard",
+        "timestamp": "2024-03-01T12:00:00Z",
+        "device": "desktop"
+    }
+}
+
+### Create external data
+# @name createExternalData
+POST {{baseUrl}}/external-data
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "source": "github",
+    "data": {
+        "repos": 25,
+        "followers": 150,
+        "languages": ["TypeScript", "Python", "Go"]
+    }
+}
+
+### Get all user data (includes volunteered, behavioral, and external data)
+# @name getUserData
+GET {{baseUrl}}/user-data/{{userId}}
+Content-Type: {{contentType}}
+
+### Test validation errors
+
+### Test missing fields in volunteered data (should return 400)
+# @name createVolunteeredDataError
+POST {{baseUrl}}/volunteered-data
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}"
+}
+
+### Test missing fields in behavioral data (should return 400)
+# @name createBehavioralDataError
+POST {{baseUrl}}/behavioral-data
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "action": "page_view"
+}
+
+### Test missing fields in external data (should return 400)
+# @name createExternalDataError
+POST {{baseUrl}}/external-data
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "source": "github"
+}
