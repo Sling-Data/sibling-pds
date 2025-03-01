@@ -1,0 +1,61 @@
+{
+  "task": {
+    "objective": "Research limitations of MongoDB Community Edition with CSFLE and pricing tiers beyond it",
+    "domain": "Compliance",
+    "sub_context": "Sibling uses MongoDB Community Edition in Docker (port 27018) with TypeScript/Node.js. Evaluating CSFLE for encryption.",
+    "deliverable": "A JSON object detailing CSFLE limitations in Community Edition and pricing for higher tiers (e.g., Enterprise, Atlas).",
+    "notes": "Focus on compliance (GDPR/CCPA), simplicity, and cost implications."
+  },
+  "results": {
+    "csfle_community_edition_limitations": [
+      {
+        "limitation": "No Automatic Encryption",
+        "description": "Community Edition lacks the `mongocryptd` daemon required for automatic CSFLE, meaning encryption/decryption must be explicitly coded in the app (unlike Enterprise/Atlas). This increases complexity for TypeScript/Node.js developers.",
+        "impact": "Requires manual encryption logic using `mongodb-client-encryption`, impacting simplicity but still GDPR/CCPA-compliant with proper key management."
+      },
+      {
+        "limitation": "Limited Query Support",
+        "description": "CSFLE in Community Edition doesn’t support complex queries (e.g., aggregations, $lookup) on encrypted fields due to server-side restrictions on encrypted BinData.",
+        "impact": "May limit *Sibling*’s ability to perform advanced analytics on encrypted data, though basic equality searches are possible with deterministic encryption."
+      },
+      {
+        "limitation": "No Built-in Key Management",
+        "description": "Community Edition lacks native integration with Key Management Interoperability Protocol (KMIP), requiring external solutions (e.g., AWS KMS) for secure key storage.",
+        "impact": "Adds setup overhead in Docker but remains cost-free if using local key files or affordable KMS options."
+      },
+      {
+        "limitation": "No Server-Side Schema Enforcement",
+        "description": "Unlike Enterprise/Atlas, Community Edition can’t enforce encryption schemas at the database level, relying entirely on client-side logic.",
+        "impact": "Increases risk of misconfiguration but manageable with robust TypeScript code reviews."
+      }
+    ],
+    "pricing_tiers_beyond_community": [
+      {
+        "tier": "MongoDB Enterprise Advanced",
+        "description": "Self-managed, on-premises or cloud-hosted MongoDB with full CSFLE support, including automatic encryption via `mongocryptd` and KMIP integration.",
+        "pricing": "Subscription-based, starts at ~$10,000/year for small deployments (varies by node count, support level). Contact MongoDB sales for exact quotes.",
+        "pros": "Simplifies CSFLE with automatic encryption, enhances compliance with auditing and support.",
+        "cons": "High cost, requires Docker customization for deployment."
+      },
+      {
+        "tier": "MongoDB Atlas (Shared Tier)",
+        "description": "Managed cloud service with free tier (M0: 512MB RAM, 5GB storage) and shared tiers (M2/M5) starting at ~$9/month. CSFLE supported but requires Enterprise features for full automation.",
+        "pricing": "Pay-as-you-go, ~$0.012/hour ($9/month) for M2, scales with usage.",
+        "pros": "Low entry cost, Docker-compatible, managed backups/security.",
+        "cons": "Automatic CSFLE requires higher tiers (e.g., M10+ at $57/month), limited resources in free/shared tiers."
+      },
+      {
+        "tier": "MongoDB Atlas (Dedicated Tier)",
+        "description": "Fully managed with automatic CSFLE, KMIP, and advanced features. Starts at M10 tier with 2GB RAM, 10GB storage.",
+        "pricing": "~$0.08/hour ($57/month) for M10, up to $100s/month for multi-region or large clusters.",
+        "pros": "Best for compliance (GDPR/CCPA), zero Docker setup, scales easily.",
+        "cons": "Cost increases with scale, less control vs. self-managed."
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Compliance Clara",
+    "date": "2025-03-01",
+    "filename": "csfle_limitations_pricing_sibling_2025-03-01.json"
+  }
+}

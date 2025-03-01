@@ -15,6 +15,7 @@
     - [Test](#test)
     - [Deploy](#deploy)
   - [Documentation](#documentation)
+  - [Tech Stack](#tech-stack)
 
 ## Project Overview
 Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing user autonomy, transparency, and security.
@@ -81,4 +82,25 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 - [External Data APIs (Researcher Rita, 2025-03-01)](docs/external_data_apis.md)
 - [User Data Input Wireframes (Designer Dana, 2025-03-01)](docs/user_data_input_wireframes.md)
 - [MongoDB Encryption Options (Compliance Clara, 2025-03-01)](docs/mongodb_encryption_options_sibling.md)
+- [Behavioral Data Sources (Researcher Rita, 2025-03-01)](docs/behavioral_data_sources.md)
+- [User Dashboard Wireframes (Designer Dana, 2025-03-01)](docs/user_dashboard_wireframes.md)
+- [CSFLE Limitations and Pricing (Compliance Clara, 2025-03-01)](docs/csfle_limitations_pricing_sibling.md)
 *(More to be added as tasks complete.)*
+
+
+## Tech Stack
+- **Backend**: 
+  - Node.js with TypeScript for server-side logic.
+  - Express.js for API routing and middleware.
+  - MongoDB (Community Edition) with Mongoose for data modeling, running in Docker on port 27018.
+  - Client-Side Field Level Encryption (CSFLE) for GDPR/CCPA-compliant data encryption using `mongodb-client-encryption`.
+- **Frontend**: 
+  - React with TypeScript for dynamic user interfaces.
+- **Testing**: 
+  - Jest with `ts-jest` and `supertest` for API unit tests.
+  - MongoDB Memory Server for isolated test databases.
+  - REST Client extension for manual API testing.
+- **Development Tools**: 
+  - Nodemon for auto-restarting the backend.
+  - Docker for containerized MongoDB deployment.
+  - Git for version control.

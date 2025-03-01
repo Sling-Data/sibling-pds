@@ -1,0 +1,62 @@
+{
+  "task": {
+    "objective": "Research behavioral data sources for integration",
+    "domain": "Research",
+    "sub_context": "Sibling will integrate behavioral data (e.g., online actions, physical activity). We use Node.js, TypeScript, and MongoDB.",
+    "deliverable": "A JSON list of 3-5 behavioral data sources (e.g., browser extensions, fitness trackers) with name, why chosen, auth setup, sample JSON output, and TypeScript compatibility notes.",
+    "notes": "Prioritize free tiers and JSON output. Consider user consent and privacy."
+  },
+  "results": {
+    "data_sources": [
+      {
+        "name": "Web Activity Time Tracker (Browser Extension)",
+        "why_chosen": "Free, open-source, tracks online activity (time spent on sites) with JSON export, requires explicit user consent.",
+        "auth_setup": [
+          "Install via Chrome Web Store",
+          "No API key required; local storage access with user permission",
+          "Use chrome.runtime API in Node.js with browser extension polyfills"
+        ],
+        "sample_json_output": "{\"site\": \"example.com\", \"time_spent\": 1200, \"date\": \"2025-03-01\", \"category\": \"productivity\"}",
+        "typescript_compatibility": "No official typings, but simple JSON structure works with TypeScript interfaces."
+      },
+      {
+        "name": "Fitbit Web API",
+        "why_chosen": "Free tier available, JSON output, tracks physical activity (steps, heart rate), requires OAuth consent for privacy.",
+        "auth_setup": [
+          "Register app in Fitbit Dev Portal",
+          "Set up OAuth 2.0 with client ID and secret",
+          "Use fitbit-node npm package in Node.js"
+        ],
+        "sample_json_output": "{\"activities-steps\": [{\"dateTime\": \"2025-03-01\", \"value\": \"10500\"}], \"activities-heart\": [{\"dateTime\": \"2025-03-01\", \"value\": {\"heartRate\": 72}}]}",
+        "typescript_compatibility": "Fitbit-node package includes TypeScript definitions."
+      },
+      {
+        "name": "RescueTime API",
+        "why_chosen": "Free tier for basic tracking, JSON output, monitors online behavior (app/site usage), emphasizes user consent.",
+        "auth_setup": [
+          "Sign up for RescueTime account",
+          "Generate API key in account settings",
+          "Use HTTP requests with key in Node.js"
+        ],
+        "sample_json_output": "{\"rows\": [[\"2025-03-01T09:00:00\", 1800, \"Coding\", \"Visual Studio Code\", 5, 1]], \"row_headers\": [\"time\", \"duration\", \"activity\", \"source\", \"productivity\", \"category\"]}",
+        "typescript_compatibility": "No official typings, but JSON structure is easily typed in TypeScript."
+      },
+      {
+        "name": "Strava API",
+        "why_chosen": "Free tier, JSON output, tracks physical activity (runs, rides) with GPS, requires user OAuth consent.",
+        "auth_setup": [
+          "Register app in Strava API portal",
+          "Implement OAuth 2.0 with client ID/secret",
+          "Use strava-v3 npm package in Node.js"
+        ],
+        "sample_json_output": "{\"id\": 123456, \"type\": \"Run\", \"distance\": 5000, \"start_date\": \"2025-03-01T08:00:00Z\", \"average_speed\": 3.5}",
+        "typescript_compatibility": "Strava-v3 package supports TypeScript with custom typings."
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Researcher Rita",
+    "date": "2025-03-01",
+    "filename": "behavioral_data_sources_2025-03-01.json"
+  }
+}
