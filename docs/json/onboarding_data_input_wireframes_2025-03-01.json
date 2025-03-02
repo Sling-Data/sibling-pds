@@ -1,0 +1,32 @@
+{
+  "task": {
+    "objective": "Refine wireframes for user data input interface with complex inputs",
+    "domain": "Design",
+    "sub_context": "Sibling’s frontend is React. Build on the existing data input wireframe to include varied inputs for onboarding (e.g., goals via checkboxes, location via searchable dropdown, profession via dropdown, interaction style via radio buttons, age via validated text).",
+    "deliverable": "A JSON object with updated wireframe descriptions for the data input screen (fields, input types, layout, interactions like submit/clear).",
+    "notes": "Keep it text-based, no images. Ensure it’s intuitive and scalable."
+  },
+  "results": {
+    "wireframes": [
+      {
+        "screen": "Onboarding Data Input",
+        "fields": [
+          "Goals (checkboxes: Productivity, Health, Learning, Other)",
+          "Location (searchable dropdown: e.g., 'New York, NY', 'London, UK')",
+          "Profession (dropdown: e.g., Software Developer, Healthcare, Marketing)",
+          "Interaction Style (radio buttons: Concise, Detailed, Visual)",
+          "Age (text input: numeric, validated 13-120)",
+          "userId (hidden: auto-populated)",
+          "timestamp (hidden: auto-generated)"
+        ],
+        "layout": "Vertical form with labeled inputs grouped in sections, action buttons at bottom",
+        "interactions": "Checkboxes multi-selectable, searchable dropdown with type-ahead, dropdown selectable, radio buttons single-selectable, text input with validation (numeric only, 13-120), Submit button saves data, Clear button resets fields"
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Designer Dana",
+    "date": "2025-03-01",
+    "filename": "onboarding_data_input_wireframes_2025-03-01.json"
+  }
+}

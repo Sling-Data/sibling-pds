@@ -1,0 +1,66 @@
+{
+  "task": {
+    "objective": "Research onboarding data needs for Sibling",
+    "domain": "Research",
+    "sub_context": "Sibling collects volunteered data during onboarding (e.g., interests, goals). We use Node.js, TypeScript, MongoDB, and React. Aim for a comprehensive yet user-friendly data set.",
+    "deliverable": "A JSON list of 5-10 volunteered data fields (e.g., goals, location, profession) with descriptions, suggested input methods (e.g., dropdown, checkbox, text), and why they’re valuable.",
+    "notes": "Balance completeness with usability—consider external API integration for prepopulated options."
+  },
+  "results": {
+    "data_fields": [
+      {
+        "name": "Interests",
+        "description": "User’s hobbies or topics of interest (e.g., tech, fitness, music).",
+        "suggested_input_method": "Multi-select dropdown or tags",
+        "why_valuable": "Enables personalized content and AI recommendations. Prepopulate options via external taxonomy APIs (e.g., Wikipedia, Google Knowledge Graph)."
+      },
+      {
+        "name": "Primary Goal",
+        "description": "Main objective for using Sibling (e.g., productivity, health, learning).",
+        "suggested_input_method": "Dropdown",
+        "why_valuable": "Guides AI assistant focus and prioritization. Predefined options ensure simplicity and consistency."
+      },
+      {
+        "name": "Location",
+        "description": "User’s city or region (e.g., New York, NY).",
+        "suggested_input_method": "Text with autocomplete",
+        "why_valuable": "Contextualizes data (e.g., weather, local events) for AI insights. Integrate with Google Places API for prepopulated suggestions."
+      },
+      {
+        "name": "Profession",
+        "description": "User’s job or industry (e.g., software developer, healthcare).",
+        "suggested_input_method": "Dropdown with optional text",
+        "why_valuable": "Tailors AI support to work-related needs. Prepopulate via LinkedIn API or industry lists."
+      },
+      {
+        "name": "Preferred Communication Style",
+        "description": "How user likes to receive info (e.g., concise, detailed, visual).",
+        "suggested_input_method": "Radio buttons",
+        "why_valuable": "Customizes AI interaction style for user comfort and engagement."
+      },
+      {
+        "name": "Daily Availability",
+        "description": "Times user is free for tasks (e.g., mornings, evenings).",
+        "suggested_input_method": "Checkbox list (e.g., morning, afternoon, evening)",
+        "why_valuable": "Optimizes AI scheduling and reminders based on user routine."
+      },
+      {
+        "name": "Fitness Level",
+        "description": "Self-reported activity level (e.g., beginner, intermediate, advanced).",
+        "suggested_input_method": "Dropdown",
+        "why_valuable": "Supports health-related AI features and integration with fitness trackers."
+      },
+      {
+        "name": "Learning Style",
+        "description": "Preferred way to learn (e.g., visual, auditory, kinesthetic).",
+        "suggested_input_method": "Checkbox (multi-select)",
+        "why_valuable": "Enhances AI-driven educational recommendations and content delivery."
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Researcher Rita",
+    "date": "2025-03-01",
+    "filename": "onboarding_data_needs_2025-03-01.json"
+  }
+}
