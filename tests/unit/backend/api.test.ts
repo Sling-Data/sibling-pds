@@ -3,7 +3,7 @@ import { Express } from "express";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import path from "path";
 import dotenv from "dotenv";
-import app, { connectDb, disconnectDb } from "../src/backend/index";
+import app, { connectDb, disconnectDb } from "@backend/index";
 
 // Load test environment variables
 dotenv.config({ path: path.join(__dirname, ".env.test") });

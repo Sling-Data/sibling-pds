@@ -19,7 +19,7 @@ app.use(express.json());
 let isConnected = false;
 
 // Encryption Configuration
-const KEY_FILE = path.join(__dirname, ".encryption_key");
+const KEY_FILE = path.join(__dirname, "config/encryption_key");
 let ENCRYPTION_KEY: Buffer;
 
 try {
