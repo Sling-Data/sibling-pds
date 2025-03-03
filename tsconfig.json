@@ -25,7 +25,8 @@
     "paths": {
       "@backend/*": ["src/backend/*"],
       "@frontend/*": ["src/frontend/*"]
-    }
+    },
+    "jsx": "react-jsx"
   },
   "exclude": ["node_modules"],
   "include": ["./src/**/*.tsx", "./src/**/*.ts", "tests/**/*.ts"]
