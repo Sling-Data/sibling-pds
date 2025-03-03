@@ -2,8 +2,11 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import crypto from "crypto";
-import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 import { Request, Response } from "express";
 import UserModel from "./models/user.model";
@@ -19,20 +22,18 @@ app.use(express.json());
 let isConnected = false;
 
 // Encryption Configuration
-const KEY_FILE = path.join(__dirname, "config/encryption_key");
-let ENCRYPTION_KEY: Buffer;
+const algorithm = "aes-256-cbc";
+const key = process.env.ENCRYPTION_KEY
+  ? Buffer.from(process.env.ENCRYPTION_KEY, "hex")
+  : crypto.randomBytes(32);
 
-try {
-  // Try to read existing key
-  const keyHex = fs.readFileSync(KEY_FILE, "utf8");
-  ENCRYPTION_KEY = Buffer.from(keyHex, "hex");
-} catch (error) {
-  // Generate new key if none exists
-  ENCRYPTION_KEY = crypto.randomBytes(32);
-  fs.writeFileSync(KEY_FILE, ENCRYPTION_KEY.toString("hex"), "utf8");
+if (!process.env.ENCRYPTION_KEY) {
+  console.warn(
+    "ENCRYPTION_KEY not set in .env, using random key. Set it for production security."
+  );
 }
 
-const IV_LENGTH = 16;
+const ivLength = 16; // AES-256-CBC requires 16-byte IV
 
 interface EncryptedData {
   iv: string;
@@ -42,47 +43,58 @@ interface EncryptedData {
 // Updated User model interface
 interface UserDocument extends Document {
   name: EncryptedData;
-  email: string;
+  email: EncryptedData;
   volunteeredData: Types.ObjectId[];
   behavioralData: Types.ObjectId[];
   externalData: Types.ObjectId[];
 }
 
 // Encryption functions
-function encrypt(text: string): EncryptedData {
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv("aes-256-cbc", ENCRYPTION_KEY, iv);
-  let encrypted = cipher.update(text);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
+const encrypt = (text: string): EncryptedData => {
+  const iv = crypto.randomBytes(ivLength);
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
   return {
     iv: iv.toString("hex"),
-    content: encrypted.toString("hex"),
+    content: encrypted,
   };
-}
+};
 
-function decrypt(data: EncryptedData): string {
-  const iv = Buffer.from(data.iv, "hex");
-  const encryptedText = Buffer.from(data.content, "hex");
-  const decipher = crypto.createDecipheriv("aes-256-cbc", ENCRYPTION_KEY, iv);
-  let decrypted = decipher.update(encryptedText);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-  return decrypted.toString();
-}
+const decrypt = (encryptedData: EncryptedData): string => {
+  const decipher = crypto.createDecipheriv(
+    algorithm,
+    key,
+    Buffer.from(encryptedData.iv, "hex")
+  );
+  let decrypted = decipher.update(encryptedData.content, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+};
 
-// Dynamic connection
-export async function connectDb(uri: string) {
+// Dynamic connection without TLS
+export const connectDb = async (uri: string) => {
   if (!isConnected) {
-    await mongoose.connect(uri);
-    isConnected = true;
-    console.log("Connected to MongoDB");
+    try {
+      await mongoose.connect(uri);
+      isConnected = true;
+      console.log("Connected to MongoDB");
+    } catch (error) {
+      console.error("MongoDB connection error details:", error);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
+      throw error;
+    }
   }
-}
+};
 
-export async function disconnectDb() {
+export const disconnectDb = async () => {
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
   isConnected = false;
-}
+};
 
 // Updated API routes with encryption
 app.post("/users", async (req: Request, res: Response) => {
@@ -93,12 +105,13 @@ app.post("/users", async (req: Request, res: Response) => {
       return;
     }
     const encryptedName = encrypt(name);
-    const user = new UserModel({ name: encryptedName, email });
+    const encryptedEmail = encrypt(email);
+    const user = new UserModel({ name: encryptedName, email: encryptedEmail });
     const savedUser = await user.save();
     res.status(201).json({
       _id: savedUser._id,
-      name: name,
-      email: savedUser.email,
+      name: encryptedName,
+      email: encryptedEmail,
     });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -114,7 +127,8 @@ app.get("/users/:id", async (req: Request, res: Response) => {
       return;
     }
     const decryptedName = decrypt(user.name);
-    res.json({ _id: user._id, name: decryptedName, email: user.email });
+    const decryptedEmail = decrypt(user.email);
+    res.json({ _id: user._id, name: decryptedName, email: decryptedEmail });
   } catch (error) {
     console.error("Error retrieving user:", error);
     res.status(500).json({ error: "Failed to retrieve user" });
@@ -138,7 +152,12 @@ app.post("/volunteered-data", async (req: Request, res: Response) => {
     await UserModel.findByIdAndUpdate(userId, {
       $push: { volunteeredData: savedData._id },
     });
-    res.status(201).json({ _id: savedData._id, type: savedData.type });
+    res.status(201).json({
+      _id: savedData._id,
+      type: savedData.type,
+      userId: savedData.userId,
+      value: encryptedValue,
+    });
   } catch (error) {
     console.error("Error creating volunteered data:", error);
     res.status(500).json({ error: "Failed to create volunteered data" });
@@ -164,7 +183,12 @@ app.post("/behavioral-data", async (req: Request, res: Response) => {
     await UserModel.findByIdAndUpdate(userId, {
       $push: { behavioralData: savedData._id },
     });
-    res.status(201).json({ _id: savedData._id, action: savedData.action });
+    res.status(201).json({
+      _id: savedData._id,
+      action: savedData.action,
+      userId: savedData.userId,
+      context: encryptedContext,
+    });
   } catch (error) {
     console.error("Error creating behavioral data:", error);
     res.status(500).json({ error: "Failed to create behavioral data" });
@@ -188,7 +212,12 @@ app.post("/external-data", async (req: Request, res: Response) => {
     await UserModel.findByIdAndUpdate(userId, {
       $push: { externalData: savedData._id },
     });
-    res.status(201).json({ _id: savedData._id, source: savedData.source });
+    res.status(201).json({
+      _id: savedData._id,
+      source: savedData.source,
+      userId: savedData.userId,
+      data: encryptedData,
+    });
   } catch (error) {
     console.error("Error creating external data:", error);
     res.status(500).json({ error: "Failed to create external data" });
@@ -197,14 +226,16 @@ app.post("/external-data", async (req: Request, res: Response) => {
 
 app.get("/user-data/:id", async (req: Request, res: Response) => {
   try {
-    const user = await UserModel.findById<UserDocument>(req.params.id).populate(
-      "volunteeredData behavioralData externalData"
-    );
+    const user = await UserModel.findById<UserDocument>(req.params.id)
+      .populate("volunteeredData")
+      .populate("behavioralData")
+      .populate("externalData");
     if (!user) {
       res.status(404).json({ error: "User not found" });
       return;
     }
     const decryptedName = decrypt(user.name);
+    const decryptedEmail = decrypt(user.email);
     const volunteeredData = await Promise.all(
       user.volunteeredData.map(async (data: any) => ({
         _id: data._id,
@@ -227,7 +258,7 @@ app.get("/user-data/:id", async (req: Request, res: Response) => {
       }))
     );
     res.json({
-      user: { _id: user._id, name: decryptedName, email: user.email },
+      user: { _id: user._id, name: decryptedName, email: decryptedEmail },
       volunteeredData,
       behavioralData,
       externalData,

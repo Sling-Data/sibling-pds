@@ -7,7 +7,7 @@ interface EncryptedData {
 
 interface User extends Document {
   name: EncryptedData;
-  email: string;
+  email: EncryptedData;
   volunteeredData: Types.ObjectId[];
   behavioralData: Types.ObjectId[];
   externalData: Types.ObjectId[];
@@ -23,7 +23,7 @@ const EncryptedDataSchema = new Schema(
 
 const UserSchema: Schema = new Schema({
   name: { type: EncryptedDataSchema, required: true },
-  email: { type: String, required: true },
+  email: { type: EncryptedDataSchema, required: true },
   volunteeredData: [{ type: Schema.Types.ObjectId, ref: "VolunteeredData" }],
   behavioralData: [{ type: Schema.Types.ObjectId, ref: "BehavioralData" }],
   externalData: [{ type: Schema.Types.ObjectId, ref: "ExternalData" }],

@@ -12,6 +12,7 @@
     - [Test](#test)
     - [Deploy](#deploy)
   - [Tech Stack](#tech-stack)
+  - [Encryption](#encryption)
   - [Documentation](#documentation)
     - [Design](#design)
     - [Research](#research)
@@ -49,6 +50,7 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 ├── tsconfig.json       # TypeScript configuration
 └── .gitignore          # Git ignore file
 
+
 ## Build, Run, Test, Deploy Instructions
 ### Prerequisites
 - Node.js (v18 or later)
@@ -79,7 +81,7 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
   - Node.js with TypeScript for server-side logic.
   - Express.js for API routing and middleware.
   - MongoDB (Community Edition) with Mongoose for data modeling, running in Docker on port 27018.
-  - Node.js native `crypto` module (AES-256-CBC) for GDPR/CCPA-compliant data encryption.
+  - Node.js native `crypto` module (AES-256-CBC) for data encryption.
 - **Frontend**: 
   - React with TypeScript for dynamic user interfaces.
 - **Testing**: 
@@ -90,6 +92,15 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
   - Nodemon for auto-restarting the backend.
   - Docker for containerized MongoDB deployment.
   - Git for version control.
+
+## Encryption
+Sibling implements encryption using Node.js native `crypto` module with AES-256-CBC to comply with GDPR/CCPA requirements. TLS is deferred to Phase 5 post-deployment due to current undeployed status. Key features include:
+
+- **Encryption Key Management**: The encryption key is stored in an environment variable (`ENCRYPTION_KEY`) via a `.env` file in `src/backend`. A 32-byte hex key is recommended (e.g., generated with `openssl rand -hex 32`). If unset, a random key is generated with a warning for development convenience.
+- **Initialization Vectors (IVs)**: Unique 16-byte IVs are generated per encryption operation using `crypto.randomBytes(16)` and stored with the encrypted data in MongoDB as hex strings, preventing reuse and enhancing security.
+- **Encrypted Fields**: Fields (name, email, value, context, data) are encrypted and stored as hex strings, with decryption handled server-side for GET requests.
+
+This setup ensures data confidentiality locally, with plans to add TLS and key rotation in future phases.
 
 ## Documentation
 ### Design
@@ -109,3 +120,4 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 - [CSFLE Limitations and Pricing (Compliance Clara, 2025-03-01)](docs/csfle_limitations_pricing_sibling.md)
 - [Consent Flows (Compliance Clara, 2025-03-01)](docs/consent_flows_sibling.md)
 - [Crypto AES-256-CBC Assessment (Compliance Clara, 2025-03-01)](docs/crypto_aes256cbc_assessment_sibling.md)
+- [TLS Alternatives (Compliance Clara, 2025-03-03)](docs/tls_alternatives_sibling.md)
