@@ -32,7 +32,7 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 │   └── /json      # Worker Grok JSON outputs
 ├── /src           # Source code
 │   ├── /backend   # Node.js/TypeScript backend
-│   │   ├── /config  # Configuration files (e.g., encryption_key)
+│   │   ├── /config  # Configuration files
 │   │   └── /models  # Mongoose schemas
 │   └── /frontend  # React/TypeScript frontend
 │       ├── /public  # Static assets
@@ -61,11 +61,12 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 1. Clone the repository: `git clone <repo-url>`
 2. Navigate to the root: `cd sibling-pds`
 3. Install dependencies: `npm install`
-4. Start MongoDB via Docker: `docker-compose up -d`
-5. Start the app: `npm start`
+4. Set up environment variables: Add `ENCRYPTION_KEY=<32-byte-key>` to `src/backend/.env`.
+5. Start MongoDB via Docker: `docker-compose up -d`
+6. Start the app: `npm start`
    - Backend runs on `http://localhost:3000`
    - Frontend runs on `http://localhost:3001`
-6. Open `http://localhost:3001` in your browser.
+7. Open `http://localhost:3001` in your browser.
 
 ### Test
 1. Run unit tests: `npm test`
@@ -94,13 +95,11 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
   - Git for version control.
 
 ## Encryption
-Sibling implements encryption using Node.js native `crypto` module with AES-256-CBC to comply with GDPR/CCPA requirements. TLS is deferred to Phase 5 post-deployment due to current undeployed status. Key features include:
-
-- **Encryption Key Management**: The encryption key is stored in an environment variable (`ENCRYPTION_KEY`) via a `.env` file in `src/backend`. A 32-byte hex key is recommended (e.g., generated with `openssl rand -hex 32`). If unset, a random key is generated with a warning for development convenience.
-- **Initialization Vectors (IVs)**: Unique 16-byte IVs are generated per encryption operation using `crypto.randomBytes(16)` and stored with the encrypted data in MongoDB as hex strings, preventing reuse and enhancing security.
-- **Encrypted Fields**: Fields (name, email, value, context, data) are encrypted and stored as hex strings, with decryption handled server-side for GET requests.
-
-This setup ensures data confidentiality locally, with plans to add TLS and key rotation in future phases.
+- **Key Management**: Moved to `ENCRYPTION_KEY` in `src/backend/.env` with fallback to a random 32-byte key if unset.
+- **IV Usage**: Unique 16-byte IVs generated per encryption operation using `crypto.randomBytes(16)`, stored as hex strings with encrypted data.
+- **Encrypted Fields**: `name`, `email`, `value`, `context`, `data`.
+- **Future Plans**: Add TLS in Phase 5 post-deployment, implement key rotation for enhanced security.
+*(Please preserve this section in future README updates.)*
 
 ## Documentation
 ### Design
