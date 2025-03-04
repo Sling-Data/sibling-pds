@@ -63,10 +63,10 @@ describe("User API", () => {
       .post("/users")
       .send({ name: "" }) // Missing email
       .expect(400);
-    expect(response.body).toHaveProperty(
-      "error",
-      "Name and email are required"
-    );
+    expect(response.body).toEqual({
+      status: "error",
+      message: "Name and email are required",
+    });
   });
 
   it("should create volunteered data with POST /volunteered-data", async () => {
@@ -283,7 +283,10 @@ describe("User API", () => {
       .put("/users/123456789012345678901234")
       .send({ name: "Updated User", email: "updated@example.com" })
       .expect(404);
-    expect(response.body).toHaveProperty("error", "User not found");
+    expect(response.body).toEqual({
+      status: "error",
+      message: "User not found",
+    });
   });
 
   it("should return 400 for invalid data with PUT /users/:id", async () => {
@@ -291,9 +294,19 @@ describe("User API", () => {
       .put("/users/123456789012345678901234")
       .send({ name: "Updated User" }) // Missing email
       .expect(400);
-    expect(response.body).toHaveProperty(
-      "error",
-      "Name and email are required"
-    );
+    expect(response.body).toEqual({
+      status: "error",
+      message: "Name and email are required",
+    });
+  });
+
+  it("should return 404 for non-existent user with GET /users/:id", async () => {
+    const response = await request(server)
+      .get("/users/123456789012345678901234")
+      .expect(404);
+    expect(response.body).toEqual({
+      status: "error",
+      message: "User not found",
+    });
   });
 });
