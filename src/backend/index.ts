@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import crypto from "crypto";
 import path from "path";
 import dotenv from "dotenv";
 
@@ -14,63 +13,14 @@ import VolunteeredData from "./models/volunteeredData.model";
 import BehavioralData from "./models/behavioralData.model";
 import ExternalData from "./models/externalData.model";
 import { Document, Types } from "mongoose";
+import usersRouter from "./routes/users";
+import { encrypt, decrypt, EncryptedData } from "./utils/encryption";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 let isConnected = false;
-
-// Encryption Configuration
-const algorithm = "aes-256-cbc";
-const key = process.env.ENCRYPTION_KEY
-  ? Buffer.from(process.env.ENCRYPTION_KEY, "hex")
-  : crypto.randomBytes(32);
-
-if (!process.env.ENCRYPTION_KEY) {
-  console.warn(
-    "ENCRYPTION_KEY not set in .env, using random key. Set it for production security."
-  );
-}
-
-const ivLength = 16; // AES-256-CBC requires 16-byte IV
-
-interface EncryptedData {
-  iv: string;
-  content: string;
-}
-
-// Updated User model interface
-interface UserDocument extends Document {
-  name: EncryptedData;
-  email: EncryptedData;
-  volunteeredData: Types.ObjectId[];
-  behavioralData: Types.ObjectId[];
-  externalData: Types.ObjectId[];
-}
-
-// Encryption functions
-const encrypt = (text: string): EncryptedData => {
-  const iv = crypto.randomBytes(ivLength);
-  const cipher = crypto.createCipheriv(algorithm, key, iv);
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return {
-    iv: iv.toString("hex"),
-    content: encrypted,
-  };
-};
-
-const decrypt = (encryptedData: EncryptedData): string => {
-  const decipher = crypto.createDecipheriv(
-    algorithm,
-    key,
-    Buffer.from(encryptedData.iv, "hex")
-  );
-  let decrypted = decipher.update(encryptedData.content, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-};
 
 // Dynamic connection without TLS
 export const connectDb = async (uri: string) => {
@@ -96,79 +46,10 @@ export const disconnectDb = async () => {
   isConnected = false;
 };
 
-// Updated API routes with encryption
-app.post("/users", async (req: Request, res: Response) => {
-  try {
-    const { name, email } = req.body;
-    if (!name || !email) {
-      res.status(400).json({ error: "Name and email are required" });
-      return;
-    }
-    const encryptedName = encrypt(name);
-    const encryptedEmail = encrypt(email);
-    const user = new UserModel({ name: encryptedName, email: encryptedEmail });
-    const savedUser = await user.save();
-    res.status(201).json({
-      _id: savedUser._id,
-      name: encryptedName,
-      email: encryptedEmail,
-    });
-  } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).json({ error: "Failed to create user" });
-  }
-});
+// Mount users router
+app.use("/users", usersRouter);
 
-app.get("/users/:id", async (req: Request, res: Response) => {
-  try {
-    const user = await UserModel.findById<UserDocument>(req.params.id);
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-    const decryptedName = decrypt(user.name);
-    const decryptedEmail = decrypt(user.email);
-    res.json({ _id: user._id, name: decryptedName, email: decryptedEmail });
-  } catch (error) {
-    console.error("Error retrieving user:", error);
-    res.status(500).json({ error: "Failed to retrieve user" });
-  }
-});
-
-app.put("/users/:id", async (req: Request, res: Response) => {
-  try {
-    const { name, email } = req.body;
-    if (!name || !email) {
-      res.status(400).json({ error: "Name and email are required" });
-      return;
-    }
-
-    const user = await UserModel.findById<UserDocument>(req.params.id);
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    const encryptedName = encrypt(name);
-    const encryptedEmail = encrypt(email);
-
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.params.id,
-      { name: encryptedName, email: encryptedEmail },
-      { new: true }
-    );
-
-    res.status(200).json({
-      _id: updatedUser?._id,
-      name: encryptedName,
-      email: encryptedEmail,
-    });
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ error: "Failed to update user" });
-  }
-});
-
+// Other routes
 app.post("/volunteered-data", async (req: Request, res: Response) => {
   try {
     const { userId, type, value } = req.body;
@@ -257,6 +138,14 @@ app.post("/external-data", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to create external data" });
   }
 });
+
+interface UserDocument extends Document {
+  name: EncryptedData;
+  email: EncryptedData;
+  volunteeredData: Types.ObjectId[];
+  behavioralData: Types.ObjectId[];
+  externalData: Types.ObjectId[];
+}
 
 app.get("/user-data/:id", async (req: Request, res: Response) => {
   try {

@@ -1,0 +1,80 @@
+{
+  "task": {
+    "objective": "Review and refactor Sibling codebase for best practices",
+    "domain": "Engineering",
+    "sub_context": "Sibling uses Node.js with TypeScript (backend), React with TypeScript (frontend), Express.js, MongoDB with Mongoose in Docker, and Node.js crypto (AES-256-CBC). The codebase includes schemas (VolunteeredData, BehavioralData, ExternalData, User), API routes, React components (SignupForm, DataInput, Profile), and tests. Current file structure is in README.md.",
+    "deliverable": "A plan in JSON with identified best practice issues, refactoring subtasks, and assignment to frontend or backend agents.",
+    "notes": "Focus on maintainability, scalability, and alignment with TypeScript/React/MongoDB standards. Break into high-level subtasks for agent guidance, awaiting Tomé’s confirmation."
+  },
+  "results": {
+    "best_practice_issues": [
+      {
+        "area": "Backend - Route Logic",
+        "issue": "Potential duplication in encryption and validation logic across API endpoints",
+        "impact": "Harder to maintain and scale"
+      },
+      {
+        "area": "Backend - Error Handling",
+        "issue": "Inconsistent or missing standardized error responses",
+        "impact": "Poor API reliability and debugging"
+      },
+      {
+        "area": "Backend - Naming",
+        "issue": "Inconsistent schema file naming (e.g., user.model.ts vs. volunteeredData.model.ts)",
+        "impact": "Reduced readability"
+      },
+      {
+        "area": "Frontend - Data Fetching",
+        "issue": "Repeated API fetch logic across components",
+        "impact": "Code duplication and maintenance overhead"
+      },
+      {
+        "area": "Frontend - State Management",
+        "issue": "Reliance on App.tsx state without a scalable solution",
+        "impact": "Limits complexity as app grows"
+      }
+    ],
+    "refactoring_subtasks": [
+      {
+        "description": "Modularize backend routes and logic",
+        "agent": "Backend",
+        "goal": "Create /routes and /controllers directories, move API logic into separate files"
+      },
+      {
+        "description": "Standardize backend error handling",
+        "agent": "Backend",
+        "goal": "Implement a middleware for consistent error responses (e.g., JSON { status, message })"
+      },
+      {
+        "description": "Rename schema files consistently",
+        "agent": "Backend",
+        "goal": "Standardize to UserModel.ts, VolunteeredDataModel.ts, etc."
+      },
+      {
+        "description": "Create a reusable data fetching hook",
+        "agent": "Frontend",
+        "goal": "Implement useFetch hook in /src/frontend/src/hooks for API calls"
+      },
+      {
+        "description": "Introduce Context API for state",
+        "agent": "Frontend",
+        "goal": "Set up a UserContext in /src/frontend/src/context for app-wide state"
+      },
+      {
+        "description": "Add tests for refactored code",
+        "agent": "Both",
+        "goal": "Update backend and frontend tests to cover new modules and hooks"
+      },
+      {
+        "description": "Validate refactored codebase",
+        "agent": "Both",
+        "goal": "Run tests and manual checks to ensure functionality is preserved"
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Coder Cody",
+    "date": "2025-03-04",
+    "filename": "docs/json/refactoring_plan_2025-03-04.json"
+  }
+}
