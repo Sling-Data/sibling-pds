@@ -8,10 +8,10 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.join(__dirname, ".env") });
 
 import { Request, Response } from "express";
-import UserModel from "./models/user.model";
-import VolunteeredData from "./models/volunteeredData.model";
-import BehavioralData from "./models/behavioralData.model";
-import ExternalData from "./models/externalData.model";
+import UserModel from "./models/UserModel";
+import VolunteeredData from "./models/VolunteeredDataModel";
+import BehavioralData from "./models/BehavioralDataModel";
+import ExternalData from "./models/ExternalDataModel";
 import { Document, Types } from "mongoose";
 import usersRouter from "./routes/users";
 import { encrypt, decrypt, EncryptedData } from "./utils/encryption";

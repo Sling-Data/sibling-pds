@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import UserModel from "../models/user.model";
+import UserModel from "../models/UserModel";
 import { Document } from "mongoose";
 import { EncryptedData, encrypt, decrypt } from "../utils/encryption";
 import { AppError } from "../middleware/errorHandler";
