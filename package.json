@@ -9,6 +9,7 @@
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "build": "cd src/frontend && npm run build",
     "test": "npm run test:backend && npm run test:frontend",
+    "test-once": "npm run test:backend && cd src/frontend && npm run test-once",
     "test:backend": "jest -c jest.config.backend.js",
     "test:frontend": "cd src/frontend && npm test",
     "eject": "cd src/frontend && npm run eject"

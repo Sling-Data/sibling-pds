@@ -219,6 +219,7 @@ const DataInput: React.FC = () => {
           <select
             value={formData.primaryGoal}
             onChange={(e) => handleInputChange('primaryGoal', e.target.value)}
+            aria-label="Primary Goal"
           >
             <option value="">Select a goal</option>
             <option value="fitness">Fitness</option>
@@ -247,6 +248,7 @@ const DataInput: React.FC = () => {
           <select
             value={formData.profession}
             onChange={(e) => handleInputChange('profession', e.target.value)}
+            aria-label="Profession"
           >
             <option value="">Select your profession</option>
             <option value="tech">Technology</option>
@@ -301,6 +303,7 @@ const DataInput: React.FC = () => {
           <select
             value={formData.fitnessLevel}
             onChange={(e) => handleInputChange('fitnessLevel', e.target.value)}
+            aria-label="Fitness Level"
           >
             <option value="">Select fitness level</option>
             <option value="beginner">Beginner</option>
