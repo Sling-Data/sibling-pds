@@ -271,12 +271,13 @@ app.get("/user-data/:id", async (req: Request, res: Response) => {
 
 // Only start server if run directly
 if (require.main === module) {
-  require("dotenv").config();
-  exports
-    .connectDb(process.env.MONGO_URI || "mongodb://localhost:27018")
-    .catch((err: Error) => console.error("MongoDB connection error:", err));
-  app.listen(3000, () => {
-    console.log("Backend running on port 3000");
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    // Connect to MongoDB
+    const mongoUri =
+      process.env.MONGODB_URI || "mongodb://localhost:27018/sibling-pds";
+    connectDb(mongoUri).catch(console.error);
   });
 }
 

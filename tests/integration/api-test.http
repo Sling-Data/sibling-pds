@@ -1,7 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:3000
 @contentType = application/json
-@userId = 67c597c041a85aede0542018
+@userId = 67c6e2037e7921ed3eae119c
 
 ### Test root endpoint
 # @name root
