@@ -1,0 +1,78 @@
+{
+  "task": {
+    "objective": "Assess data category assumptions for Sibling",
+    "domain": "Research",
+    "sub_context": "Sibling currently categorizes data into volunteered (user-provided), behavioral (action-based), and external (API-sourced). Assess if these cover all relevant data types for a comprehensive PDS. Consider user context, AI training needs, and potential gaps in the current model.",
+    "deliverable": "A JSON list of 3-5 potential data categories (including or beyond volunteered, behavioral, external) with names, descriptions, relevance to Sibling’s goals, and suggested fields.",
+    "notes": "Leverage the project description, tech stack, and data model. Suggest fields that align with MongoDB/Mongoose and TypeScript."
+  },
+  "results": {
+    "data_categories": [
+      {
+        "name": "VolunteeredData",
+        "description": "Data explicitly provided by users during onboarding or updates (e.g., interests, goals).",
+        "relevance_to_goals": "Forms the foundational user profile for AI personalization, ensuring transparency as users control inputs.",
+        "suggested_fields": {
+          "userId": "ObjectId (ref User)",
+          "type": "string (e.g., 'interest', 'goal')",
+          "value": "mixed (string, number, array, etc.)",
+          "timestamp": "Date",
+          "source": "string (default: 'user', for audit trail)"
+        }
+      },
+      {
+        "name": "BehavioralData",
+        "description": "Data derived from user actions within Sibling or tracked sources (e.g., clicks, fitness logs).",
+        "relevance_to_goals": "Captures real-time habits and preferences, enhancing AI’s ability to adapt to user behavior.",
+        "suggested_fields": {
+          "userId": "ObjectId (ref User)",
+          "action": "string (e.g., 'clicked', 'loggedWorkout')",
+          "context": "mixed (e.g., { 'url': string, 'duration': number })",
+          "timestamp": "Date",
+          "consentLevel": "string (e.g., 'explicit', 'implied', for transparency)"
+        }
+      },
+      {
+        "name": "ExternalData",
+        "description": "Data imported from third-party APIs (e.g., Gmail, Fitbit) with user consent.",
+        "relevance_to_goals": "Enriches the profile with contextual data, broadening AI’s support scope (e.g., scheduling, health).",
+        "suggested_fields": {
+          "userId": "ObjectId (ref User)",
+          "source": "string (e.g., 'gmail', 'fitbit')",
+          "data": "mixed (nested JSON from API)",
+          "timestamp": "Date",
+          "encryptionStatus": "boolean (true if encrypted with AES-256-CBC)"
+        }
+      },
+      {
+        "name": "InferredData",
+        "description": "Data derived from analysis of other categories (e.g., predicted preferences, mood trends).",
+        "relevance_to_goals": "Fills gaps in explicit data, enabling proactive AI insights while requiring clear transparency to maintain trust.",
+        "suggested_fields": {
+          "userId": "ObjectId (ref User)",
+          "type": "string (e.g., 'preference', 'trend')",
+          "value": "mixed (e.g., { 'category': string, 'confidence': number })",
+          "sourceCategory": "string (e.g., 'BehavioralData', 'VolunteeredData')",
+          "timestamp": "Date"
+        }
+      },
+      {
+        "name": "RelationalData",
+        "description": "Data about user connections or interactions (e.g., contacts, social patterns), sourced with consent.",
+        "relevance_to_goals": "Adds social context for AI to support collaboration or communication tasks, enhancing personalization.",
+        "suggested_fields": {
+          "userId": "ObjectId (ref User)",
+          "type": "string (e.g., 'contact', 'interaction')",
+          "relatedEntity": "mixed (e.g., { 'email': string, 'name': string })",
+          "context": "mixed (e.g., { 'frequency': number, 'lastContact': Date })",
+          "timestamp": "Date"
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Researcher Rita",
+    "date": "2025-03-01",
+    "filename": "data_category_assessment_2025-03-01.json"
+  }
+}

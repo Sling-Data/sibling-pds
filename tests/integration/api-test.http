@@ -1,7 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:3000
 @contentType = application/json
-@userId = 67c6e2037e7921ed3eae119c
+@userId = 67c73bdebc4a6b391f3ab6ac
 
 ### Test root endpoint
 # @name root
@@ -106,4 +106,14 @@ Content-Type: {{contentType}}
 {
     "userId": "{{userId}}",
     "source": "github"
+}
+
+### Update user by ID
+# @name updateUser
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: {{contentType}}
+
+{
+    "name": "Updated User",
+    "email": "updated@example.com"
 }

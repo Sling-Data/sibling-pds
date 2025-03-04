@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import '@testing-library/jest-dom';
 import App from '../components/App';
 
@@ -38,24 +39,24 @@ describe('App Component', () => {
   it('shows DataInput after successful signup', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ _id: 'test-user-123' }),
+      json: async () => ({ _id: 'test-user-123' })
     });
 
     await act(async () => {
       render(<App />);
     });
-    
+
     await act(async () => {
       // Fill in signup form
       fireEvent.change(screen.getByLabelText(/Name/i), {
-        target: { value: 'Test User' },
+        target: { value: 'Test User' }
       });
       fireEvent.change(screen.getByLabelText(/Email/i), {
-        target: { value: 'test@example.com' },
+        target: { value: 'test@example.com' }
       });
 
-      // Submit signup form
-      fireEvent.click(screen.getByText(/Create Account/i));
+      // Submit form
+      fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
     });
 
     // Wait for DataInput to appear
@@ -63,102 +64,109 @@ describe('App Component', () => {
       expect(screen.getByText(/Personal Information/i)).toBeInTheDocument();
     });
 
-    // Verify the API call
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/users', {
+    // Verify API call
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'Test User',
-        email: 'test@example.com',
-      }),
+        email: 'test@example.com'
+      })
     });
   });
 
-  it('persists user data between form submissions', async () => {
+  it('shows Profile after successful data submission', async () => {
     // Mock successful signup
-    mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ _id: 'test-user-123' }),
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ _id: 'test-user-123' })
+    });
+
+    // Mock successful data submission
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ success: true })
+    });
+
+    // Mock successful profile fetch
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        name: 'Test User',
+        email: 'test@example.com'
       })
-      // Mock successful data submission
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ success: true }),
-      });
+    });
 
     await act(async () => {
       render(<App />);
     });
 
+    // Fill and submit signup form
     await act(async () => {
-      // Complete signup
       fireEvent.change(screen.getByLabelText(/Name/i), {
-        target: { value: 'Test User' },
+        target: { value: 'Test User' }
       });
       fireEvent.change(screen.getByLabelText(/Email/i), {
-        target: { value: 'test@example.com' },
+        target: { value: 'test@example.com' }
       });
-      fireEvent.click(screen.getByText(/Create Account/i));
+      fireEvent.click(screen.getByRole('button', { name: /Create Account/i }));
     });
 
-    // Wait for DataInput to appear
+    // Fill and submit data input form
+    await act(async () => {
+      // Fill required fields
+      fireEvent.click(screen.getByLabelText('Sports'));
+      fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), {
+        target: { value: 'fitness' }
+      });
+      fireEvent.change(screen.getByPlaceholderText('Enter your location'), {
+        target: { value: 'New York' }
+      });
+      fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), {
+        target: { value: 'tech' }
+      });
+      fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
+      fireEvent.click(screen.getByLabelText('Morning'));
+      fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), {
+        target: { value: 'beginner' }
+      });
+      fireEvent.click(screen.getByLabelText('Visual'));
+      fireEvent.change(screen.getByPlaceholderText('Enter your age'), {
+        target: { value: '25' }
+      });
+
+      // Submit form
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    });
+
+    // Wait for Profile to appear
     await waitFor(() => {
-      expect(screen.getByText(/Personal Information/i)).toBeInTheDocument();
+      expect(screen.getByText('User Profile')).toBeInTheDocument();
     });
 
-    // Verify the signup API call
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/users', {
+    // Verify all API calls were made in the correct order
+    expect(mockFetch).toHaveBeenNthCalledWith(1, `${process.env.REACT_APP_API_URL}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'Test User',
-        email: 'test@example.com',
-      }),
+        email: 'test@example.com'
+      })
     });
 
-    await act(async () => {
-      // Fill in DataInput form
-      fireEvent.change(screen.getByLabelText(/Location/i), {
-        target: { value: 'New York' },
-      });
-      fireEvent.click(screen.getByText(/Sports/i));
-
-      // Fill in required fields
-      fireEvent.change(screen.getByLabelText(/Primary Goal/i), {
-        target: { value: 'fitness' },
-      });
-      fireEvent.change(screen.getByLabelText(/Profession/i), {
-        target: { value: 'tech' },
-      });
-      fireEvent.click(screen.getByText(/Direct/i));
-      fireEvent.click(screen.getByText(/Morning/i));
-      fireEvent.change(screen.getByLabelText(/Fitness Level/i), {
-        target: { value: 'beginner' },
-      });
-      fireEvent.click(screen.getByText(/Visual/i));
-      fireEvent.change(screen.getByLabelText(/Age/i), {
-        target: { value: '25' },
-      });
-
-      // Submit form
-      fireEvent.click(screen.getByText(/Submit/i));
+    expect(mockFetch).toHaveBeenNthCalledWith(2, `${process.env.REACT_APP_API_URL}/volunteered-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: expect.stringContaining('test-user-123')
     });
 
-    // Wait for the data submission API call
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenLastCalledWith('http://localhost:3000/volunteered-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: expect.stringContaining('test-user-123'),
-      });
-    });
+    expect(mockFetch).toHaveBeenNthCalledWith(3, `${process.env.REACT_APP_API_URL}/users/test-user-123`);
   });
 }); 
 

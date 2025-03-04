@@ -245,4 +245,55 @@ describe("User API", () => {
       .expect(404);
     expect(response.body).toHaveProperty("error", "User not found");
   });
+
+  it("should update user data with PUT /users/:id", async () => {
+    // Create initial user
+    const initialResponse = await request(server)
+      .post("/users")
+      .send({ name: "Initial User", email: "initial@example.com" })
+      .expect(201);
+
+    const userId = initialResponse.body._id;
+
+    // Update user
+    const updateResponse = await request(server)
+      .put(`/users/${userId}`)
+      .send({ name: "Updated User", email: "updated@example.com" })
+      .expect(200);
+
+    expect(updateResponse.body).toHaveProperty("_id", userId);
+    expect(updateResponse.body).toHaveProperty("name");
+    expect(updateResponse.body).toHaveProperty("email");
+    expect(typeof updateResponse.body.name.iv).toBe("string");
+    expect(typeof updateResponse.body.name.content).toBe("string");
+    expect(typeof updateResponse.body.email.iv).toBe("string");
+    expect(typeof updateResponse.body.email.content).toBe("string");
+
+    // Verify updated data
+    const getResponse = await request(server)
+      .get(`/users/${userId}`)
+      .expect(200);
+
+    expect(getResponse.body.name).toBe("Updated User");
+    expect(getResponse.body.email).toBe("updated@example.com");
+  });
+
+  it("should return 404 for non-existent user with PUT /users/:id", async () => {
+    const response = await request(server)
+      .put("/users/123456789012345678901234")
+      .send({ name: "Updated User", email: "updated@example.com" })
+      .expect(404);
+    expect(response.body).toHaveProperty("error", "User not found");
+  });
+
+  it("should return 400 for invalid data with PUT /users/:id", async () => {
+    const response = await request(server)
+      .put("/users/123456789012345678901234")
+      .send({ name: "Updated User" }) // Missing email
+      .expect(400);
+    expect(response.body).toHaveProperty(
+      "error",
+      "Name and email are required"
+    );
+  });
 });

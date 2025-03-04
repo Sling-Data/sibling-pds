@@ -135,6 +135,40 @@ app.get("/users/:id", async (req: Request, res: Response) => {
   }
 });
 
+app.put("/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { name, email } = req.body;
+    if (!name || !email) {
+      res.status(400).json({ error: "Name and email are required" });
+      return;
+    }
+
+    const user = await UserModel.findById<UserDocument>(req.params.id);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const encryptedName = encrypt(name);
+    const encryptedEmail = encrypt(email);
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      req.params.id,
+      { name: encryptedName, email: encryptedEmail },
+      { new: true }
+    );
+
+    res.status(200).json({
+      _id: updatedUser?._id,
+      name: encryptedName,
+      email: encryptedEmail,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Failed to update user" });
+  }
+});
+
 app.post("/volunteered-data", async (req: Request, res: Response) => {
   try {
     const { userId, type, value } = req.body;

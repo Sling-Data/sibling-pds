@@ -26,9 +26,10 @@ interface FormErrors {
 
 interface DataInputProps {
   userId: string;
+  onSubmitted?: () => void;
 }
 
-const DataInput: React.FC<DataInputProps> = ({ userId }) => {
+const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
   const [formData, setFormData] = useState<FormData>({
     interests: [],
     primaryGoal: '',
@@ -162,6 +163,11 @@ const DataInput: React.FC<DataInputProps> = ({ userId }) => {
         learningStyle: [],
         age: ''
       });
+
+      // Call onSubmitted callback if provided
+      if (onSubmitted) {
+        onSubmitted();
+      }
     } catch (error) {
       setSubmitStatus({
         success: false,

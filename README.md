@@ -33,19 +33,23 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 ├── /src           # Source code
 │   ├── /backend   # Node.js/TypeScript backend
 │   │   ├── /config  # Configuration files
-│   │   └── /models  # Mongoose schemas
+│   │   ├── /models  # Mongoose schemas
+│   |   └── /.env    # Backend environment variables
 │   └── /frontend  # React/TypeScript frontend
-│       ├── /public  # Static assets
-│       └── /src     # React source code
+│       ├── /public        # Static assets
+│       └── /src           # React source code
+│           ├── /tests # Frontend unit tests
+│           └── /components
+│           ├── /package.json  # Frontend-specific dependencies and scripts
+│           └── /.env          # Frontend environment variables
 ├── /tests         # Test files
-│   ├── /unit      # Unit tests
-│   │   ├── /backend   # Backend unit tests
-│   │   └── /frontend  # Frontend unit tests
-│   └── /integration  # Integration tests
+│   ├── /integration  # Integration tests
+│   └── /unit         # Backend unit tests
+│       └── /backend  # Backend unit tests
 ├── docker-compose.yml  # Docker configuration
 ├── jest.config.js      # Base Jest configuration
 ├── package-lock.json   # Dependency lock file
-├── package.json        # Project dependencies and scripts
+├── package.json        # Backend and root project dependencies and scripts
 ├── README.md           # This file
 ├── tsconfig.json       # TypeScript configuration
 └── .gitignore          # Git ignore file
@@ -61,17 +65,19 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 1. Clone the repository: `git clone <repo-url>`
 2. Navigate to the root: `cd sibling-pds`
 3. Install dependencies: `npm install`
-4. Set up environment variables: Add `ENCRYPTION_KEY=<32-byte-key>` to `src/backend/.env`.
-5. Start MongoDB via Docker: `docker-compose up -d`
-6. Start the app: `npm start`
+4. Set up backend environment variables: Add `ENCRYPTION_KEY=<32-byte-key>` to `src/backend/.env`.
+5. Set up frontend environment variables: Add `REACT_APP_API_URL=http://localhost:3000` to `src/frontend/.env`.
+6. Start MongoDB via Docker: `docker-compose up -d`
+7. Start the app: `npm start`
    - Backend runs on `http://localhost:3000`
    - Frontend runs on `http://localhost:3001`
-7. Open `http://localhost:3001` in your browser.
+8. Open `http://localhost:3001` in your browser.
 
 ### Test
 1. Run unit tests: `npm test`
    - Backend: `npm run test:backend`
    - Frontend: `npm run test:frontend`
+   - All tests: `npm run test-once`
    - Uses Jest with `mongodb-memory-server`.
 
 ### Deploy
@@ -95,10 +101,10 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
   - Git for version control.
 
 ## Encryption
-- **Key Management**: Moved to `ENCRYPTION_KEY` in `src/backend/.env` with fallback to a random 32-byte key if unset.
-- **IV Usage**: Unique 16-byte IVs generated per encryption operation using `crypto.randomBytes(16)`, stored as hex strings with encrypted data.
+- **Key Management**: Moved to `ENCRYPTION_KEY` in `.env` with fallback to random key.
+- **IV Usage**: Unique 16-byte IVs per encryption, stored as hex strings.
 - **Encrypted Fields**: `name`, `email`, `value`, `context`, `data`.
-- **Future Plans**: Add TLS in Phase 5 post-deployment, implement key rotation for enhanced security.
+- **Future Plans**: TLS in Phase 5, key rotation to be implemented.
 *(Please preserve this section in future README updates.)*
 
 ## Documentation
