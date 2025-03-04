@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useFetch } from '../hooks/useFetch';
 import './Profile.css';
 
 interface ProfileProps {
@@ -20,8 +21,11 @@ interface PrivacySettings {
 }
 
 function Profile({ userId }: ProfileProps) {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [error, setError] = useState<string>('');
+  const [shouldRefetch, setShouldRefetch] = useState(0);
+  const { data: userData, loading, error: fetchError } = useFetch<UserData>(
+    `${process.env.REACT_APP_API_URL}/users/${userId}`,
+    shouldRefetch // Add this as a dependency to trigger re-fetch
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserData>({ name: '', email: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -34,24 +38,12 @@ function Profile({ userId }: ProfileProps) {
     dataSharing: false
   });
 
-  const fetchUserData = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-      const data = await response.json();
-      setUserData(data);
-      setFormData(data);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      setError('Failed to load user profile');
-    }
-  };
-
+  // Update formData when userData changes
   useEffect(() => {
-    fetchUserData();
-  }, [userId]);
+    if (userData) {
+      setFormData(userData);
+    }
+  }, [userData]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -97,8 +89,8 @@ function Profile({ userId }: ProfileProps) {
         throw new Error(`HTTP error! status: ${updateResponse.status}`);
       }
 
-      // Re-fetch user data to get decrypted values
-      await fetchUserData();
+      // Trigger a re-fetch by incrementing the counter
+      setShouldRefetch(prev => prev + 1);
       
       setSubmitStatus({
         success: true,
@@ -124,12 +116,16 @@ function Profile({ userId }: ProfileProps) {
     }
   };
 
-  if (error) {
-    return <div className="error-message">{error}</div>;
+  if (loading) {
+    return <div>Loading profile...</div>;
+  }
+
+  if (fetchError) {
+    return <div className="error-message">{fetchError}</div>;
   }
 
   if (!userData) {
-    return <div>Loading profile...</div>;
+    return <div className="error-message">No user data available</div>;
   }
 
   return (
