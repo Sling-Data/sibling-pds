@@ -18,11 +18,17 @@ code {
   padding: 20px;
 }
 
-.data-input-container {
+.data-input-container,
+.signup-container {
   background: #fff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.signup-container {
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .form-group {
@@ -51,6 +57,7 @@ code {
 }
 
 input[type="text"],
+input[type="email"],
 input[type="number"],
 select {
   width: 100%;
@@ -61,6 +68,7 @@ select {
 }
 
 input[type="text"]:focus,
+input[type="email"]:focus,
 input[type="number"]:focus,
 select:focus {
   outline: none;
@@ -72,6 +80,15 @@ select:focus {
   color: #dc3545;
   font-size: 14px;
   margin-top: 4px;
+}
+
+.submit-error {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 8px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
 }
 
 .submit-status {
@@ -102,6 +119,7 @@ button {
   cursor: pointer;
   font-size: 16px;
   transition: background-color 0.2s;
+  width: 100%;
 }
 
 button:hover:not(:disabled) {

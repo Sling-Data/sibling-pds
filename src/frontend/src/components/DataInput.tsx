@@ -24,7 +24,11 @@ interface FormErrors {
   age?: string;
 }
 
-const DataInput: React.FC = () => {
+interface DataInputProps {
+  userId: string;
+}
+
+const DataInput: React.FC<DataInputProps> = ({ userId }) => {
   const [formData, setFormData] = useState<FormData>({
     interests: [],
     primaryGoal: '',
@@ -121,14 +125,16 @@ const DataInput: React.FC = () => {
     setSubmitStatus({});
 
     try {
-      const response = await fetch('/volunteered-data', {
+      console.log('Submitting data with userId:', userId);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/volunteered-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           type: 'onboarding',
-          value: JSON.stringify(formData)
+          value: JSON.stringify(formData),
+          userId: userId
         }),
       });
 
@@ -136,7 +142,9 @@ const DataInput: React.FC = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      await response.json();
+      const data = await response.json();
+      console.log('Submission response:', data);
+      
       setSubmitStatus({
         success: true,
         message: 'Form submitted successfully!'
@@ -188,7 +196,7 @@ const DataInput: React.FC = () => {
 
   return (
     <div className="data-input-container">
-      <h2>Onboarding Data Input</h2>
+      <h2>Personal Information</h2>
       {submitStatus.message && (
         <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
           {submitStatus.message}
@@ -215,11 +223,11 @@ const DataInput: React.FC = () => {
 
         {/* Primary Goal - Dropdown */}
         <div className="form-group">
-          <label>Primary Goal</label>
+          <label htmlFor="primaryGoal">Primary Goal</label>
           <select
+            id="primaryGoal"
             value={formData.primaryGoal}
             onChange={(e) => handleInputChange('primaryGoal', e.target.value)}
-            aria-label="Primary Goal"
           >
             <option value="">Select a goal</option>
             <option value="fitness">Fitness</option>
@@ -232,8 +240,9 @@ const DataInput: React.FC = () => {
 
         {/* Location - Text Input */}
         <div className="form-group">
-          <label>Location</label>
+          <label htmlFor="location">Location</label>
           <input
+            id="location"
             type="text"
             value={formData.location}
             onChange={(e) => handleInputChange('location', e.target.value)}
@@ -244,11 +253,11 @@ const DataInput: React.FC = () => {
 
         {/* Profession - Dropdown */}
         <div className="form-group">
-          <label>Profession</label>
+          <label htmlFor="profession">Profession</label>
           <select
+            id="profession"
             value={formData.profession}
             onChange={(e) => handleInputChange('profession', e.target.value)}
-            aria-label="Profession"
           >
             <option value="">Select your profession</option>
             <option value="tech">Technology</option>
@@ -259,7 +268,7 @@ const DataInput: React.FC = () => {
           {errors.profession && <div className="error-message">{errors.profession}</div>}
         </div>
 
-        {/* Communication Style - Radio Buttons */}
+        {/* Communication Style - Radio */}
         <div className="form-group">
           <label>Communication Style</label>
           <div className="radio-group">
@@ -299,11 +308,11 @@ const DataInput: React.FC = () => {
 
         {/* Fitness Level - Dropdown */}
         <div className="form-group">
-          <label>Fitness Level</label>
+          <label htmlFor="fitnessLevel">Fitness Level</label>
           <select
+            id="fitnessLevel"
             value={formData.fitnessLevel}
             onChange={(e) => handleInputChange('fitnessLevel', e.target.value)}
-            aria-label="Fitness Level"
           >
             <option value="">Select fitness level</option>
             <option value="beginner">Beginner</option>
@@ -332,10 +341,11 @@ const DataInput: React.FC = () => {
           {errors.learningStyle && <div className="error-message">{errors.learningStyle}</div>}
         </div>
 
-        {/* Age - Text Input */}
+        {/* Age - Number Input */}
         <div className="form-group">
-          <label>Age</label>
+          <label htmlFor="age">Age</label>
           <input
+            id="age"
             type="number"
             min="13"
             max="100"

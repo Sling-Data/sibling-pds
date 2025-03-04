@@ -1,17 +1,35 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import DataInput from '../components/DataInput';
 
+// Mock environment variable
+process.env.REACT_APP_API_URL = 'http://localhost:3000';
+
+const mockUserId = 'test-user-123';
+
 describe('DataInput Component', () => {
+  const originalError = console.error;
+  const originalLog = console.log;
+
   beforeEach(() => {
     // Reset fetch mock before each test
     global.fetch = jest.fn();
+    // Mock console methods to silence test output
+    console.error = jest.fn();
+    console.log = jest.fn();
   });
 
-  it('renders all form fields', () => {
-    render(<DataInput />);
+  afterEach(() => {
+    jest.resetAllMocks();
+    // Restore console methods
+    console.error = originalError;
+    console.log = originalLog;
+  });
+
+  it('renders all form fields', async () => {
+    await act(async () => {
+      render(<DataInput userId={mockUserId} />);
+    });
     
     // Check section headings
     expect(screen.getByText('Interests')).toBeInTheDocument();
@@ -69,10 +87,14 @@ describe('DataInput Component', () => {
   });
 
   it('shows validation errors when submitting empty form', async () => {
-    render(<DataInput />);
+    await act(async () => {
+      render(<DataInput userId={mockUserId} />);
+    });
     
-    // Submit empty form
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await act(async () => {
+      // Submit empty form
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    });
 
     // Check for validation error messages
     await waitFor(() => {
@@ -89,54 +111,64 @@ describe('DataInput Component', () => {
   });
 
   it('validates age input correctly', async () => {
-    render(<DataInput />);
+    await act(async () => {
+      render(<DataInput userId={mockUserId} />);
+    });
     
     const ageInput = screen.getByPlaceholderText('Enter your age');
     
-    // Test invalid age
-    fireEvent.change(ageInput, { target: { value: '10' } });
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await act(async () => {
+      // Test invalid age
+      fireEvent.change(ageInput, { target: { value: '10' } });
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid age between 13 and 100')).toBeInTheDocument();
     });
 
-    // Test valid age
-    fireEvent.change(ageInput, { target: { value: '25' } });
+    await act(async () => {
+      // Test valid age
+      fireEvent.change(ageInput, { target: { value: '25' } });
+    });
     expect(screen.queryByText('Please enter a valid age between 13 and 100')).not.toBeInTheDocument();
   });
 
   it('submits form successfully with valid data', async () => {
-    render(<DataInput />);
-    
-    // Mock successful fetch response
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    const mockFetch = global.fetch as jest.Mock;
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true })
     });
 
-    // Fill out form
-    fireEvent.click(screen.getByLabelText('Sports'));
-    fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), { target: { value: 'fitness' } });
-    fireEvent.change(screen.getByPlaceholderText('Enter your location'), { target: { value: 'London' } });
-    fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), { target: { value: 'tech' } });
-    fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
-    fireEvent.click(screen.getByLabelText('Morning'));
-    fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), { target: { value: 'intermediate' } });
-    fireEvent.click(screen.getByLabelText('Visual'));
-    fireEvent.change(screen.getByPlaceholderText('Enter your age'), { target: { value: '25' } });
+    await act(async () => {
+      render(<DataInput userId={mockUserId} />);
+    });
+    
+    await act(async () => {
+      // Fill out form
+      fireEvent.click(screen.getByLabelText('Sports'));
+      fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), { target: { value: 'fitness' } });
+      fireEvent.change(screen.getByPlaceholderText('Enter your location'), { target: { value: 'London' } });
+      fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), { target: { value: 'tech' } });
+      fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
+      fireEvent.click(screen.getByLabelText('Morning'));
+      fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), { target: { value: 'intermediate' } });
+      fireEvent.click(screen.getByLabelText('Visual'));
+      fireEvent.change(screen.getByPlaceholderText('Enter your age'), { target: { value: '25' } });
 
-    // Submit form
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      // Submit form
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    });
 
     // Check if fetch was called with correct data
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/volunteered-data', {
+      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/volunteered-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: expect.any(String)
+        body: expect.stringContaining(mockUserId)
       });
     });
 
@@ -147,24 +179,28 @@ describe('DataInput Component', () => {
   });
 
   it('handles submission error gracefully', async () => {
-    render(<DataInput />);
+    const mockFetch = global.fetch as jest.Mock;
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+    await act(async () => {
+      render(<DataInput userId={mockUserId} />);
+    });
     
-    // Mock failed fetch response
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+    await act(async () => {
+      // Fill out form with valid data
+      fireEvent.click(screen.getByLabelText('Sports'));
+      fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), { target: { value: 'fitness' } });
+      fireEvent.change(screen.getByPlaceholderText('Enter your location'), { target: { value: 'London' } });
+      fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), { target: { value: 'tech' } });
+      fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
+      fireEvent.click(screen.getByLabelText('Morning'));
+      fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), { target: { value: 'intermediate' } });
+      fireEvent.click(screen.getByLabelText('Visual'));
+      fireEvent.change(screen.getByPlaceholderText('Enter your age'), { target: { value: '25' } });
 
-    // Fill out form with valid data (reusing the successful submission data)
-    fireEvent.click(screen.getByLabelText('Sports'));
-    fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), { target: { value: 'fitness' } });
-    fireEvent.change(screen.getByPlaceholderText('Enter your location'), { target: { value: 'London' } });
-    fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), { target: { value: 'tech' } });
-    fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
-    fireEvent.click(screen.getByLabelText('Morning'));
-    fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), { target: { value: 'intermediate' } });
-    fireEvent.click(screen.getByLabelText('Visual'));
-    fireEvent.change(screen.getByPlaceholderText('Enter your age'), { target: { value: '25' } });
-
-    // Submit form
-    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+      // Submit form
+      fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    });
 
     // Check error message
     await waitFor(() => {
