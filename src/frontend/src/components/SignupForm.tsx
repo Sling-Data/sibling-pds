@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './SignupForm.css';
+import '../styles/SignupForm.css';
 
 interface SignupFormProps {
   onSuccess: (userId: string) => void;

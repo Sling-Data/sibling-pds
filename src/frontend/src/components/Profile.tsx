@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { useUser } from '../context/UserContext';
-import './Profile.css';
+import '../styles/Profile.css';
 
 interface UserData {
   name: string;
