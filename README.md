@@ -31,16 +31,24 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 
 /sibling-pds
 ├── /docs          # Documentation
-│   └── /json      # Worker Grok JSON outputs, intended for storing wireframes or specs like Dana’s (currently empty).
+│   └── /json      # Worker Grok JSON outputs, intended for storing wireframes or specs like Dana's (currently empty).
 ├── /src           # Source code
 │   ├── /backend   # Node.js/TypeScript backend
-│   │   ├── /config  # Configuration files (currently empty, reserved for future config needs).
-│   │   ├── /models  # Mongoose schemas
-│   │   │   ├── behavioralData.model.ts  # Schema for behavioral data, storing actions and context with encrypted fields.
-│   │   │   ├── externalData.model.ts    # Schema for external data, linking to user ID with encrypted data fields.
-│   │   │   ├── user.model.ts            # Schema for users, encrypting name and email.
-│   │   │   └── volunteeredData.model.ts # Schema for volunteered data, including type and encrypted value.
-│   │   └── /.env    # Backend environment variables, storing sensitive data like ENCRYPTION_KEY and MONGO_URI, loaded by the app.
+│   │   ├── /config     # Configuration files (currently empty, reserved for future config needs).
+│   │   ├── /controllers # Controller logic
+│   │   │   └── usersController.ts  # User-related business logic
+│   │   ├── /middleware  # Express middleware
+│   │   │   └── errorHandler.ts     # Centralized error handling
+│   │   ├── /models     # Mongoose schemas
+│   │   │   ├── BehavioralDataModel.ts  # Schema for behavioral data, storing actions and context with encrypted fields.
+│   │   │   ├── ExternalDataModel.ts    # Schema for external data, linking to user ID with encrypted data fields.
+│   │   │   ├── UserModel.ts            # Schema for users, encrypting name and email.
+│   │   │   └── VolunteeredDataModel.ts # Schema for volunteered data, including type and encrypted value.
+│   │   ├── /routes     # Express routes
+│   │   │   └── users.ts             # User-related endpoints
+│   │   ├── /utils      # Utility functions
+│   │   │   └── encryption.ts        # Encryption/decryption utilities
+│   │   └── /.env       # Backend environment variables
 │   └── /frontend  # React/TypeScript frontend
 │       ├── /public        # Static assets
 │       │   ├── index.html         # React entry point, injecting bundled JS into the DOM.
@@ -103,17 +111,27 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 4. Set up backend environment variables: Add `ENCRYPTION_KEY=<32-byte-key>` to `src/backend/.env`.
 5. Set up frontend environment variables: Add `REACT_APP_API_URL=http://localhost:3000` to `src/frontend/src/.env`.
 6. Start MongoDB via Docker: `docker-compose up -d`
-7. Start the app: `npm start`
+7. Build the backend: `npm run build:backend`
+8. Start the app: `npm start`
    - Backend runs on `http://localhost:3000`
    - Frontend runs on `http://localhost:3001`
-8. Open `http://localhost:3001` in your browser.
+9. Open `http://localhost:3001` in your browser.
 
 ### Test
-1. Run unit tests: `npm test`
-   - Backend: `npm run test:backend`
-   - Frontend: `npm run test:frontend` (run from `src/frontend`)
-   - All tests: `npm run test-once`
-   - Uses Jest with `mongodb-memory-server`.
+1. Run unit tests:
+   - All tests: `npm test`
+   - Backend (watch mode): `npm run test:backend`
+   - Backend (single run): `npm run test:backend-once`
+   - Frontend: `npm run test:frontend`
+   - Frontend (single run): `npm run test:frontend-once`
+2. Test coverage includes:
+   - User CRUD operations
+   - Data encryption/decryption
+   - Error handling
+   - Input validation
+3. Manual API testing:
+   - Use the REST Client extension with `tests/integration/api-test.http`
+   - Test endpoints: POST /users, GET /users/:id, PUT /users/:id
 
 ### Deploy
 *(To be added as deployment is planned.)*
