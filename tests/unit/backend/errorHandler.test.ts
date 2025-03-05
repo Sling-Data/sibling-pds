@@ -6,6 +6,20 @@ describe("Error Handler Middleware", () => {
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction = jest.fn();
   let responseObject = {};
+  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    // Mock console methods to suppress logs
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    // Restore console methods
+    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
+  });
 
   beforeEach(() => {
     mockRequest = {};

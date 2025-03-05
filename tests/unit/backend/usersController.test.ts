@@ -35,8 +35,14 @@ describe("Users Controller", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let responseObject = {};
+  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
 
   beforeAll(async () => {
+    // Mock console methods to suppress logs
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
@@ -44,6 +50,10 @@ describe("Users Controller", () => {
   });
 
   afterAll(async () => {
+    // Restore console methods
+    consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
+
     await mongoose.disconnect();
     await mongoServer.stop();
     delete process.env.ENCRYPTION_KEY;
