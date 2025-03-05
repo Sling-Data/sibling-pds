@@ -11,13 +11,23 @@ interface ErrorResponse {
   message: string;
 }
 
-export function useFetch<T>(url: string, deps: any = null): FetchResponse<T> {
+export function useFetch<T>(
+  url: string | null,
+  deps: any = null
+): FetchResponse<T> {
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
+    if (!url) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
     const fetchData = async () => {
       try {

@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
+import { useUser } from '../context/UserContext';
 import './Profile.css';
-
-interface ProfileProps {
-  userId: string;
-}
 
 interface UserData {
   name: string;
@@ -20,11 +17,12 @@ interface PrivacySettings {
   dataSharing: boolean;
 }
 
-function Profile({ userId }: ProfileProps) {
+function Profile() {
+  const { userId } = useUser();
   const [shouldRefetch, setShouldRefetch] = useState(0);
   const { data: userData, loading, error: fetchError } = useFetch<UserData>(
-    `${process.env.REACT_APP_API_URL}/users/${userId}`,
-    shouldRefetch // Add this as a dependency to trigger re-fetch
+    userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null,
+    shouldRefetch
   );
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserData>({ name: '', email: '' });
@@ -69,7 +67,7 @@ function Profile({ userId }: ProfileProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateForm() || !userId) {
       return;
     }
 
@@ -115,6 +113,10 @@ function Profile({ userId }: ProfileProps) {
       setFormErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
+
+  if (!userId) {
+    return <div className="error-message">No user ID provided</div>;
+  }
 
   if (loading) {
     return <div>Loading profile...</div>;

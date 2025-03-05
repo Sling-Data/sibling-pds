@@ -32,7 +32,7 @@ describe('useFetch', () => {
       json: async () => mockUser
     });
 
-    const { result } = renderHook(() => useFetch<TestUser>('/api/users/123'));
+    const { result } = renderHook(() => useFetch<TestUser>('/users/123'));
 
     // Initial state
     expect(result.current.loading).toBe(true);
@@ -57,7 +57,7 @@ describe('useFetch', () => {
       json: async () => ({ status: 'error', message: 'User not found' })
     });
 
-    const { result } = renderHook(() => useFetch<TestUser>('/api/users/123'));
+    const { result } = renderHook(() => useFetch<TestUser>('/users/123'));
 
     // Initial state
     expect(result.current.loading).toBe(true);
@@ -78,7 +78,7 @@ describe('useFetch', () => {
     const mockFetch = global.fetch as jest.Mock;
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-    const { result } = renderHook(() => useFetch<TestUser>('/api/users/123'));
+    const { result } = renderHook(() => useFetch<TestUser>('/users/123'));
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);

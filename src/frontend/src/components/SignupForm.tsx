@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
+import './SignupForm.css';
 
 interface SignupFormProps {
-  onSignupSuccess: (userId: string) => void;
-}
-
-interface FormData {
-  name: string;
-  email: string;
+  onSuccess: (userId: string) => void;
 }
 
 interface FormErrors {
@@ -15,34 +11,27 @@ interface FormErrors {
   submit?: string;
 }
 
-const SignupForm: React.FC<SignupFormProps> = ({ onSignupSuccess }) => {
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: ''
-  });
-
+export default function SignupForm({ onSuccess }: SignupFormProps) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const newErrors: FormErrors = {};
-    let isValid = true;
-
-    if (!formData.name.trim()) {
+    
+    if (!name.trim()) {
       newErrors.name = 'Name is required';
-      isValid = false;
     }
-
-    if (!formData.email.trim()) {
+    
+    if (!email.trim()) {
       newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
       newErrors.email = 'Please enter a valid email address';
-      isValid = false;
     }
-
+    
     setErrors(newErrors);
-    return isValid;
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,17 +40,19 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupSuccess }) => {
     if (!validateForm()) {
       return;
     }
-
+    
     setIsSubmitting(true);
-    setErrors({});
-
+    
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name,
+          email,
+        }),
       });
 
       if (!response.ok) {
@@ -69,7 +60,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupSuccess }) => {
       }
 
       const data = await response.json();
-      onSignupSuccess(data._id);
+      onSuccess(data._id);
     } catch (error) {
       setErrors({
         submit: 'Failed to sign up'
@@ -77,13 +68,6 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupSuccess }) => {
       console.error('Signup error:', error);
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -96,37 +80,33 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSignupSuccess }) => {
           <input
             id="name"
             type="text"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Enter your name"
-            disabled={isSubmitting}
           />
           {errors.name && <div className="error-message">{errors.name}</div>}
         </div>
-
+        
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            disabled={isSubmitting}
           />
           {errors.email && <div className="error-message">{errors.email}</div>}
         </div>
-
+        
         {errors.submit && (
           <div className="error-message submit-error">{errors.submit}</div>
         )}
-
+        
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          Create Account
         </button>
       </form>
     </div>
   );
-};
-
-export default SignupForm; 
+} 
