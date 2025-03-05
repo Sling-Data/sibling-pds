@@ -99,7 +99,7 @@ function Profile() {
       console.error('Error updating profile:', error);
       setSubmitStatus({
         success: false,
-        message: 'Failed to update profile. Please try again.'
+        message: 'Failed to update profile'
       });
     } finally {
       setIsSubmitting(false);
@@ -115,15 +115,15 @@ function Profile() {
   };
 
   if (!userId) {
-    return <div className="error-message">No user ID provided</div>;
+    return <div>No user ID provided</div>;
   }
 
   if (loading) {
-    return <div>Loading profile...</div>;
+    return <div>Loading...</div>;
   }
 
   if (fetchError) {
-    return <div className="error-message">{fetchError}</div>;
+    return <div>Error: {fetchError}</div>;
   }
 
   if (!userData) {

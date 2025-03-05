@@ -9,10 +9,11 @@ const UserContext = createContext<UserState | undefined>(undefined);
 
 interface UserProviderProps {
   children: ReactNode;
+  initialUserId?: string | null;
 }
 
-export function UserProvider({ children }: UserProviderProps) {
-  const [userId, setUserId] = useState<string | null>(null);
+export function UserProvider({ children, initialUserId = null }: UserProviderProps) {
+  const [userId, setUserId] = useState<string | null>(initialUserId);
 
   const value = {
     userId,
