@@ -15,7 +15,7 @@
     "test:backend": "jest -c jest.config.backend.js --watch --silent",
     "test:backend-once": "jest -c jest.config.backend.js --runInBand --silent",
     "test:frontend": "cd src/frontend && npm test",
-    "test:frontend-once": "cd src/frontend && npm test-once",
+    "test:frontend-once": "cd src/frontend && npm run test-once",
     "eject": "cd src/frontend && npm run eject"
   },
   "devDependencies": {
@@ -30,6 +30,7 @@
     "@types/supertest": "^6.0.2",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
+    "jest-environment-jsdom": "^29.7.0",
     "mongodb-memory-server": "^10.1.4",
     "nodemon": "^3.1.9",
     "supertest": "^7.0.0",

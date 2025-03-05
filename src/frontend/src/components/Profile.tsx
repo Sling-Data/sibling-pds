@@ -19,8 +19,8 @@ interface PrivacySettings {
 
 function Profile() {
   const { userId } = useUser();
-  const [shouldRefetch, setShouldRefetch] = useState(0);
-  const { data: userData, loading, error: fetchError } = useFetch<UserData>(
+  const [shouldRefetch, _setShouldRefetch] = useState(0);
+  const { data: userData, loading, error: fetchError, refetch } = useFetch<UserData>(
     userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null,
     shouldRefetch
   );
@@ -87,8 +87,8 @@ function Profile() {
         throw new Error(`HTTP error! status: ${updateResponse.status}`);
       }
 
-      // Trigger a re-fetch by incrementing the counter
-      setShouldRefetch(prev => prev + 1);
+      // Use refetch instead of shouldRefetch
+      await refetch();
       
       setSubmitStatus({
         success: true,
@@ -132,13 +132,15 @@ function Profile() {
 
   return (
     <div className="profile-container">
+      {fetchError && (
+        <div className="error-message">
+          Error: {fetchError}
+        </div>
+      )}
       <div className="profile-header">
         <h2>User Profile</h2>
         {!isEditing && (
-          <button 
-            className="edit-button"
-            onClick={() => setIsEditing(true)}
-          >
+          <button className="edit-button" onClick={() => setIsEditing(true)}>
             Edit Profile
           </button>
         )}
