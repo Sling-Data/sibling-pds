@@ -1,3 +1,5 @@
+// @ts-expect-error React is used implicitly with JSX
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../components/App';
@@ -37,17 +39,17 @@ describe('App Component', () => {
     );
 
     // Fill out and submit signup form
-    fireEvent.change(screen.getByLabelText('Name'), {
+    fireEvent.change(screen.getByRole('textbox', { name: /name/i }), {
       target: { value: 'Test User' },
     });
-    fireEvent.change(screen.getByLabelText('Email'), {
+    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
       target: { value: 'test@example.com' },
     });
-    fireEvent.click(screen.getByText('Create Account'));
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     // Wait for DataInput to appear
     await waitFor(() => {
-      expect(screen.getByText('Personal Information')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /personal information/i })).toBeInTheDocument();
     });
 
     expect(global.fetch).toHaveBeenCalledTimes(1);
@@ -80,62 +82,62 @@ describe('App Component', () => {
     );
 
     // Fill out and submit signup form
-    fireEvent.change(screen.getByLabelText('Name'), {
+    fireEvent.change(screen.getByRole('textbox', { name: /name/i }), {
       target: { value: 'Test User' },
     });
-    fireEvent.change(screen.getByLabelText('Email'), {
+    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
       target: { value: 'test@example.com' },
     });
-    fireEvent.click(screen.getByText('Create Account'));
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     // Fill out and submit data form
     await waitFor(() => {
-      expect(screen.getByText('Personal Information')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /personal information/i })).toBeInTheDocument();
     });
 
     // Fill out required fields
-    fireEvent.change(screen.getByLabelText('Location'), {
+    fireEvent.change(screen.getByRole('textbox', { name: /location/i }), {
       target: { value: 'New York' },
     });
     
     // Select interests
-    fireEvent.click(screen.getByLabelText('Sports'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /sports/i }));
     
     // Select primary goal
-    fireEvent.change(screen.getByLabelText('Primary Goal'), {
+    fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), {
       target: { value: 'fitness' },
     });
     
     // Select profession
-    fireEvent.change(screen.getByLabelText('Profession'), {
+    fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), {
       target: { value: 'tech' },
     });
     
     // Select communication style
-    fireEvent.click(screen.getByLabelText('Direct'));
+    fireEvent.click(screen.getByRole('radio', { name: /direct/i }));
     
     // Select availability
-    fireEvent.click(screen.getByLabelText('Morning'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /morning/i }));
     
     // Select fitness level
-    fireEvent.change(screen.getByLabelText('Fitness Level'), {
+    fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), {
       target: { value: 'intermediate' },
     });
     
     // Select learning style
-    fireEvent.click(screen.getByLabelText('Visual'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /visual/i }));
     
     // Enter age
-    fireEvent.change(screen.getByLabelText('Age'), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: /age/i }), {
       target: { value: '25' },
     });
 
     // Submit the form
-    fireEvent.click(screen.getByText('Submit'));
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
 
     // Wait for Profile to appear and verify its contents
     await waitFor(() => {
-      expect(screen.getByText('User Profile')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /user profile/i })).toBeInTheDocument();
       expect(screen.getByText(mockUserData.name)).toBeInTheDocument();
       expect(screen.getByText(mockUserData.email)).toBeInTheDocument();
     });

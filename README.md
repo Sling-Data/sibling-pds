@@ -30,66 +30,67 @@ Enable individuals to own their data, refine it, and unlock tailored AI assistan
 Make AI a trusted, personalized partner via a user-controlled data foundation.
 
 /sibling-pds
-├── /docs          # Documentation
-│   └── /json      # Worker Grok JSON outputs, intended for storing wireframes or specs like Dana's (currently empty).
+├── /.vscode         # VS Code configuration
+│   ├── launch.json          # Debug configuration for Jest tests
+│   └── settings.json        # VS Code settings including Jest configuration
 ├── /src           # Source code
 │   ├── /backend   # Node.js/TypeScript backend
-│   │   ├── /config     # Configuration files (currently empty, reserved for future config needs).
+│   │   ├── /config     # Configuration files
 │   │   ├── /controllers # Controller logic
 │   │   │   └── usersController.ts  # User-related business logic
 │   │   ├── /middleware  # Express middleware
 │   │   │   └── errorHandler.ts     # Centralized error handling
 │   │   ├── /models     # Mongoose schemas
-│   │   │   ├── BehavioralDataModel.ts  # Schema for behavioral data, storing actions and context with encrypted fields.
-│   │   │   ├── ExternalDataModel.ts    # Schema for external data, linking to user ID with encrypted data fields.
-│   │   │   ├── UserModel.ts            # Schema for users, encrypting name and email.
-│   │   │   └── VolunteeredDataModel.ts # Schema for volunteered data, including type and encrypted value.
+│   │   │   ├── BehavioralDataModel.ts
+│   │   │   ├── ExternalDataModel.ts
+│   │   │   ├── UserModel.ts
+│   │   │   └── VolunteeredDataModel.ts
 │   │   ├── /routes     # Express routes
-│   │   │   └── users.ts             # User-related endpoints
+│   │   │   └── users.ts
 │   │   ├── /utils      # Utility functions
-│   │   │   └── encryption.ts        # Encryption/decryption utilities
+│   │   │   └── encryption.ts
 │   │   └── /.env       # Backend environment variables
 │   └── /frontend  # React/TypeScript frontend
-│       ├── /public        # Static assets
-│       │   ├── index.html         # React entry point, injecting bundled JS into the DOM.
-│       │   ├── logo.svg           # Project logo for display in the application.
-│       │   └── manifest.json      # Web app manifest for PWA features, defining metadata.
-│       └── /src           # React source code
-│           ├── /tests # Frontend unit tests
-│           │   ├── App.test.tsx          # Tests App component rendering and navigation.
-│           │   ├── DataInput.test.tsx    # Tests DataInput form rendering and submission.
-│           │   ├── Profile.test.tsx      # Tests Profile view and edit functionality.
-│           │   └── SignupForm.test.tsx   # Tests SignupForm submission and validation.
+│       ├── /public     # Static assets
+│       │   ├── index.html
+│       │   ├── logo.svg
+│       │   └── manifest.json
+│       └── /src        # React source code
+│           ├── /__mocks__/
+│           │   └── styleMock.ts    # CSS module mock for tests
+│           ├── /__tests__/         # Frontend unit tests
+│           │   ├── App.test.tsx
+│           │   ├── DataInput.test.tsx
+│           │   ├── Profile.test.tsx
+│           │   ├── SignupForm.test.tsx
+│           │   ├── UserContext.test.tsx
+│           │   ├── integration.test.tsx
+│           │   └── useFetch.test.tsx
 │           ├── /components
-│           │   ├── App.tsx               # Main app component, managing state and rendering SignupForm, DataInput, or Profile.
-│           │   ├── DataInput.tsx         # Form component for volunteered data with 8 fields, validated and submitted to /volunteered-data.
-│           │   ├── Profile.tsx           # Displays and edits user profile (name, email) with privacy settings placeholder.
-│           │   └── SignupForm.tsx        # Form for user creation, posting to /users.
-│           ├── App.css                  # Styles for App component layout.
-│           ├── index.css                # Global CSS for the application.
-│           ├── index.tsx                # React entry point, rendering App into DOM.
-│           ├── logo.svg                 # Logo asset for branding.
-│           ├── react-app-env.d.ts       # TypeScript declaration for React environment, enhancing type safety.
-│           ├── reportWebVitals.ts       # Performance monitoring utility (unused for now).
-│           ├── package.json  # Frontend-specific dependencies and scripts, listing React (18.2.0), TypeScript (4.9.5), and scripts like test-once.
-│           └── /.env          # Frontend environment variables, including REACT_APP_API_URL=http://localhost:3000, loaded by react-scripts.
+│           │   ├── App.tsx
+│           │   ├── DataInput.tsx
+│           │   ├── Profile.tsx
+│           │   └── SignupForm.tsx
+│           ├── /hooks
+│           │   └── useFetch.ts
+│           ├── /context
+│           │   └── UserContext.tsx
+│           ├── setupTests.ts       # Frontend test setup and mocks
+│           ├── App.css
+│           ├── index.css
+│           ├── index.tsx
+│           └── .babelrc            # Frontend Babel configuration
 ├── /tests         # Test files
-│   ├── /integration  # Integration tests
-│   │   └── api-test.http  # HTTP test file for manual API endpoint testing (e.g., GET /user-data/:id).
-│   └── /unit         # Backend unit tests
-│       └── /backend  # Backend unit tests
-│           ├── api.test.ts      # Tests API endpoints (15 cases, e.g., POST /users validation, PUT /users/:id).
-│           └── setup.ts         # Test setup with MongoMemoryServer for isolated testing.
-├── docker-compose.yml  # Docker configuration, defining MongoDB services, mapping port 27018, and managing data volumes.
-├── jest.config.js      # Base Jest configuration, extended by domain-specific configs for testing setup.
-├── jest.config.backend.js      # Jest config for backend tests, specifying TypeScript support and MongoMemoryServer.
-├── jest.config.frontend.js     # Jest config for frontend tests, setting up jsdom environment for React.
-├── package-lock.json   # Dependency lock file, ensuring consistent installs across environments.
-├── package.json        # Backend and root project dependencies and scripts, including Express, Mongoose, and test-once combining runs.
-├── README.md           # This file, documenting setup, encryption, and file structure.
-├── tsconfig.json       # TypeScript configuration for the project, setting jsx to react-jsx and path aliases (e.g., @backend/, @frontend/).
-└── .gitignore          # Git ignore file, excluding node_modules, .env, and build artifacts from version control.
-
+│   └── /unit
+│       ├── /backend              # Backend unit tests
+│       │   ├── api.test.ts
+│       │   ├── errorHandler.test.ts
+│       │   └── usersController.test.ts
+│       └── setup.ts             # Backend test setup and mocks
+├── babel.config.js              # Root Babel configuration
+├── jest.config.js              # Jest configuration for both frontend and backend
+├── package.json
+└── tsconfig.json
 
 ## Build, Run, Test, Deploy Instructions
 ### Prerequisites
@@ -120,18 +121,27 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 ### Test
 1. Run unit tests:
    - All tests: `npm test`
-   - Backend (watch mode): `npm run test:backend`
-   - Backend (single run): `npm run test:backend-once`
-   - Frontend: `npm run test:frontend`
-   - Frontend (single run): `npm run test:frontend-once`
+   - Single run: `npm run test-once`
+   - Debug tests using VS Code:
+     1. Open the Run and Debug tab
+     2. Select "Debug Jest Tests" configuration
+     3. Use Test Explorer to run specific tests
+     4. Set breakpoints in test files
 2. Test coverage includes:
    - User CRUD operations
    - Data encryption/decryption
    - Error handling
    - Input validation
-3. Manual API testing:
-   - Use the REST Client extension with `tests/integration/api-test.http`
-   - Test endpoints: POST /users, GET /users/:id, PUT /users/:id
+   - Frontend component rendering
+   - Form validation
+   - API integration
+3. Test Configuration:
+   - Jest configuration in `jest.config.js`
+   - Babel configuration in `babel.config.js` and frontend `.babelrc`
+   - VS Code debug settings in `.vscode/launch.json`
+   - Test setup files:
+     - Frontend: `src/frontend/src/setupTests.ts`
+     - Backend: `tests/unit/setup.ts`
 
 ### Deploy
 *(To be added as deployment is planned.)*

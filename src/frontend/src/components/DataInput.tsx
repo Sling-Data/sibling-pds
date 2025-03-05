@@ -49,6 +49,16 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
     message?: string;
   }>({});
 
+  const validateAge = (age: string) => {
+    const ageNum = parseInt(age);
+    if (!age) {
+      return 'Please enter your age';
+    } else if (isNaN(ageNum) || ageNum < 13 || ageNum > 100) {
+      return 'Please enter a valid age between 13 and 100';
+    }
+    return '';
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     let isValid = true;
@@ -102,12 +112,9 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
     }
 
     // Validate age
-    const ageNum = parseInt(formData.age);
-    if (!formData.age) {
-      newErrors.age = 'Please enter your age';
-      isValid = false;
-    } else if (isNaN(ageNum) || ageNum < 13 || ageNum > 100) {
-      newErrors.age = 'Please enter a valid age between 13 and 100';
+    const ageError = validateAge(formData.age);
+    if (ageError) {
+      newErrors.age = ageError;
       isValid = false;
     }
 
@@ -194,8 +201,13 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user makes a selection
-    if (errors[field]) {
+    
+    // Validate age on change
+    if (field === 'age') {
+      const ageError = validateAge(value);
+      setErrors(prev => ({ ...prev, age: ageError || undefined }));
+    } else if (errors[field]) {
+      // Clear other field errors when user makes a selection
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };

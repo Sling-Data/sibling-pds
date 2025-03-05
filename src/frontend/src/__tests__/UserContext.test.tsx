@@ -1,3 +1,5 @@
+// @ts-expect-error React is used implicitly with JSX
+import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { act } from 'react';
 import { UserProvider, useUser } from '../context/UserContext';
@@ -17,7 +19,7 @@ function TestComponent() {
   const { userId, setUserId } = useUser();
   return (
     <div>
-      <div data-testid="user-id">{userId || 'no-user'}</div>
+      <div>{userId || 'no-user'}</div>
       <button onClick={() => setUserId('test-123')}>Set User</button>
     </div>
   );
@@ -39,13 +41,13 @@ describe('UserContext', () => {
       </UserProvider>
     );
 
-    expect(screen.getByTestId('user-id')).toHaveTextContent('no-user');
+    expect(screen.getByText('no-user')).toBeInTheDocument();
     
     await act(async () => {
-      fireEvent.click(screen.getByText('Set User'));
+      fireEvent.click(screen.getByRole('button', { name: /set user/i }));
     });
 
-    expect(screen.getByTestId('user-id')).toHaveTextContent('test-123');
+    expect(screen.getByText('test-123')).toBeInTheDocument();
   });
 
   it('Profile component uses userId from context', async () => {
@@ -67,7 +69,7 @@ describe('UserContext', () => {
 
     // Set user ID
     await act(async () => {
-      fireEvent.click(screen.getByText('Set User'));
+      fireEvent.click(screen.getByRole('button', { name: /set user/i }));
     });
 
     // Wait for profile data to load

@@ -1,3 +1,5 @@
+// @ts-expect-error React is used implicitly with JSX
+import React from 'react';
 import { useState } from 'react';
 import SignupForm from './SignupForm';
 import DataInput from './DataInput';

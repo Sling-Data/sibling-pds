@@ -1,3 +1,5 @@
+// @ts-expect-error React is used implicitly with JSX
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
@@ -21,14 +23,14 @@ describe('SignupForm Component', () => {
 
   it('renders without crashing', () => {
     render(<SignupForm onSuccess={mockOnSuccess} />);
-    expect(screen.getByText('Create Your Account')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /create your account/i })).toBeInTheDocument();
   });
 
   it('shows validation errors for empty form submission', async () => {
     render(<SignupForm onSuccess={mockOnSuccess} />);
     
     await act(async () => {
-      fireEvent.click(screen.getByText('Create Account'));
+      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     });
     
     await waitFor(() => {
@@ -40,16 +42,14 @@ describe('SignupForm Component', () => {
   it('shows validation error for invalid email', async () => {
     render(<SignupForm onSuccess={mockOnSuccess} />);
     
-    await act(async () => {
-      fireEvent.change(screen.getByLabelText('Name'), {
-        target: { value: 'Test User' },
-      });
-      fireEvent.change(screen.getByLabelText('Email'), {
-        target: { value: 'invalid-email' },
-      });
-      
-      fireEvent.click(screen.getByText('Create Account'));
+    fireEvent.change(screen.getByRole('textbox', { name: /name/i }), {
+      target: { value: 'Test User' },
     });
+    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
+      target: { value: 'invalid-email' },
+    });
+    
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
@@ -65,14 +65,14 @@ describe('SignupForm Component', () => {
     render(<SignupForm onSuccess={mockOnSuccess} />);
     
     await act(async () => {
-      fireEvent.change(screen.getByLabelText('Name'), {
+      fireEvent.change(screen.getByRole('textbox', { name: /name/i }), {
         target: { value: 'Test User' },
       });
-      fireEvent.change(screen.getByLabelText('Email'), {
+      fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
         target: { value: 'test@example.com' },
       });
       
-      fireEvent.click(screen.getByText('Create Account'));
+      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     });
     
     await waitFor(() => {
@@ -103,14 +103,14 @@ describe('SignupForm Component', () => {
     render(<SignupForm onSuccess={mockOnSuccess} />);
     
     await act(async () => {
-      fireEvent.change(screen.getByLabelText('Name'), {
+      fireEvent.change(screen.getByRole('textbox', { name: /name/i }), {
         target: { value: 'Test User' },
       });
-      fireEvent.change(screen.getByLabelText('Email'), {
+      fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
         target: { value: 'test@example.com' },
       });
       
-      fireEvent.click(screen.getByText('Create Account'));
+      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     });
     
     await waitFor(() => {

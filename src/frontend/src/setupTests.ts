@@ -3,22 +3,30 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
+import { configure } from "@testing-library/react";
 
-// Mock console methods to suppress noisy logs during tests
-const originalConsoleError = console.error;
-const originalConsoleLog = console.log;
+// Configure Testing Library
+configure({
+  testIdAttribute: "data-testid",
+});
 
+// Mock fetch
+global.fetch = jest.fn();
+
+// Suppress console output during tests
 beforeAll(() => {
-  console.error = jest.fn();
-  console.log = jest.fn();
+  jest.spyOn(console, "log").mockImplementation(() => {});
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.spyOn(console, "warn").mockImplementation(() => {});
+  jest.spyOn(console, "debug").mockImplementation(() => {});
 });
 
+// Restore console after all tests
 afterAll(() => {
-  console.error = originalConsoleError;
-  console.log = originalConsoleLog;
+  jest.restoreAllMocks();
 });
 
-// Clear mocks between tests
+// Reset all mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();
 });

@@ -17,6 +17,15 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const validateEmail = (email: string) => {
+    if (!email.trim()) {
+      return 'Email is required';
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
   const validateForm = () => {
     const newErrors: FormErrors = {};
     
@@ -24,10 +33,9 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
       newErrors.name = 'Name is required';
     }
     
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+    const emailError = validateEmail(email);
+    if (emailError) {
+      newErrors.email = emailError;
     }
     
     setErrors(newErrors);
@@ -71,6 +79,13 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
     }
   };
 
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    const emailError = validateEmail(newEmail);
+    setErrors(prev => ({ ...prev, email: emailError || undefined }));
+  };
+
   return (
     <div className="signup-container">
       <h2>Create Your Account</h2>
@@ -93,7 +108,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             placeholder="Enter your email"
           />
           {errors.email && <div className="error-message">{errors.email}</div>}

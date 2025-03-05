@@ -1,3 +1,5 @@
+// @ts-expect-error React is used implicitly with JSX
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
