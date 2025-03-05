@@ -12,6 +12,7 @@
     "test-once": "npm run test:backend && cd src/frontend && npm run test-once",
     "test:backend": "jest -c jest.config.backend.js",
     "test:frontend": "cd src/frontend && npm test",
+    "test:frontend-once": "cd src/frontend && npm test-once",
     "eject": "cd src/frontend && npm run eject"
   },
   "devDependencies": {
