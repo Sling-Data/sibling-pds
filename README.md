@@ -20,6 +20,7 @@
     - [Design](#design)
     - [Research](#research)
     - [Compliance](#compliance)
+    - [DevOps](#devops)
 
 ## Project Overview
 Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing user autonomy, transparency, and security.
@@ -193,3 +194,6 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 - [Consent Flows (Compliance Clara, 2025-03-01)](docs/md/consent_flows_sibling.md)
 - [Crypto AES-256-CBC Assessment (Compliance Clara, 2025-03-01)](docs/md/crypto_aes256cbc_assessment_sibling.md)
 - [TLS Alternatives (Compliance Clara, 2025-03-03)](docs/md/tls_alternatives_sibling.md)
+
+### DevOps
+- [Google Cloud Setup Guide for Gmail API (DevOps Dylan, 2025-03-06)](docs/md/google_cloud_setup_guide.md)

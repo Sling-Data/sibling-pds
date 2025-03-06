@@ -1,0 +1,79 @@
+{
+  "task": {
+    "objective": "Set up Google Cloud project for Gmail API",
+    "domain": "DevOps",
+    "sub_context": "Configure a Google Cloud project for Sibling’s Gmail ingestion, including OAuth 2.0 credentials for backend use.",
+    "deliverable": "A detailed step-by-step guide for developers to set up a Google Cloud project with Gmail API and OAuth 2.0 credentials.",
+    "notes": "Use redirect URI http://localhost:3000/auth/callback for testing. Ensure credentials are securely managed. Incorporate lessons from initial setup."
+  },
+  "results": {
+    "configuration": {
+      "project_id": "Sibling-Gmail-Ingestion",
+      "api_enabled": ["Gmail API"],
+      "credentials": {
+        "client_id": "Placeholder (generate via OAuth 2.0 Client IDs)",
+        "client_secret": "Placeholder (generate via OAuth 2.0 Client IDs)",
+        "redirect_uri": "http://localhost:3000/auth/callback"
+      },
+      "setup_steps": [
+        {
+          "step": "Create a Google Cloud Project",
+          "description": "In the Google Cloud Console (https://console.cloud.google.com/), click the project dropdown, select 'New Project', and name it (e.g., 'Sibling-Gmail-Ingestion'). Enable billing if required (can reuse existing billing setup from prior projects).",
+          "notes": "Billing setup is only needed once per account unless a new payment method is required."
+        },
+        {
+          "step": "Enable the Gmail API",
+          "description": "Navigate to APIs & Services > Library, search for 'Gmail API', and click 'Enable'. Verify it appears under Enabled APIs & Services.",
+          "notes": "Ensure the API is enabled before proceeding to avoid 403 errors later."
+        },
+        {
+          "step": "Configure the OAuth Consent Screen",
+          "description": "Go to APIs & Services > OAuth consent screen. Select 'External' user type, set App name to 'Sibling Gmail Ingestion', User support email to developer’s email, and Developer contact to developer’s email. Add scope https://www.googleapis.com/auth/gmail.readonly, then save.",
+          "notes": "This sets the app in testing mode; only test users can authorize until verified by Google."
+        },
+        {
+          "step": "Add Test Users",
+          "description": "In the OAuth consent screen, scroll to 'Test users', click '+ Add users', and enter the Gmail addresses of testers (e.g., developer’s Gmail). Save the changes.",
+          "notes": "Test users must have Gmail accounts, as the Gmail API requires access to a Gmail inbox."
+        },
+        {
+          "step": "Generate OAuth 2.0 Credentials",
+          "description": "Navigate to APIs & Services > Credentials, click 'Create Credentials' > 'OAuth 2.0 Client IDs'. Choose 'Web application', name it (e.g., 'Sibling Gmail Web Client'), set Authorized JavaScript origins to http://localhost:3000, and Authorized redirect URIs to http://localhost:3000/auth/callback. Create the credentials, download the JSON file, and extract client_id and client_secret.",
+          "notes": "Keep credentials secure (e.g., in environment variables or encrypted storage); do not commit to version control."
+        },
+        {
+          "step": "Validate the Setup",
+          "description": "Generate an authorization URL using the google-auth-library (e.g., oauth2Client.generateAuthUrl({ scope: 'https://www.googleapis.com/auth/gmail.readonly', access_type: 'offline', prompt: 'consent' })). Open it in a browser, log in with a test user, and confirm the consent screen shows 'Sibling Gmail Ingestion'.",
+          "notes": "This confirms the app is correctly linked to the Google Cloud project."
+        },
+        {
+          "step": "Exchange Authorization Code for Tokens (Post-Flow Setup)",
+          "description": "After approval, the browser redirects to the redirect URI with a code (e.g., ?code=4/0AX...). Use oauth2Client.getToken(code) to exchange it for access_token and refresh_token. Store the refresh_token securely (e.g., in MongoDB with AES-256-CBC encryption).",
+          "notes": "The code expires in ~10 minutes and is single-use; if interrupted, restart the flow. Use access_type: 'offline' to get a refresh_token."
+        }
+      ],
+      "challenges": [
+        {
+          "issue": "Code expiration and interruption",
+          "description": "The authorization code expires after ~10 minutes and is single-use. If the user is interrupted (e.g., closes browser), they must restart the OAuth flow.",
+          "solution": "Implement a retry mechanism in the UI (e.g., 'Try connecting Gmail again') and regenerate the authorization URL as needed."
+        },
+        {
+          "issue": "No server for redirect URI",
+          "description": "Initially, no server was running at http://localhost:3000/auth/callback, requiring manual code capture.",
+          "solution": "Set up an Express.js endpoint (/auth/callback) to handle the redirect and automate token exchange."
+        },
+        {
+          "issue": "Deferred token testing",
+          "description": "Full token exchange testing was deferred due to lack of OAuth flow implementation.",
+          "solution": "Complete the flow implementation with Coder Cody to validate tokens with setCredentials and Gmail API calls."
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "worker": "DevOps Dylan",
+    "date": "2025-03-06",
+    "filename": "google_cloud_setup_guide_2025-03-06.json"
+  }
+}

@@ -1,7 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:3000
 @contentType = application/json
-@userId = 67c87a4fd9d681fe217e3741
+@userId = 67c98f830385ef76ba65cbce
 
 ### Test root endpoint
 # @name root
@@ -14,8 +14,8 @@ POST {{baseUrl}}/users
 Content-Type: {{contentType}}
 
 {
-    "name": "Test User",
-    "email": "test@example.com"
+    "name": "Tomé",
+    "email": "tome.m.dj@gmail.com"
 }
 
 ### Get user by ID (replace ID with the _id from the createUser response)
@@ -182,3 +182,17 @@ Content-Type: {{contentType}}
     "userId": "{{userId}}",
     "dataSourceType": "gmail"
 }
+
+### Test Gmail token generation
+# @name testGmailToken
+POST {{baseUrl}}/user-data-sources/test-gmail-token
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}"
+}
+
+### Get Gmail authorization URL
+# @name getGmailAuthUrl
+GET {{baseUrl}}/user-data-sources/gmail-auth-url
+Content-Type: {{contentType}}

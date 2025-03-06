@@ -3,6 +3,7 @@ import UserDataSourcesModel, {
   DataSourceType,
 } from "../models/UserDataSourcesModel";
 import { AppError } from "../middleware/errorHandler";
+import gmailClient from "../services/apiClients/gmailClient";
 
 const router = express.Router();
 
@@ -90,6 +91,30 @@ router.get(
     res.json({
       credentials,
     });
+  })
+);
+
+// Temporary endpoint for testing Gmail token generation
+router.post(
+  "/test-gmail-token",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.body;
+
+    if (!userId) {
+      throw new AppError("userId is required", 400);
+    }
+
+    const accessToken = await gmailClient.getAccessToken(userId);
+    res.json({ accessToken });
+  })
+);
+
+// Get Gmail authorization URL
+router.get(
+  "/gmail-auth-url",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const authUrl = gmailClient.generateAuthUrl();
+    res.json({ authUrl });
   })
 );
 
