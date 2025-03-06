@@ -196,3 +196,12 @@ Content-Type: {{contentType}}
 # @name getGmailAuthUrl
 GET {{baseUrl}}/test/gmail-auth-url?userId={{userId}}
 Content-Type: {{contentType}}
+
+### Test Gmail data fetching
+# @name gmailFetch
+POST http://localhost:3000/test/test-gmail-fetch
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}"
+}

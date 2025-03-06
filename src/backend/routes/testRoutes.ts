@@ -53,4 +53,24 @@ router.get(
   })
 );
 
+router.post("/test-gmail-fetch", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId || typeof userId !== "string") {
+      throw new AppError("userId is required in request body", 400);
+    }
+
+    const data = await gmailClient.fetchGmailData(userId);
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching Gmail data:", error);
+    const message =
+      error instanceof AppError ? error.message : "Failed to fetch Gmail data";
+    res.status(error instanceof AppError ? error.statusCode : 500).json({
+      status: "error",
+      message,
+    });
+  }
+});
+
 export default router;
