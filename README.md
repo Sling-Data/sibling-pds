@@ -150,12 +150,52 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 
 ## Tech Stack
 - **Backend**: 
-  - Node.js with TypeScript for server-side logic.
-  - Express.js for API routing and middleware.
-  - MongoDB (Community Edition) with Mongoose for data modeling, running in Docker on port 27018.
-  - Node.js native `crypto` module (AES-256-CBC) for data encryption.
+  - Core Technologies:
+    - Node.js with TypeScript for server-side logic
+    - Express.js for API routing and middleware
+    - MongoDB (Community Edition) with Mongoose for data modeling, running in Docker on port 27018
+  - Authentication & Security:
+    - Node.js native `crypto` module (AES-256-CBC) for data encryption
+    - OAuth2 authentication for external services (Gmail, Plaid)
+    - Google Auth Library for Gmail API integration
+  - Data Management:
+    - Mongoose schemas for data modeling and validation
+    - UserDataSources collection for external service credentials
+    - Automatic token refresh for OAuth2 services
+  - API Architecture:
+    - RESTful API design with Express routers
+    - Modular controller architecture
+    - Centralized error handling middleware
+    - Type-safe request/response handling
+  - Development Features:
+    - Hot reloading with ts-node-dev
+    - Environment-based configuration
+    - Comprehensive logging system
+    - API documentation with REST Client
 - **Frontend**: 
-  - React with TypeScript for dynamic user interfaces.
+  - Core Technologies:
+    - React 18.2.0 with TypeScript 4.9.5
+    - React DOM 18.2.0
+    - Create React App with react-scripts 5.0.1
+  - Modern React Features:
+    - Context API for state management (UserContext)
+    - Custom hooks for data fetching (useFetch with caching, retry logic)
+    - Functional components with hooks (useState, useEffect, useCallback)
+  - Testing Suite:
+    - Jest 29.7.0 with jest-environment-jsdom
+    - React Testing Library 16.2.0
+    - User Event Testing Library 13.5.0
+    - Integration tests for component interactions
+    - Jest Transform CSS for style imports
+  - Development Tools:
+    - TypeScript with strict type checking
+    - ESLint with react-app config
+    - Babel with React and TypeScript presets
+    - Hot module replacement
+    - Web Vitals for performance monitoring
+  - Browser Support:
+    - Modern evergreen browsers
+    - Configurable through browserslist
 - **Testing**: 
   - Jest with `ts-jest` and `supertest` for API unit tests.
   - MongoDB Memory Server for isolated test databases.

@@ -11,7 +11,7 @@ interface GmailCredentials {
 
 class GmailClient {
   private oauth2Client: OAuth2Client | null = null;
-  private readonly GMAIL_SCOPES = [
+  private readonly GMAIL_SCOPES = process.env.GMAIL_SCOPES || [
     "https://www.googleapis.com/auth/gmail.readonly",
   ];
   private readonly REDIRECT_URI =
