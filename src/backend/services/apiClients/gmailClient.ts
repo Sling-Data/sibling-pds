@@ -1,4 +1,4 @@
-import { OAuth2Client } from "google-auth-library";
+import { OAuth2Client, Credentials } from "google-auth-library";
 import UserDataSourcesModel, {
   DataSourceType,
 } from "../../models/UserDataSourcesModel";
@@ -9,16 +9,22 @@ interface GmailCredentials {
   expiry: string;
 }
 
-class GmailClient {
+export class GmailClient {
   private oauth2Client: OAuth2Client | null = null;
-  private readonly GMAIL_SCOPES = process.env.GMAIL_SCOPES || [
+  private readonly GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
   ];
   private readonly REDIRECT_URI =
     process.env.GOOGLE_OAUTH_REDIRECT_URI ||
     "http://localhost:3000/auth/callback";
 
+  constructor(private customOAuth2Client?: OAuth2Client) {}
+
   private getOAuth2Client(): OAuth2Client {
+    if (this.customOAuth2Client) {
+      return this.customOAuth2Client;
+    }
+
     if (!this.oauth2Client) {
       const clientId = process.env.GOOGLE_CLIENT_ID;
       const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -47,6 +53,30 @@ class GmailClient {
       prompt: "consent", // Force consent screen to ensure we get refresh token
       state: state, // Pass through the state parameter if provided
     });
+  }
+
+  async exchangeCodeForTokens(code: string): Promise<Credentials> {
+    const oauth2Client = this.getOAuth2Client();
+    const { tokens } = await oauth2Client.getToken(code);
+
+    // Validate required token fields
+    if (!tokens.access_token) {
+      throw new Error(
+        "Invalid token response from Google: missing access_token"
+      );
+    }
+    if (!tokens.refresh_token) {
+      throw new Error(
+        "Invalid token response from Google: missing refresh_token"
+      );
+    }
+    if (!tokens.expiry_date) {
+      throw new Error(
+        "Invalid token response from Google: missing expiry_date"
+      );
+    }
+
+    return tokens;
   }
 
   async getAccessToken(userId: string): Promise<string> {
@@ -84,7 +114,7 @@ class GmailClient {
         userId,
         DataSourceType.GMAIL,
         {
-          accessToken: refreshedCredentials.access_token,
+          accessToken: refreshedCredentials.access_token!,
           refreshToken:
             refreshedCredentials.refresh_token || credentials.refreshToken, // Keep old refresh token if new one not provided
           expiry: new Date(refreshedCredentials.expiry_date!).toISOString(),

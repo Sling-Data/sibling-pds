@@ -1,7 +1,7 @@
 ### Variables
 @baseUrl = http://localhost:3000
 @contentType = application/json
-@userId = 67c98f830385ef76ba65cbce
+@userId = 67c9dcd230beec3d0e0c19c6
 
 ### Test root endpoint
 # @name root
@@ -185,7 +185,7 @@ Content-Type: {{contentType}}
 
 ### Test Gmail token generation
 # @name testGmailToken
-POST {{baseUrl}}/user-data-sources/test-gmail-token
+POST {{baseUrl}}/test/test-gmail-token
 Content-Type: {{contentType}}
 
 {
@@ -194,5 +194,5 @@ Content-Type: {{contentType}}
 
 ### Get Gmail authorization URL
 # @name getGmailAuthUrl
-GET {{baseUrl}}/user-data-sources/gmail-auth-url
+GET {{baseUrl}}/test/gmail-auth-url?userId={{userId}}
 Content-Type: {{contentType}}
