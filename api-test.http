@@ -117,3 +117,68 @@ Content-Type: {{contentType}}
     "name": "Updated User",
     "email": "updated@example.com"
 }
+
+### User Data Sources Tests ###
+
+### Store Gmail credentials
+# @name storeGmailCredentials
+POST {{baseUrl}}/user-data-sources
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "dataSourceType": "gmail",
+    "credentials": {
+        "accessToken": "ya29.a0AfB_byC...",
+        "refreshToken": "1//04u...",
+        "expiry": "2024-03-21T12:00:00.000Z"
+    }
+}
+
+### Store Plaid credentials
+# @name storePlaidCredentials
+POST {{baseUrl}}/user-data-sources
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "dataSourceType": "plaid",
+    "credentials": {
+        "accessToken": "access-sandbox-1234...",
+        "itemId": "M5eVJqLnv3tbzdW...",
+        "expiry": "2024-03-21T12:00:00.000Z"
+    }
+}
+
+### Get Gmail credentials
+# @name getGmailCredentials
+GET {{baseUrl}}/user-data-sources/{{userId}}/gmail
+
+### Get Plaid credentials
+# @name getPlaidCredentials
+GET {{baseUrl}}/user-data-sources/{{userId}}/plaid
+
+### Test validation errors for user data sources
+
+### Try invalid data source type (should return 400)
+# @name invalidDataSourceType
+POST {{baseUrl}}/user-data-sources
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "dataSourceType": "invalid",
+    "credentials": {
+        "accessToken": "test"
+    }
+}
+
+### Try missing credentials (should return 400)
+# @name missingCredentials
+POST {{baseUrl}}/user-data-sources
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "dataSourceType": "gmail"
+}

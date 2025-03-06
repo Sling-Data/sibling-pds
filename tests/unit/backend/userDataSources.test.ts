@@ -8,10 +8,10 @@ import * as encryption from "@backend/utils/encryption";
 describe("UserDataSources Model", () => {
   let mongoServer: MongoMemoryServer;
   const userId = new mongoose.Types.ObjectId().toString();
-  const testCredentials = JSON.stringify({
+  const testCredentials = {
     accessToken: "test-token",
     refreshToken: "test-refresh-token",
-  });
+  };
 
   beforeAll(async () => {
     // Set up MongoDB Memory Server
@@ -46,7 +46,9 @@ describe("UserDataSources Model", () => {
       expect(dataSource.dataSourceType).toBe(DataSourceType.GMAIL);
       expect(dataSource.credentials).toHaveProperty("iv");
       expect(dataSource.credentials).toHaveProperty("content");
-      expect(dataSource.credentials.content).not.toBe(testCredentials);
+      expect(dataSource.credentials.content).not.toBe(
+        JSON.stringify(testCredentials)
+      );
     });
 
     it("should update existing credentials", async () => {
@@ -58,10 +60,10 @@ describe("UserDataSources Model", () => {
       );
 
       // Update with new credentials
-      const newCredentials = JSON.stringify({
+      const newCredentials = {
         accessToken: "new-token",
         refreshToken: "new-refresh-token",
-      });
+      };
 
       const updatedDataSource = await UserDataSourcesModel.storeCredentials(
         userId,
@@ -73,8 +75,8 @@ describe("UserDataSources Model", () => {
       const decryptedCredentials = encryption.decrypt(
         updatedDataSource.credentials
       );
-      expect(decryptedCredentials).toBe(newCredentials);
-      expect(decryptedCredentials).not.toBe(testCredentials);
+      expect(JSON.parse(decryptedCredentials)).toEqual(newCredentials);
+      expect(JSON.parse(decryptedCredentials)).not.toEqual(testCredentials);
     });
 
     it("should enforce unique userId and dataSourceType combination", async () => {
@@ -86,10 +88,10 @@ describe("UserDataSources Model", () => {
       );
 
       // Try to create another record with the same userId and dataSourceType
-      const duplicateCredentials = JSON.stringify({
+      const duplicateCredentials = {
         accessToken: "duplicate-token",
         refreshToken: "duplicate-refresh-token",
-      });
+      };
 
       // Should update instead of creating new
       const result = await UserDataSourcesModel.storeCredentials(
@@ -106,7 +108,7 @@ describe("UserDataSources Model", () => {
 
       // Verify it's the updated credentials
       const decryptedCredentials = encryption.decrypt(result.credentials);
-      expect(decryptedCredentials).toBe(duplicateCredentials);
+      expect(JSON.parse(decryptedCredentials)).toEqual(duplicateCredentials);
     });
   });
 
@@ -125,7 +127,7 @@ describe("UserDataSources Model", () => {
         DataSourceType.GMAIL
       );
 
-      expect(retrievedCredentials).toBe(testCredentials);
+      expect(retrievedCredentials).toEqual(testCredentials);
     });
 
     it("should return null for non-existent credentials", async () => {
@@ -158,10 +160,10 @@ describe("UserDataSources Model", () => {
       );
 
       // Store Plaid credentials
-      const plaidCredentials = JSON.stringify({
+      const plaidCredentials = {
         accessToken: "plaid-token",
         itemId: "plaid-item-id",
-      });
+      };
       await UserDataSourcesModel.storeCredentials(
         userId,
         DataSourceType.PLAID,
@@ -182,8 +184,8 @@ describe("UserDataSources Model", () => {
         DataSourceType.PLAID
       );
 
-      expect(gmailCreds).toBe(testCredentials);
-      expect(plaidCreds).toBe(plaidCredentials);
+      expect(gmailCreds).toEqual(testCredentials);
+      expect(plaidCreds).toEqual(plaidCredentials);
     });
   });
 });

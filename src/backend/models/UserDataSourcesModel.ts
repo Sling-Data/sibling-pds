@@ -24,7 +24,7 @@ export interface UserDataSourceDocument extends Document {
 export interface CreateUserDataSource {
   userId: string;
   dataSourceType: DataSourceType;
-  credentials: string;
+  credentials: string | object;
 }
 
 const userDataSourcesSchema = new Schema<UserDataSourceDocument>(
@@ -63,9 +63,13 @@ userDataSourcesSchema.index({ userId: 1, dataSourceType: 1 }, { unique: true });
 userDataSourcesSchema.statics.storeCredentials = async function (
   userId: string,
   dataSourceType: DataSourceType,
-  plainCredentials: string
+  credentials: string | object
 ): Promise<UserDataSourceDocument> {
-  const encryptedCredentials = encryption.encrypt(plainCredentials);
+  // Convert credentials to string if it's an object
+  const credentialsString =
+    typeof credentials === "string" ? credentials : JSON.stringify(credentials);
+
+  const encryptedCredentials = encryption.encrypt(credentialsString);
 
   // Validate dataSourceType before proceeding
   if (!Object.values(DataSourceType).includes(dataSourceType)) {
@@ -83,7 +87,7 @@ userDataSourcesSchema.statics.storeCredentials = async function (
     {
       new: true,
       upsert: true,
-      runValidators: true, // Enable validation for updates
+      runValidators: true,
     }
   );
 };
@@ -95,7 +99,14 @@ userDataSourcesSchema.statics.getCredentials = async function (
   const dataSource = await this.findOne({ userId, dataSourceType });
   if (!dataSource) return null;
 
-  return encryption.decrypt(dataSource.credentials);
+  const decrypted = encryption.decrypt(dataSource.credentials);
+  try {
+    // Try to parse the decrypted string as JSON
+    return JSON.parse(decrypted);
+  } catch {
+    // If parsing fails, return the raw string
+    return decrypted;
+  }
 };
 
 // Create and export the model
@@ -105,7 +116,7 @@ const UserDataSourcesModel = mongoose.model<
     storeCredentials(
       userId: string,
       dataSourceType: DataSourceType,
-      credentials: string
+      credentials: string | object
     ): Promise<UserDataSourceDocument>;
     getCredentials(
       userId: string,
