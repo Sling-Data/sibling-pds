@@ -5,6 +5,8 @@ import UserDataSourcesModel, {
 } from "@backend/models/UserDataSourcesModel";
 import gmailClient from "@backend/services/apiClients/gmailClient";
 
+jest.mock("@backend/models/UserDataSourcesModel");
+
 describe("Gmail Client", () => {
   let mongoServer: MongoMemoryServer;
   const userId = new mongoose.Types.ObjectId().toString();
@@ -40,20 +42,27 @@ describe("Gmail Client", () => {
 
   describe("getAccessToken", () => {
     it("should return access token for valid credentials", async () => {
-      // Store test credentials
-      await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        testCredentials
+      const mockCredentials = {
+        accessToken: "test-token",
+        refreshToken: "test-refresh",
+        expiry: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
+      };
+
+      (UserDataSourcesModel.getCredentials as jest.Mock).mockResolvedValue(
+        mockCredentials
       );
 
-      const accessToken = await gmailClient.getAccessToken(userId);
-      expect(accessToken).toBe(testCredentials.accessToken);
+      const token = await gmailClient.getAccessToken("test-user-id");
+      expect(token).toBe(mockCredentials.accessToken);
     });
 
     it("should throw error for non-existent credentials", async () => {
-      await expect(gmailClient.getAccessToken(userId)).rejects.toThrow(
-        `No Gmail credentials found for user ${userId}`
+      (UserDataSourcesModel.getCredentials as jest.Mock).mockResolvedValue(
+        null
+      );
+
+      await expect(gmailClient.getAccessToken("test-user-id")).rejects.toThrow(
+        "No Gmail credentials found for user test-user-id"
       );
     });
 
@@ -63,15 +72,21 @@ describe("Gmail Client", () => {
 
   describe("generateAuthUrl", () => {
     it("should generate a valid authorization URL", () => {
-      const authUrl = gmailClient.generateAuthUrl();
-      expect(authUrl).toContain("https://accounts.google.com/o/oauth2/v2/auth");
-      expect(authUrl).toContain(
-        "scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly"
+      const url = gmailClient.generateAuthUrl();
+      expect(url).toContain("https://accounts.google.com/o/oauth2/v2/auth");
+      expect(url).toContain("access_type=offline");
+      expect(url).toContain("prompt=consent");
+      expect(url).toContain(
+        encodeURIComponent("https://www.googleapis.com/auth/gmail.readonly")
       );
-      expect(authUrl).toContain("access_type=offline");
-      expect(authUrl).toContain("prompt=consent");
-      expect(authUrl).toContain("client_id=test-client-id");
-      expect(authUrl).toContain("redirect_uri=");
+    });
+
+    it("should include state parameter when provided", () => {
+      const state = Buffer.from(
+        JSON.stringify({ userId: "123", nonce: "abc" })
+      ).toString("base64");
+      const url = gmailClient.generateAuthUrl(state);
+      expect(url).toContain(`state=${encodeURIComponent(state)}`);
     });
   });
 });

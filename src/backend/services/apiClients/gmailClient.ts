@@ -16,7 +16,7 @@ class GmailClient {
   ];
   private readonly REDIRECT_URI =
     process.env.GOOGLE_OAUTH_REDIRECT_URI ||
-    "http://localhost:3000/auth/google/callback";
+    "http://localhost:3000/auth/callback";
 
   private getOAuth2Client(): OAuth2Client {
     if (!this.oauth2Client) {
@@ -39,12 +39,13 @@ class GmailClient {
     return this.oauth2Client;
   }
 
-  generateAuthUrl(): string {
+  generateAuthUrl(state?: string): string {
     const oauth2Client = this.getOAuth2Client();
     return oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: this.GMAIL_SCOPES,
       prompt: "consent", // Force consent screen to ensure we get refresh token
+      state: state, // Pass through the state parameter if provided
     });
   }
 
