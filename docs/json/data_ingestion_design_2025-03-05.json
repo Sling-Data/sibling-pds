@@ -1,0 +1,65 @@
+{
+  "task": {
+    "objective": "Design data ingestion system for Sibling",
+    "domain": "System Design",
+    "sub_context": "Sibling needs to ingest data from external APIs (e.g., Gmail, Plaid) and behavioral sources (e.g., Fitbit, RescueTime) into MongoDB. Use Rita’s research (docs/json/external_data_apis_2025-03-01.json, docs/json/behavioral_data_sources_2025-03-01.json) and existing schemas (VolunteeredData, BehavioralData, ExternalData). Deferred categories (InferredData, RelationalData) should be considered for future extensibility.",
+    "deliverable": "A JSON object with: - High-level architecture (e.g., microservices, monolithic). - Component breakdown (e.g., API client, data processor). - Data flow diagram (text-based description). - Implementation notes (e.g., API key management, error handling). - Scalability and performance considerations.",
+    "notes": "Prioritize modularity and alignment with current tech stack (Node.js, Express.js, MongoDB). Avoid overcomplicating for deferred categories."
+  },
+  "results": {
+    "architecture": "Modular monolith within Node.js/Express.js application",
+    "components": [
+      {
+        "name": "Scheduler",
+        "description": "Triggers periodic data fetching for each user and connected data source."
+      },
+      {
+        "name": "API Clients",
+        "description": "Handle authentication and data fetching for specific data sources (e.g., Gmail, Fitbit)."
+      },
+      {
+        "name": "Data Processors",
+        "description": "Transform raw data into MongoDB schema formats (BehavioralData, ExternalData)."
+      },
+      {
+        "name": "Storage Module",
+        "description": "Inserts processed data into MongoDB with CSFLE encryption."
+      },
+      {
+        "name": "Event Receivers",
+        "description": "API endpoints to receive and process data from event sources."
+      }
+    ],
+    "data_flow": {
+      "api_based_ingestion": [
+        "Scheduler triggers fetching for a data source.",
+        "Query UserDataSources for connected users.",
+        "For each user, decrypt credentials and fetch data using API Client.",
+        "Process data with Data Processor.",
+        "Save to MongoDB via Storage Module."
+      ],
+      "event_based_ingestion": [
+        "Event source sends data to Event Receiver.",
+        "Validate and process data with Data Processor.",
+        "Save to MongoDB via Storage Module."
+      ]
+    },
+    "implementation_notes": [
+      "Store user-specific credentials in UserDataSources collection, encrypted with CSFLE.",
+      "API Clients must handle OAuth token refresh and error retries.",
+      "Data Processors should map data to correct schemas and validate inputs.",
+      "Use Mongoose with CSFLE for field-level encryption.",
+      "Implement logging and monitoring for ingestion tasks."
+    ],
+    "scalability_notes": [
+      "Initially, run ingestion sequentially within the main app.",
+      "Consider queue-based system for horizontal scaling if needed.",
+      "Optimize API calls with rate limit handling and caching."
+    ]
+  },
+  "metadata": {
+    "worker": "Designer Drew",
+    "date": "2025-03-05",
+    "filename": "data_ingestion_design_2025-03-05.json"
+  }
+}

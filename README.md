@@ -16,6 +16,7 @@
   - [Tech Stack](#tech-stack)
   - [Encryption](#encryption)
   - [Documentation](#documentation)
+    - [Architecture](#architecture)
     - [Design](#design)
     - [Research](#research)
     - [Compliance](#compliance)
@@ -171,22 +172,24 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 *(Please preserve this section in future README updates.)*
 
 ## Documentation
+### Architecture
+- [Data Ingestion System](docs/md/data_ingestion_design.md)
 ### Design
-- [User Profile Wireframes (Designer Dana, 2025-03-01)](docs/user_profile_wireframes.md)
-- [User Data Input Wireframes (Designer Dana, 2025-03-01)](docs/user_data_input_wireframes.md)
-- [User Dashboard Wireframes (Designer Dana, 2025-03-01)](docs/user_dashboard_wireframes.md)
-- [Onboarding Data Input Wireframes (Designer Dana, 2025-03-01)](docs/onboarding_data_input_wireframes.md)
+- [User Profile Wireframes (Designer Dana, 2025-03-01)](docs/md/user_profile_wireframes.md)
+- [User Data Input Wireframes (Designer Dana, 2025-03-01)](docs/md/user_data_input_wireframes.md)
+- [User Dashboard Wireframes (Designer Dana, 2025-03-01)](docs/md/user_dashboard_wireframes.md)
+- [Onboarding Data Input Wireframes (Designer Dana, 2025-03-01)](docs/md/onboarding_data_input_wireframes.md)
 
 ### Research
-- [External Data APIs (Researcher Rita, 2025-03-01)](docs/external_data_apis.md)
-- [Behavioral Data Sources (Researcher Rita, 2025-03-01)](docs/behavioral_data_sources.md)
-- [Onboarding Data Needs (Researcher Rita, 2025-03-01)](docs/onboarding_data_needs.md)
-- [Data Category Assessment (Researcher Rita, 2025-03-01)](docs/data_category_assessment.md)
+- [External Data APIs (Researcher Rita, 2025-03-01)](docs/md/external_data_apis.md)
+- [Behavioral Data Sources (Researcher Rita, 2025-03-01)](docs/md/behavioral_data_sources.md)
+- [Onboarding Data Needs (Researcher Rita, 2025-03-01)](docs/md/onboarding_data_needs.md)
+- [Data Category Assessment (Researcher Rita, 2025-03-01)](docs/md/data_category_assessment.md)
 
 ### Compliance
-- [GDPR/CCPA Compliance Requirements (Compliance Clara, 2025-03-01)](docs/gdpr_ccpa_requirements_sibling.md)
-- [MongoDB Encryption Options (Compliance Clara, 2025-03-01)](docs/mongodb_encryption_options_sibling.md)
-- [CSFLE Limitations and Pricing (Compliance Clara, 2025-03-01)](docs/csfle_limitations_pricing_sibling.md)
-- [Consent Flows (Compliance Clara, 2025-03-01)](docs/consent_flows_sibling.md)
-- [Crypto AES-256-CBC Assessment (Compliance Clara, 2025-03-01)](docs/crypto_aes256cbc_assessment_sibling.md)
-- [TLS Alternatives (Compliance Clara, 2025-03-03)](docs/tls_alternatives_sibling.md)
+- [GDPR/CCPA Compliance Requirements (Compliance Clara, 2025-03-01)](docs/md/gdpr_ccpa_requirements_sibling.md)
+- [MongoDB Encryption Options (Compliance Clara, 2025-03-01)](docs/md/mongodb_encryption_options_sibling.md)
+- [CSFLE Limitations and Pricing (Compliance Clara, 2025-03-01)](docs/md/csfle_limitations_pricing_sibling.md)
+- [Consent Flows (Compliance Clara, 2025-03-01)](docs/md/consent_flows_sibling.md)
+- [Crypto AES-256-CBC Assessment (Compliance Clara, 2025-03-01)](docs/md/crypto_aes256cbc_assessment_sibling.md)
+- [TLS Alternatives (Compliance Clara, 2025-03-03)](docs/md/tls_alternatives_sibling.md)

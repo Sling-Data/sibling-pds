@@ -7,14 +7,12 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, ".env") });
 
-import { Request, Response } from "express";
-import UserModel from "./models/UserModel";
-import VolunteeredData from "./models/VolunteeredDataModel";
-import BehavioralData from "./models/BehavioralDataModel";
-import ExternalData from "./models/ExternalDataModel";
-import { Document, Types } from "mongoose";
+// Import routes
 import usersRouter from "./routes/users";
-import { encrypt, decrypt, EncryptedData } from "./utils/encryption";
+import volunteeredDataRouter from "./routes/volunteeredData";
+import behavioralDataRouter from "./routes/behavioralData";
+import externalDataRouter from "./routes/externalData";
+import userDataRouter from "./routes/userData";
 
 const app = express();
 app.use(cors());
@@ -46,151 +44,12 @@ export const disconnectDb = async () => {
   isConnected = false;
 };
 
-// Mount users router
+// Mount routers
 app.use("/users", usersRouter);
-
-// Other routes
-app.post("/volunteered-data", async (req: Request, res: Response) => {
-  try {
-    const { userId, type, value } = req.body;
-    if (!userId || !type || value === undefined) {
-      res.status(400).json({ error: "userId, type, and value are required" });
-      return;
-    }
-    const encryptedValue = encrypt(value.toString());
-    const volunteeredData = new VolunteeredData({
-      userId,
-      type,
-      value: encryptedValue,
-    });
-    const savedData = await volunteeredData.save();
-    await UserModel.findByIdAndUpdate(userId, {
-      $push: { volunteeredData: savedData._id },
-    });
-    res.status(201).json({
-      _id: savedData._id,
-      type: savedData.type,
-      userId: savedData.userId,
-      value: encryptedValue,
-    });
-  } catch (error) {
-    console.error("Error creating volunteered data:", error);
-    res.status(500).json({ error: "Failed to create volunteered data" });
-  }
-});
-
-app.post("/behavioral-data", async (req: Request, res: Response) => {
-  try {
-    const { userId, action, context } = req.body;
-    if (!userId || !action || context === undefined) {
-      res
-        .status(400)
-        .json({ error: "userId, action, and context are required" });
-      return;
-    }
-    const encryptedContext = encrypt(JSON.stringify(context));
-    const behavioralData = new BehavioralData({
-      userId,
-      action,
-      context: encryptedContext,
-    });
-    const savedData = await behavioralData.save();
-    await UserModel.findByIdAndUpdate(userId, {
-      $push: { behavioralData: savedData._id },
-    });
-    res.status(201).json({
-      _id: savedData._id,
-      action: savedData.action,
-      userId: savedData.userId,
-      context: encryptedContext,
-    });
-  } catch (error) {
-    console.error("Error creating behavioral data:", error);
-    res.status(500).json({ error: "Failed to create behavioral data" });
-  }
-});
-
-app.post("/external-data", async (req: Request, res: Response) => {
-  try {
-    const { userId, source, data } = req.body;
-    if (!userId || !source || data === undefined) {
-      res.status(400).json({ error: "userId, source, and data are required" });
-      return;
-    }
-    const encryptedData = encrypt(JSON.stringify(data));
-    const externalData = new ExternalData({
-      userId,
-      source,
-      data: encryptedData,
-    });
-    const savedData = await externalData.save();
-    await UserModel.findByIdAndUpdate(userId, {
-      $push: { externalData: savedData._id },
-    });
-    res.status(201).json({
-      _id: savedData._id,
-      source: savedData.source,
-      userId: savedData.userId,
-      data: encryptedData,
-    });
-  } catch (error) {
-    console.error("Error creating external data:", error);
-    res.status(500).json({ error: "Failed to create external data" });
-  }
-});
-
-interface UserDocument extends Document {
-  name: EncryptedData;
-  email: EncryptedData;
-  volunteeredData: Types.ObjectId[];
-  behavioralData: Types.ObjectId[];
-  externalData: Types.ObjectId[];
-}
-
-app.get("/user-data/:id", async (req: Request, res: Response) => {
-  try {
-    const user = await UserModel.findById<UserDocument>(req.params.id)
-      .populate("volunteeredData")
-      .populate("behavioralData")
-      .populate("externalData");
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-    const decryptedName = decrypt(user.name);
-    const decryptedEmail = decrypt(user.email);
-    const volunteeredData = await Promise.all(
-      user.volunteeredData.map(async (data: any) => ({
-        _id: data._id,
-        type: data.type,
-        value: decrypt(data.value),
-      }))
-    );
-    const behavioralData = await Promise.all(
-      user.behavioralData.map(async (data: any) => ({
-        _id: data._id,
-        action: data.action,
-        context: JSON.parse(decrypt(data.context)),
-      }))
-    );
-    const externalData = await Promise.all(
-      user.externalData.map(async (data: any) => ({
-        _id: data._id,
-        source: data.source,
-        data: JSON.parse(decrypt(data.data)),
-      }))
-    );
-    res.json({
-      user: { _id: user._id, name: decryptedName, email: decryptedEmail },
-      volunteeredData,
-      behavioralData,
-      externalData,
-    });
-  } catch (error) {
-    console.error("Error retrieving user data:", error);
-    res.status(500).json({ error: "Failed to retrieve user data" });
-  }
-});
+app.use("/volunteered-data", volunteeredDataRouter);
+app.use("/behavioral-data", behavioralDataRouter);
+app.use("/external-data", externalDataRouter);
+app.use("/user-data", userDataRouter);
 
 // Only start server if run directly
 if (require.main === module) {
