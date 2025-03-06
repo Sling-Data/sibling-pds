@@ -4,6 +4,7 @@ import { google } from "googleapis";
 import UserDataSourcesModel, {
   DataSourceType,
 } from "../../models/UserDataSourcesModel";
+import { AppError } from "../../middleware/errorHandler";
 
 interface GmailCredentials {
   accessToken: string;
@@ -25,6 +26,16 @@ interface GmailData {
   contacts: string[];
 }
 
+interface RetryConfig {
+  maxRetries: number;
+  delayMs: number;
+}
+
+interface GmailApiError extends Error {
+  code?: number;
+  status?: number;
+}
+
 export class GmailClient {
   private oauth2Client: OAuth2Client | null = null;
   private readonly GMAIL_SCOPES = [
@@ -34,6 +45,14 @@ export class GmailClient {
     process.env.GOOGLE_OAUTH_REDIRECT_URI ||
     "http://localhost:3000/auth/callback";
   private readonly MAX_MESSAGES = 100;
+  private readonly RATE_LIMIT_RETRY_CONFIG: RetryConfig = {
+    maxRetries: 2,
+    delayMs: 1000,
+  };
+  private readonly NETWORK_RETRY_CONFIG: RetryConfig = {
+    maxRetries: 1,
+    delayMs: 1000,
+  };
 
   constructor(private customOAuth2Client?: OAuth2Client) {}
 
@@ -158,6 +177,92 @@ export class GmailClient {
     };
   }
 
+  private async delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private isRateLimitError(error: GmailApiError): boolean {
+    return error.code === 429 || error.status === 429;
+  }
+
+  private isAuthError(error: GmailApiError): boolean {
+    return error.code === 401 || error.status === 401;
+  }
+
+  private isNetworkError(error: Error): boolean {
+    return (
+      error.message.includes("ECONNREFUSED") ||
+      error.message.includes("ETIMEDOUT") ||
+      error.message.includes("ENOTFOUND")
+    );
+  }
+
+  private async retryWithConfig<T>(
+    operation: () => Promise<T>,
+    config: RetryConfig,
+    retryCount = 0
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (retryCount >= config.maxRetries) {
+        throw error;
+      }
+
+      console.error(
+        `Retry attempt ${retryCount + 1}/${config.maxRetries}`,
+        error
+      );
+      await this.delay(config.delayMs);
+      return this.retryWithConfig(operation, config, retryCount + 1);
+    }
+  }
+
+  private async handleGmailApiError(
+    error: GmailApiError,
+    userId: string,
+    operation: () => Promise<any>
+  ): Promise<any> {
+    console.error("Gmail API Error:", error);
+
+    if (this.isRateLimitError(error)) {
+      return this.retryWithConfig(operation, this.RATE_LIMIT_RETRY_CONFIG);
+    }
+
+    if (this.isAuthError(error)) {
+      console.error("Auth error detected, refreshing token...");
+      await this.getAccessToken(userId); // This will refresh the token
+      return operation(); // Retry once with new token
+    }
+
+    if (this.isNetworkError(error)) {
+      return this.retryWithConfig(operation, this.NETWORK_RETRY_CONFIG);
+    }
+
+    throw new AppError(
+      `Gmail API error: ${error.message}`,
+      error.status || 500
+    );
+  }
+
+  private async processMessageWithRetry(
+    gmail: gmail_v1.Gmail,
+    messageId: string,
+    userId: string
+  ): Promise<GmailMessage> {
+    const operation = () => this.processMessage(gmail, messageId);
+
+    try {
+      return await operation();
+    } catch (error) {
+      return this.handleGmailApiError(
+        error as GmailApiError,
+        userId,
+        operation
+      );
+    }
+  }
+
   async fetchGmailData(userId: string): Promise<GmailData> {
     const accessToken = await this.getAccessToken(userId);
     const gmail = this.getGmailClient(accessToken);
@@ -167,29 +272,47 @@ export class GmailClient {
 
     try {
       do {
-        // Fetch message list
-        const response = await gmail.users.messages.list({
-          userId: "me",
-          maxResults: Math.min(50, this.MAX_MESSAGES - messages.length),
-          pageToken: nextPageToken,
-        });
+        const fetchMessages = async () => {
+          const response = await gmail.users.messages.list({
+            userId: "me",
+            maxResults: Math.min(50, this.MAX_MESSAGES - messages.length),
+            pageToken: nextPageToken,
+          });
+          return response;
+        };
+
+        let response;
+        try {
+          response = await fetchMessages();
+        } catch (error) {
+          response = await this.handleGmailApiError(
+            error as GmailApiError,
+            userId,
+            fetchMessages
+          );
+        }
 
         if (!response.data.messages) break;
 
-        // Process each message
+        // Process each message with retry logic
         const messagePromises = response.data.messages
           .filter(
-            (msg): msg is { id: string } =>
+            (msg: gmail_v1.Schema$Message): msg is { id: string } =>
               msg.id !== null && msg.id !== undefined
           )
-          .map((msg) => this.processMessage(gmail, msg.id));
+          .map((msg: { id: string }) =>
+            this.processMessageWithRetry(gmail, msg.id, userId)
+          );
+
         const processedMessages = await Promise.all(messagePromises);
 
         // Add messages and collect contacts
         for (const msg of processedMessages) {
           messages.push(msg);
           contacts.add(msg.sender);
-          msg.recipients.forEach((r) => contacts.add(r));
+          msg.recipients.forEach((recipient: string) =>
+            contacts.add(recipient)
+          );
         }
 
         nextPageToken = response.data.nextPageToken || undefined;
@@ -201,8 +324,9 @@ export class GmailClient {
       };
     } catch (error) {
       console.error("Error fetching Gmail data:", error);
-      throw new Error(
-        "Failed to fetch Gmail data: " + (error as Error).message
+      throw new AppError(
+        `Failed to fetch Gmail data: ${(error as Error).message}`,
+        (error as GmailApiError).status || 500
       );
     }
   }
