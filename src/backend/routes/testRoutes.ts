@@ -9,8 +9,8 @@ interface PlaidTokenRequest {
   userId: string;
 }
 
-// Wrap async route handlers
-const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
+// Wrap async route handlers with proper return type
+const asyncHandler = (fn: (req: Request, res: Response) => Promise<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res)).catch((error) => {
       if (error instanceof AppError) {
@@ -105,6 +105,30 @@ router.post(
       }
     })();
   }
+);
+
+router.get(
+  "/plaid-auth-url",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.query;
+    if (!userId || typeof userId !== "string") {
+      throw new AppError("userId is required as a query parameter", 400);
+    }
+
+    const response = await plaidClient.getAccessToken(userId);
+
+    // Return the URL that would be redirected to
+    if (response.type === "access_token") {
+      return res.json({
+        redirectUrl:
+          "http://localhost:3000/connect-plaid?status=already_connected",
+      });
+    }
+
+    return res.json({
+      redirectUrl: `http://localhost:3000/connect-plaid?linkToken=${response.linkToken}`,
+    });
+  })
 );
 
 export default router;

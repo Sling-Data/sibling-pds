@@ -197,9 +197,14 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/test/gmail-auth-url?userId={{userId}}
 Content-Type: {{contentType}}
 
+### Get Plaid authorization URL (returns redirect URL)
+# @name getPlaidAuthUrl
+GET {{baseUrl}}/test/plaid-auth-url?userId={{userId}}
+Content-Type: {{contentType}}
+
 ### Test Gmail data fetching
 # @name gmailFetch
-POST http://localhost:3000/test/test-gmail-fetch
+POST {{baseUrl}}/test/test-gmail-fetch
 Content-Type: {{contentType}}
 
 {
@@ -208,7 +213,7 @@ Content-Type: {{contentType}}
 
 ### Test Plaid Token Generation
 # @name testPlaidToken
-POST http://localhost:3000/test/test-plaid-token
+POST {{baseUrl}}/test/test-plaid-token
 Content-Type: application/json
 
 {
