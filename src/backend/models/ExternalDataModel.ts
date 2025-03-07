@@ -13,16 +13,32 @@ interface ExternalData extends Document {
 
 const EncryptedDataSchema = new Schema(
   {
-    iv: { type: String, required: true },
-    content: { type: String, required: true },
+    iv: {
+      type: String,
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
   },
   { _id: false }
 );
 
 const ExternalDataSchema: Schema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  source: { type: String, required: true },
-  data: { type: EncryptedDataSchema, required: true },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  source: {
+    type: String,
+    required: true,
+  },
+  data: {
+    type: EncryptedDataSchema,
+    required: true,
+  },
 });
 
 export default mongoose.model<ExternalData>("ExternalData", ExternalDataSchema);

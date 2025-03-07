@@ -13,16 +13,32 @@ interface BehavioralData extends Document {
 
 const EncryptedDataSchema = new Schema(
   {
-    iv: { type: String, required: true },
-    content: { type: String, required: true },
+    iv: {
+      type: String,
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
   },
   { _id: false }
 );
 
 const BehavioralDataSchema: Schema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  action: { type: String, required: true },
-  context: { type: EncryptedDataSchema, required: true },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  action: {
+    type: String,
+    required: true,
+  },
+  context: {
+    type: EncryptedDataSchema,
+    required: true,
+  },
 });
 
 export default mongoose.model<BehavioralData>(

@@ -23,7 +23,7 @@
     - [DevOps](#devops)
 
 ## Project Overview
-Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing user autonomy, transparency, and security.
+Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing data sovereignty user autonomy, transparency, and security.
 
 ### Mission
 Enable individuals to own their data, refine it, and unlock tailored AI assistance.

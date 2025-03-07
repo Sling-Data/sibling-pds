@@ -16,7 +16,9 @@
     "test:backend-once": "jest --runInBand --selectProjects backend",
     "test:frontend": "jest --watch --selectProjects frontend",
     "test:frontend-once": "jest --runInBand --selectProjects frontend",
-    "eject": "cd src/frontend && npm run eject"
+    "eject": "cd src/frontend && npm run eject",
+    "start-proxy": "node proxy.js",
+    "http-server": "http-server"
   },
   "devDependencies": {
     "@babel/core": "^7.26.9",
@@ -41,6 +43,8 @@
     "babel-jest": "^29.7.0",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
+    "http-proxy-middleware": "^3.0.3",
+    "http-server": "^14.1.1",
     "identity-obj-proxy": "^3.0.0",
     "jest-editor-support": "^32.0.0-beta.1",
     "jest-environment-jsdom": "^29.7.0",

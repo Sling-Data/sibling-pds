@@ -13,16 +13,32 @@ interface VolunteeredData extends Document {
 
 const EncryptedDataSchema = new Schema(
   {
-    iv: { type: String, required: true },
-    content: { type: String, required: true },
+    iv: {
+      type: String,
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
   },
   { _id: false }
 );
 
 const VolunteeredDataSchema: Schema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  type: { type: String, required: true },
-  value: { type: EncryptedDataSchema, required: true },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: EncryptedDataSchema,
+    required: true,
+  },
 });
 
 export default mongoose.model<VolunteeredData>(
