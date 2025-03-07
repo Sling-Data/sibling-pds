@@ -16,9 +16,7 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
       const message =
         error instanceof AppError ? error.message : "Internal server error";
       res.redirect(
-        `http://localhost:3000/connect-plaid?error=${encodeURIComponent(
-          message
-        )}`
+        `http://localhost:3001/profile?error=${encodeURIComponent(message)}`
       );
     });
   };
@@ -108,14 +106,46 @@ router.get(
     // If we got an access token, user is already authenticated
     if (response.type === "access_token") {
       return res.redirect(
-        "http://localhost:3000/connect-plaid?status=already_connected"
+        "http://localhost:3001/connect-plaid?status=already_connected"
       );
     }
 
     // Otherwise, redirect with the link token
     return res.redirect(
-      `http://localhost:3000/connect-plaid?linkToken=${response.linkToken}`
+      `http://localhost:3001/connect-plaid?linkToken=${response.linkToken}`
     );
+  })
+);
+
+router.get(
+  "/plaid-callback",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { public_token, userId } = req.query;
+
+    if (!public_token || typeof public_token !== "string") {
+      throw new AppError("public_token is required as a query parameter", 400);
+    }
+
+    if (!userId || typeof userId !== "string") {
+      throw new AppError("userId is required as a query parameter", 400);
+    }
+
+    try {
+      // Exchange public token for access token and store credentials
+      await plaidClient.exchangePublicToken(public_token, userId);
+
+      // Redirect to profile page with success status
+      res.redirect("http://localhost:3001/profile?status=success");
+    } catch (error) {
+      console.error("Plaid callback error:", error);
+      const message =
+        error instanceof AppError
+          ? error.message
+          : "Failed to connect Plaid account";
+      res.redirect(
+        `http://localhost:3001/profile?error=${encodeURIComponent(message)}`
+      );
+    }
   })
 );
 
