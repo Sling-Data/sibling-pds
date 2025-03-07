@@ -237,3 +237,5 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 
 ### DevOps
 - [Google Cloud Setup Guide for Gmail API (DevOps Dylan, 2025-03-06)](docs/md/google_cloud_setup_guide.md)
+- [Gmail 429 Error Simulation Guide (DevOps Dylan, 2025-03-07)](docs/md/gmail_429_simulation_guide.md)
+- [Plaid Setup Guide (DevOps Dylan, 2025-03-07)](docs/md/plaid_setup_guide.md)

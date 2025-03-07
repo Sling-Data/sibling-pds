@@ -1,8 +1,13 @@
 import express, { Request, Response, NextFunction } from "express";
 import { AppError } from "../middleware/errorHandler";
 import gmailClient from "../services/apiClients/gmailClient";
+import plaidClient from "../services/apiClients/plaidClient";
 
 const router = express.Router();
+
+interface PlaidTokenRequest {
+  userId: string;
+}
 
 // Wrap async route handlers
 const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
@@ -72,5 +77,34 @@ router.post("/test-gmail-fetch", async (req, res) => {
     });
   }
 });
+
+router.post(
+  "/test-plaid-token",
+  (
+    req: Request<{}, any, PlaidTokenRequest>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    void (async () => {
+      try {
+        const { userId } = req.body;
+        if (!userId) {
+          res.status(400).json({ error: "userId is required" });
+          return;
+        }
+
+        try {
+          // Get auth response which could contain either access token or link token
+          const authResponse = await plaidClient.getAccessToken(userId);
+          res.json(authResponse);
+        } catch (error) {
+          next(error);
+        }
+      } catch (error) {
+        next(error);
+      }
+    })();
+  }
+);
 
 export default router;

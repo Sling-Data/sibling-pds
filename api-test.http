@@ -205,3 +205,14 @@ Content-Type: {{contentType}}
 {
     "userId": "{{userId}}"
 }
+
+### Test Plaid Token Generation
+# @name testPlaidToken
+POST http://localhost:3000/test/test-plaid-token
+Content-Type: application/json
+
+{
+    "userId": "{{userId}}"
+}
+
+###
