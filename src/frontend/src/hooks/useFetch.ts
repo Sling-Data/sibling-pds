@@ -28,7 +28,7 @@ const fetchWithRetry = async (url: string): Promise<Response> => {
   const maxAttempts = 3;
 
   while (attempt <= maxAttempts) {
-    console.debug(`Attempting fetch for ${url} (attempt ${attempt})`);
+    console.log(`Attempting fetch for ${url} (attempt ${attempt})`);
     try {
       const response = await fetch(url);
 
@@ -36,7 +36,7 @@ const fetchWithRetry = async (url: string): Promise<Response> => {
       if (response.status >= 500 || response.status === 429) {
         if (attempt < maxAttempts) {
           const delayTime = response.status === 429 ? 1000 : 100 * attempt;
-          console.debug(
+          console.log(
             `Retrying after ${delayTime}ms due to status ${response.status}`
           );
           await delay(delayTime);
@@ -45,11 +45,11 @@ const fetchWithRetry = async (url: string): Promise<Response> => {
         }
       }
 
-      console.debug("Fetch successful");
+      console.log("Fetch successful");
       return response;
     } catch (err) {
       if (err instanceof TypeError && attempt < maxAttempts) {
-        console.debug(`Network error, retrying (attempt ${attempt})`);
+        console.log(`Network error, retrying (attempt ${attempt})`);
         await delay(100 * attempt);
         attempt++;
         continue;
@@ -86,7 +86,7 @@ export function useFetch<T>(
       if (!skipCache) {
         const cachedEntry = cache.get(url);
         if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_EXPIRY) {
-          console.debug(`Cache hit for ${url}`);
+          console.log(`Cache hit for ${url}`);
           setData(cachedEntry.data);
           setLoading(false);
           setFromCache(true);
@@ -94,7 +94,7 @@ export function useFetch<T>(
         }
       }
 
-      console.debug(`Cache miss for ${url}`);
+      console.log(`Cache miss for ${url}`);
       setFromCache(false);
 
       try {
@@ -103,11 +103,11 @@ export function useFetch<T>(
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const jsonData = await response.json();
-        console.debug(`Updating cache for ${url}`);
+        console.log(`Updating cache for ${url}`);
         cache.set(url, { data: jsonData, timestamp: Date.now() });
         setData(jsonData);
       } catch (err) {
-        console.debug(`Error: ${err.message}`);
+        console.log(`Error: ${err.message}`);
         if (err instanceof SyntaxError) {
           setError("Invalid JSON response from server");
         } else {

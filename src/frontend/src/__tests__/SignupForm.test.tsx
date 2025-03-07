@@ -30,7 +30,7 @@ describe('SignupForm Component', () => {
     render(<SignupForm onSuccess={mockOnSuccess} />);
     
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+      fireEvent.click(screen.getByRole('form'));
     });
     
     await waitFor(() => {
@@ -49,7 +49,7 @@ describe('SignupForm Component', () => {
       target: { value: 'invalid-email' },
     });
     
-    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    fireEvent.click(screen.getByRole('form'));
     
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('SignupForm Component', () => {
         target: { value: 'test@example.com' },
       });
       
-      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+      fireEvent.click(screen.getByRole('form'));
     });
     
     await waitFor(() => {
@@ -110,7 +110,7 @@ describe('SignupForm Component', () => {
         target: { value: 'test@example.com' },
       });
       
-      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+      fireEvent.click(screen.getByRole('form'));
     });
     
     await waitFor(() => {

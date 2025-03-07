@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
 interface FormData {
   interests: string[];
@@ -48,6 +49,7 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
     success?: boolean;
     message?: string;
   }>({});
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   const validateAge = (age: string) => {
     const ageNum = parseInt(age);
@@ -175,6 +177,9 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
       if (onSubmitted) {
         onSubmitted();
       }
+
+      // Set redirect flag
+      setShouldRedirect(true);
     } catch (error) {
       setSubmitStatus({
         success: false,
@@ -212,6 +217,10 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
     }
   };
 
+  if (shouldRedirect) {
+    return <Navigate to="/profile" replace />;
+  }
+
   return (
     <div className="data-input-container">
       <h2>Personal Information</h2>
@@ -220,7 +229,7 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
           {submitStatus.message}
         </div>
       )}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} >
         {/* Interests - Checkboxes */}
         <div className="form-group">
           <label>Interests</label>

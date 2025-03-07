@@ -118,7 +118,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
           <div className="error-message submit-error">{errors.submit}</div>
         )}
         
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" disabled={isSubmitting} role="form">
           Create Account
         </button>
       </form>

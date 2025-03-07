@@ -1,14 +1,31 @@
-// @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import '@testing-library/jest-dom';
 import DataInput from '../components/DataInput';
+import * as router from 'react-router-dom';
+
+// Mock Navigate component
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  Navigate: jest.fn(() => null)
+}));
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
 
 const mockUserId = 'test-user-123';
+
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(
+    <router.MemoryRouter initialEntries={['/data-input']}>
+      <router.Routes>
+        <router.Route path="/data-input" element={component} />
+        <router.Route path="/profile" element={<div>Profile Page</div>} />
+      </router.Routes>
+    </router.MemoryRouter>
+  );
+};
 
 describe('DataInput Component', () => {
   const originalError = console.error;
@@ -20,6 +37,8 @@ describe('DataInput Component', () => {
     // Mock console methods to silence test output
     console.error = jest.fn();
     console.log = jest.fn();
+    // Reset Navigate mock
+    (router.Navigate as jest.Mock).mockClear();
   });
 
   afterEach(() => {
@@ -31,7 +50,7 @@ describe('DataInput Component', () => {
 
   it('renders all form fields', async () => {
     await act(async () => {
-      render(<DataInput userId={mockUserId} />);
+      renderWithRouter(<DataInput userId={mockUserId} />);
     });
     
     // Check main heading
@@ -94,7 +113,7 @@ describe('DataInput Component', () => {
 
   it('shows validation errors when submitting empty form', async () => {
     await act(async () => {
-      render(<DataInput userId={mockUserId} />);
+      renderWithRouter(<DataInput userId={mockUserId} />);
     });
     
     await act(async () => {
@@ -117,7 +136,7 @@ describe('DataInput Component', () => {
   });
 
   it('validates age input correctly', async () => {
-    render(<DataInput userId={mockUserId} />);
+    renderWithRouter(<DataInput userId={mockUserId} />);
     
     // Fill out required fields to isolate age validation
     fireEvent.click(screen.getByRole('checkbox', { name: 'Sports' }));
@@ -146,47 +165,88 @@ describe('DataInput Component', () => {
     expect(screen.queryByText('Please enter a valid age between 13 and 100')).not.toBeInTheDocument();
   });
 
-  it('submits form successfully with valid data', async () => {
+  it('submits form successfully with valid data and redirects to profile page', async () => {
     const mockFetch = global.fetch as jest.Mock;
+    const mockOnSubmitted = jest.fn();
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ success: true })
     });
 
     await act(async () => {
-      render(<DataInput userId={mockUserId} />);
+      renderWithRouter(<DataInput userId={mockUserId} onSubmitted={mockOnSubmitted} />);
     });
     
+    // Fill out form with valid data
     await act(async () => {
-      // Fill out form
+      // Interests (at least one required)
       fireEvent.click(screen.getByRole('checkbox', { name: 'Sports' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Music' }));
+      // Primary goal (required)
       fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), { target: { value: 'fitness' } });
+      // Location (required)
       fireEvent.change(screen.getByRole('textbox', { name: /location/i }), { target: { value: 'London' } });
+      // Profession (required)
       fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), { target: { value: 'tech' } });
+      // Communication style (required)
       fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
+      // Daily availability (at least one required)
       fireEvent.click(screen.getByRole('checkbox', { name: 'Morning' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Evening' }));
+      // Fitness level (required)
       fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), { target: { value: 'intermediate' } });
+      // Learning style (at least one required)
       fireEvent.click(screen.getByRole('checkbox', { name: 'Visual' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Auditory' }));
+      // Age (required, between 13-100)
       fireEvent.change(screen.getByRole('spinbutton', { name: /age/i }), { target: { value: '25' } });
+    });
 
-      // Submit form
+    // Submit form
+    await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /submit/i }));
     });
 
-    // Check if fetch was called with correct data
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('http://localhost:3000/volunteered-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: expect.stringContaining(mockUserId)
-      });
+    // Verify no validation errors are present
+    expect(screen.queryByText('Please select at least one interest')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please select a primary goal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please enter your location')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please select your profession')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please select your communication style')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please select at least one time slot')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please select your fitness level')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please select at least one learning style')).not.toBeInTheDocument();
+    expect(screen.queryByText('Please enter a valid age between 13 and 100')).not.toBeInTheDocument();
+
+    // Verify API call with complete data
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/volunteered-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'onboarding',
+        value: JSON.stringify({
+          interests: ['Sports', 'Music'],
+          primaryGoal: 'fitness',
+          location: 'London',
+          profession: 'tech',
+          communicationStyle: 'Direct',
+          dailyAvailability: ['Morning', 'Evening'],
+          fitnessLevel: 'intermediate',
+          learningStyle: ['Visual', 'Auditory'],
+          age: '25'
+        }),
+        userId: mockUserId
+      })
     });
 
-    // Check success message
+    // Verify onSubmitted callback was called
+    expect(mockOnSubmitted).toHaveBeenCalled();
+
+    // Verify redirection to profile page
     await waitFor(() => {
-      expect(screen.getByText('Form submitted successfully!')).toBeInTheDocument();
+      expect(router.Navigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/profile' }), {});
     });
   });
 
@@ -195,19 +255,22 @@ describe('DataInput Component', () => {
     mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
     await act(async () => {
-      render(<DataInput userId={mockUserId} />);
+      renderWithRouter(<DataInput userId={mockUserId} />);
     });
     
     await act(async () => {
       // Fill out form with valid data
       fireEvent.click(screen.getByRole('checkbox', { name: 'Sports' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Music' }));
       fireEvent.change(screen.getByRole('combobox', { name: /primary goal/i }), { target: { value: 'fitness' } });
       fireEvent.change(screen.getByRole('textbox', { name: /location/i }), { target: { value: 'London' } });
       fireEvent.change(screen.getByRole('combobox', { name: /profession/i }), { target: { value: 'tech' } });
       fireEvent.click(screen.getByRole('radio', { name: 'Direct' }));
       fireEvent.click(screen.getByRole('checkbox', { name: 'Morning' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Evening' }));
       fireEvent.change(screen.getByRole('combobox', { name: /fitness level/i }), { target: { value: 'intermediate' } });
       fireEvent.click(screen.getByRole('checkbox', { name: 'Visual' }));
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Auditory' }));
       fireEvent.change(screen.getByRole('spinbutton', { name: /age/i }), { target: { value: '25' } });
 
       // Submit form
@@ -218,5 +281,8 @@ describe('DataInput Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Failed to submit form. Please try again.')).toBeInTheDocument();
     });
+
+    // Verify we did not redirect
+    expect(router.Navigate).not.toHaveBeenCalled();
   });
 }); 

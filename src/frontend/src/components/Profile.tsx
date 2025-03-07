@@ -43,6 +43,18 @@ function Profile() {
     }
   }, [userData]);
 
+  const handleGmailConnect = () => {
+    if (userId) {
+      window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}`;
+    }
+  };
+
+  const handlePlaidConnect = () => {
+    if (userId) {
+      window.location.href = `${process.env.REACT_APP_API_URL}/auth/plaid?userId=${userId}`;
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     let isValid = true;
@@ -207,6 +219,24 @@ function Profile() {
           </div>
         </div>
       )}
+
+      <div className="connected-services">
+        <h3 role="heading" aria-level={3}>Connected Services</h3>
+        <div className="service-buttons">
+          <button
+            className="connect-button"
+            onClick={handleGmailConnect}
+          >
+            Connect Gmail
+          </button>
+          <button
+            className="connect-button"
+            onClick={handlePlaidConnect}
+          >
+            Connect Plaid
+          </button>
+        </div>
+      </div>
 
       <div className="privacy-settings">
         <h3>Privacy Settings</h3>

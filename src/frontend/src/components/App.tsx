@@ -1,42 +1,67 @@
-// @ts-expect-error React is used implicitly with JSX
 import React from 'react';
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignupForm from './SignupForm';
 import DataInput from './DataInput';
 import Profile from './Profile';
 import { UserProvider, useUser } from '../context/UserContext';
 
 function AppContent() {
-  const [showProfile, setShowProfile] = useState(false);
   const { userId, setUserId } = useUser();
 
   const handleSignupSuccess = (newUserId: string) => {
     setUserId(newUserId);
   };
 
-  const handleDataSubmitted = () => {
-    setShowProfile(true);
-  };
-
   return (
     <div className="app-container">
       <h1>Hello, Sibling!</h1>
-      {!userId ? (
-        <SignupForm onSuccess={handleSignupSuccess} />
-      ) : showProfile ? (
-        <Profile />
-      ) : (
-        <DataInput userId={userId} onSubmitted={handleDataSubmitted} />
-      )}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            !userId ? (
+              <SignupForm onSuccess={handleSignupSuccess} />
+            ) : (
+              <Navigate to="/data-input" replace />
+            )
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            userId ? (
+              <Profile />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/data-input"
+          element={
+            userId ? (
+              <DataInput userId={userId} onSubmitted={() => {}} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+      </Routes>
     </div>
   );
 }
 
-function App() {
+interface AppProps {
+  router?: React.ComponentType<{ children: React.ReactNode }>;
+}
+
+function App({ router: Router = BrowserRouter }: AppProps) {
   return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
+    <Router>
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </Router>
   );
 }
 
