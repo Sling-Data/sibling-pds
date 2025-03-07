@@ -1,46 +1,105 @@
-# Getting Started with Create React App
+# Sibling Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React application for connecting siblings and managing their interactions.
 
-## Available Scripts
+## Tech Stack
 
-In the project directory, you can run:
+- **React 18.2.0** - A JavaScript library for building user interfaces
+- **TypeScript 4.9.5** - Adds static typing to JavaScript
+- **React Router 6.20.0** - For client-side routing
+- **Jest & React Testing Library** - For unit and integration testing
+- **CSS Modules** - For component-scoped styling
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- User registration and profile management
+- Detailed data input form for user preferences
+- Profile page with editable user information
+- Service connections (Gmail, Plaid)
+- Privacy settings management
+- Responsive design for mobile and desktop
+- Form validation and error handling
+- Protected routes with authentication
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (v18.0.0 or higher)
+- npm (v8.0.0 or higher)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository
+2. Navigate to the frontend directory:
+   ```bash
+   cd src/frontend
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Create a `.env` file in the frontend directory with:
+   ```
+   REACT_APP_API_URL=http://localhost:3000
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Development
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+# Start development server
+npm start
 
-### `npm run eject`
+# Run tests
+npm test
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+# Run tests once
+npm run test-once
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Build for production
+npm run build:frontend
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Project Structure
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```
+src/
+├── components/        # React components
+├── context/          # React context providers
+├── hooks/            # Custom React hooks
+├── styles/           # CSS stylesheets
+├── __tests__/        # Test files
+└── index.tsx         # Application entry point
+```
+
+## Testing
+
+The project uses Jest and React Testing Library for testing. Tests are located in the `__tests__` directory and can be run with:
+
+```bash
+npm test
+```
+
+## Building for Production
+
+To create a production build:
+
+```bash
+npm run build:frontend
+```
+
+This will create an optimized build in the `build` directory.
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Write or update tests
+4. Submit a pull request
 
 ## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+- [React Documentation](https://reactjs.org/)
+- [TypeScript Documentation](https://www.typescriptlang.org/)
+- [React Router Documentation](https://reactrouter.com/)
+- [Testing Library Documentation](https://testing-library.com/)

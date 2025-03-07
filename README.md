@@ -6,6 +6,7 @@
   - [Project Overview](#project-overview)
     - [Mission](#mission)
     - [Vision](#vision)
+    - [Project Structure](#project-structure)
   - [Build, Run, Test, Deploy Instructions](#build-run-test-deploy-instructions)
     - [Prerequisites](#prerequisites)
   - [Build, Run, Test, Deploy Instructions](#build-run-test-deploy-instructions-1)
@@ -31,6 +32,8 @@ Enable individuals to own their data, refine it, and unlock tailored AI assistan
 ### Vision
 Make AI a trusted, personalized partner via a user-controlled data foundation.
 
+### Project Structure
+```
 /sibling-pds
 ├── /.vscode         # VS Code configuration
 │   ├── launch.json          # Debug configuration for Jest tests
@@ -93,6 +96,7 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 ├── jest.config.js              # Jest configuration for both frontend and backend
 ├── package.json
 └── tsconfig.json
+```
 
 ## Build, Run, Test, Deploy Instructions
 ### Prerequisites

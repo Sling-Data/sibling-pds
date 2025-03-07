@@ -27,20 +27,20 @@ function AppContent() {
           }
         />
         <Route
-          path="/profile"
-          element={
-            userId ? (
-              <Profile />
-            ) : (
-              <Navigate to="/" replace />
-            )
-          }
-        />
-        <Route
           path="/data-input"
           element={
             userId ? (
               <DataInput userId={userId} onSubmitted={() => {}} />
+            ) : (
+              <Navigate to="/profile" replace />
+            )
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            userId ? (
+              <Profile />
             ) : (
               <Navigate to="/" replace />
             )
