@@ -109,6 +109,26 @@ userDataSourcesSchema.statics.getCredentials = async function (
   }
 };
 
+// Add method to update lastIngestedAt timestamp
+userDataSourcesSchema.statics.updateLastIngestedAt = async function (
+  userId: string,
+  dataSourceType: DataSourceType
+): Promise<UserDataSourceDocument | null> {
+  return this.findOneAndUpdate(
+    { userId, dataSourceType },
+    { lastIngestedAt: new Date() },
+    { new: true }
+  );
+};
+
+// Add method to get all users with a specific data source
+userDataSourcesSchema.statics.getUsersWithDataSource = async function (
+  dataSourceType: DataSourceType
+): Promise<string[]> {
+  const dataSources = await this.find({ dataSourceType });
+  return dataSources.map((ds: UserDataSourceDocument) => ds.userId.toString());
+};
+
 // Create and export the model
 const UserDataSourcesModel = mongoose.model<
   UserDataSourceDocument,
@@ -122,6 +142,11 @@ const UserDataSourcesModel = mongoose.model<
       userId: string,
       dataSourceType: DataSourceType
     ): Promise<string | null>;
+    updateLastIngestedAt(
+      userId: string,
+      dataSourceType: DataSourceType
+    ): Promise<UserDataSourceDocument | null>;
+    getUsersWithDataSource(dataSourceType: DataSourceType): Promise<string[]>;
   }
 >("UserDataSources", userDataSourcesSchema);
 

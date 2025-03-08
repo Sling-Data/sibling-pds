@@ -229,4 +229,9 @@ Content-Type: {{contentType}}
     "userId": "{{userId}}"
 }
 
+### Manually trigger data ingestion
+# @name runDataIngestion
+POST {{baseUrl}}/test/run-data-ingestion
+Content-Type: {{contentType}}
+
 ###

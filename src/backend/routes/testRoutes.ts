@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import { AppError } from "../middleware/errorHandler";
 import gmailClient from "../services/apiClients/gmailClient";
 import plaidClient from "../services/apiClients/plaidClient";
+import scheduler from "../services/scheduler";
 
 const router = express.Router();
 
@@ -141,6 +142,15 @@ router.post(
 
     const plaidData = await plaidClient.fetchPlaidData(userId);
     res.json(plaidData);
+  })
+);
+
+router.post(
+  "/run-data-ingestion",
+  asyncHandler(async (_req: Request, res: Response) => {
+    console.log("Manually triggering data ingestion process");
+    await scheduler.runDataIngestionNow();
+    res.json({ message: "Data ingestion process triggered successfully" });
   })
 );
 

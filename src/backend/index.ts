@@ -18,6 +18,9 @@ import authRouter from "./routes/authRoutes";
 import apiRouter from "./routes/apiRoutes";
 import testRouter from "./routes/testRoutes";
 
+// Import scheduler
+import scheduler from "./services/scheduler";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -67,7 +70,17 @@ if (require.main === module) {
     // Connect to MongoDB
     const mongoUri =
       process.env.MONGODB_URI || "mongodb://localhost:27018/sibling-pds";
-    connectDb(mongoUri).catch(console.error);
+    connectDb(mongoUri)
+      .then(() => {
+        // Start the scheduler after database connection is established
+        const isDev = process.env.NODE_ENV === "development";
+        scheduler.startScheduler({
+          // Use a more frequent schedule in development for testing
+          cronExpression: isDev ? "*/5 * * * *" : "0 2 * * *",
+          enabled: process.env.DISABLE_SCHEDULER !== "true",
+        });
+      })
+      .catch(console.error);
   });
 }
 
