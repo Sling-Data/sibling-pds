@@ -1,0 +1,120 @@
+{
+  "task": {
+    "objective": "Tech Debt Audit 1",
+    "domain": "Engineering",
+    "sub_context": "Sibling codebase audit for tech debt and vulnerabilities in Node.js with TypeScript (backend), React with TypeScript (frontend), Express.js, MongoDB with Mongoose in Docker, and Node.js crypto (AES-256-CBC). Recent work includes Gmail and Plaid pipelines with scheduler, 91 tests (57 backend, 34 frontend). Identified tech debt includes Gmail redirect issue.",
+    "deliverable": "A JSON report with prioritized and deferred tech debt findings.",
+    "notes": "Prioritization based on importance (severity) and urgency (dev mode relevance). Deferred items are production-specific or less urgent in dev mode."
+  },
+  "results": {
+    "prioritised": [
+      {
+        "name": "Gmail Redirect Issue (BE/FE)",
+        "task": "Fix redirect logic and add app-level auth (JWT)."
+      },
+      {
+        "name": "Unsanitized Rendering of Error Messages (FE)",
+        "task": "Sanitize query params in Profile.tsx."
+      },
+      {
+        "name": "No App-Level Authentication",
+        "task": "Implement JWT-based authentication."
+      },
+      {
+        "name": "Hardcoded Redirect URLs and API URLs (BE/FE)",
+        "task": "Centralize in environment variables."
+      },
+      {
+        "name": "Query Parameters Not Cleared After Processing (FE)",
+        "task": "Clear params in Profile.tsx with useEffect."
+      },
+      {
+        "name": "Lack of CSRF Protection (BE/FE)",
+        "task": "Add CSRF tokens with JWT implementation."
+      },
+      {
+        "name": "Privacy Settings Don’t Persist (FE)",
+        "task": "Add API endpoints to save/retrieve settings."
+      },
+      {
+        "name": "Insufficient Input Validation in Route Handlers (BE)",
+        "task": "Use Joi for validation."
+      },
+      {
+        "name": "Duplicate Form Validation Logic (FE)",
+        "task": "Extract into a shared utility."
+      },
+      {
+        "name": "Duplicate Error Handling Logic (BE)",
+        "task": "Create a centralized utility."
+      }
+    ],
+    "deferred": [
+      {
+        "type": "Gaps",
+        "list": [
+          "Lack of integration tests for external APIs",
+          "Missing error notification system",
+          "Incomplete token refresh handling in Plaid client",
+          "No health check endpoints or monitoring",
+          "Limited test coverage for edge cases",
+          "Missing error handling for Plaid Link token expiration",
+          "No visual indication of connection status",
+          "Missing validation for API responses in useFetch hook"
+        ]
+      },
+      {
+        "type": "Code Smells",
+        "list": [
+          "Tight coupling between scheduler and API clients",
+          "Inconsistent logging format",
+          "Lack of separation between route handlers and business logic",
+          "Inconsistent error handling patterns across components",
+          "Duplicate styling patterns across CSS files",
+          "Duplicate form validation logic across components"
+        ]
+      },
+      {
+        "type": "Issues",
+        "list": [
+          "Scheduler doesn’t handle database connection failures gracefully",
+          "No mechanism to retry failed data ingestion jobs",
+          "Lack of loading indicators during form submissions",
+          "Duplicate manual mock for styleMock",
+          "Inconsistent port usage in redirect URLs"
+        ]
+      },
+      {
+        "type": "Vulnerabilities",
+        "list": [
+          "Sensitive API keys and secrets stored in plaintext in .env",
+          "Encryption key stored in .env",
+          "No rate limiting on API endpoints",
+          "Lack of CSRF protection in authentication flows",
+          "No rate limiting for form submissions",
+          "Insecure handling of Plaid tokens in client-side code",
+          "No CORS configuration"
+        ]
+      },
+      {
+        "type": "Performance Bottlenecks",
+        "list": [
+          "Sequential processing of data ingestion in scheduler",
+          "Inefficient database queries in getUsersWithDataSource",
+          "No caching for frequently accessed data",
+          "Lack of database indexing strategy",
+          "No pagination in Gmail data fetching",
+          "Inefficient useEffect dependencies in Profile.tsx",
+          "Lack of pagination for potential large data sets",
+          "Inefficient cache invalidation in useFetch hook",
+          "Synchronous form validation blocking UI thread"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "worker": "Coder Cody",
+    "date": "2025-03-08",
+    "filename": "tech_debt_audit_01_2025-03-08.json"
+  }
+}

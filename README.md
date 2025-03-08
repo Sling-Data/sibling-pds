@@ -17,11 +17,11 @@
   - [Tech Stack](#tech-stack)
   - [Encryption](#encryption)
   - [Documentation](#documentation)
-    - [Architecture](#architecture)
     - [Design](#design)
     - [Research](#research)
     - [Compliance](#compliance)
     - [DevOps](#devops)
+    - [Engineering](#engineering)
 
 ## Project Overview
 Sibling is a user-centric Personal Data Store (PDS) that collects, manages, and harnesses an individual's comprehensive data profile—integrating volunteered, behavioral, and external data. It empowers users to train AI assistants (e.g., Grok, ChatGPT, Gemini) for personalized support, prioritizing data sovereignty user autonomy, transparency, and security.
@@ -217,8 +217,6 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 *(Please preserve this section in future README updates.)*
 
 ## Documentation
-### Architecture
-- [Data Ingestion System](docs/md/data_ingestion_design.md)
 ### Design
 - [User Profile Wireframes (Designer Dana, 2025-03-01)](docs/md/user_profile_wireframes.md)
 - [User Data Input Wireframes (Designer Dana, 2025-03-01)](docs/md/user_data_input_wireframes.md)
@@ -243,3 +241,6 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 - [Google Cloud Setup Guide for Gmail API (DevOps Dylan, 2025-03-06)](docs/md/google_cloud_setup_guide.md)
 - [Gmail 429 Error Simulation Guide (DevOps Dylan, 2025-03-07)](docs/md/gmail_429_simulation_guide.md)
 - [Plaid Setup Guide (DevOps Dylan, 2025-03-07)](docs/md/plaid_setup_guide.md)
+
+### Engineering
+- [Tech Debt Audit Report (Coder Cody, 2025-03-08)](docs/md/tech_debt_audit_01.md)
