@@ -1,6 +1,6 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { act } from 'react';
 import '@testing-library/jest-dom';
 import Profile from '../components/Profile';
@@ -231,5 +231,73 @@ describe('Profile Component', () => {
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
+  });
+
+  it('successfully updates user profile and refetches data', async () => {
+    // Mock user data
+    const mockUserData = { name: 'Test User', email: 'test@example.com' };
+    const updatedUserData = { name: 'Updated User', email: 'updated@example.com' };
+    
+    // Set up fetch mock
+    const mockFetch = global.fetch as jest.Mock;
+    
+    // Mock first fetch call to return initial user data
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockUserData
+    });
+    
+    // Mock the user ID
+    jest.spyOn(require('../context/UserContext'), 'useUser').mockReturnValue({ userId: 'test-user-id' });
+    
+    // Render the component
+    const { getByText, getByLabelText, getByRole } = render(
+      <BrowserRouter>
+        <UserProvider>
+          <Profile />
+        </UserProvider>
+      </BrowserRouter>
+    );
+    
+    // Wait for initial data to load
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+    
+    // Verify initial data is displayed
+    expect(getByText('Test User')).toBeInTheDocument();
+    
+    // Click edit button
+    fireEvent.click(getByText('Edit Profile'));
+    
+    // Change form values
+    fireEvent.change(getByLabelText('Name'), { target: { value: 'Updated User' } });
+    fireEvent.change(getByLabelText('Email'), { target: { value: 'updated@example.com' } });
+    
+    // Mock the update request
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ message: 'Profile updated successfully!' })
+    });
+    
+    // Mock the refetch request
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => updatedUserData
+    });
+    
+    // Submit the form
+    await act(async () => {
+      fireEvent.click(getByRole('button', { name: 'Save Changes' }));
+    });
+    
+    // Wait for the async operations to complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+    
+    // Verify the updated data is displayed
+    expect(getByText('Updated User')).toBeInTheDocument();
+    expect(getByText('updated@example.com')).toBeInTheDocument();
   });
 });

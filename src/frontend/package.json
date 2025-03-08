@@ -34,7 +34,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "build:frontend": "react-scripts build",
+    "build:test": "react-scripts build && npm run test-once",
     "test": "react-scripts test --env=jsdom",
     "test-once": "react-scripts test --env=jsdom --watchAll=false",
     "eject": "react-scripts eject"

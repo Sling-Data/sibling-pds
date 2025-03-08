@@ -190,7 +190,7 @@ describe('UserContext and useFetch Integration', () => {
     });
 
     // Verify both PUT and GET requests were made
-    expect(mockFetch).toHaveBeenCalledTimes(2); // Initial GET + PUT
+    expect(mockFetch).toHaveBeenCalledTimes(3); // Initial GET + PUT + Refetch GET
     expect(mockFetch.mock.calls[1][0]).toBe(`${process.env.REACT_APP_API_URL}/users/user123`);
     expect(mockFetch.mock.calls[1][1]).toEqual({
       method: 'PUT',
@@ -199,6 +199,8 @@ describe('UserContext and useFetch Integration', () => {
       },
       body: JSON.stringify(mockUpdatedUser),
     });
+    // Verify the refetch GET request
+    expect(mockFetch.mock.calls[2][0]).toBe(`${process.env.REACT_APP_API_URL}/users/user123`);
   });
 
   it('should handle network errors with retry', async () => {

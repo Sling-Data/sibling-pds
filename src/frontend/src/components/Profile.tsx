@@ -36,10 +36,8 @@ function Profile() {
   const { userId } = useUser();
   const location = useLocationSafe();
   const navigate = useNavigate();
-  const [shouldRefetch, setShouldRefetch] = useState(0);
   const { data: userData, loading, error: fetchError, refetch } = useFetch<UserData>(
-    userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null,
-    shouldRefetch
+    userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null
   );
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserData>({ name: '', email: '' });
@@ -111,14 +109,6 @@ function Profile() {
     });
   };
 
-  const handlePrivacyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setPrivacySettings({
-      ...privacySettings,
-      [name]: checked
-    });
-  };
-
   const validateForm = () => {
     const errors: FormErrors = {};
     if (!formData.name.trim()) {
@@ -153,8 +143,8 @@ function Profile() {
             success: true,
             message: 'Profile updated successfully!'
           });
-          setShouldRefetch(prev => prev + 1);
           setIsEditing(false);
+          refetch();
         } else {
           const errorData = await response.json();
           setSubmitStatus({
@@ -248,18 +238,6 @@ function Profile() {
               className={formErrors.email ? 'error' : ''}
             />
             {formErrors.email && <div className="error-message">{formErrors.email}</div>}
-          </div>
-          
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                name="dataSharing"
-                checked={privacySettings.dataSharing}
-                onChange={handlePrivacyChange}
-              />
-              Allow data sharing with third parties
-            </label>
           </div>
           
           <div className="button-group">

@@ -152,11 +152,11 @@ Content-Type: {{contentType}}
 
 ### Get Gmail credentials
 # @name getGmailCredentials
-GET {{baseUrl}}/user-data-sources/67cc33c5d7f80756cc98ce2f/gmail
+GET {{baseUrl}}/user-data-sources/{{userId}}/gmail
 
 ### Get Plaid credentials
 # @name getPlaidCredentials
-GET {{baseUrl}}/user-data-sources/67cc33c5d7f80756cc98ce2f/plaid
+GET {{baseUrl}}/user-data-sources/{{userId}}/plaid
 
 ### Test validation errors for user data sources
 
