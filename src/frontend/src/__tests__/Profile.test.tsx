@@ -5,9 +5,20 @@ import { act } from 'react';
 import '@testing-library/jest-dom';
 import Profile from '../components/Profile';
 import { UserProvider } from '../context/UserContext';
+import { BrowserRouter } from 'react-router-dom';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
+
+// Mock react-router-dom hooks
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    useLocation: jest.fn().mockReturnValue({ search: '' }),
+    useNavigate: jest.fn().mockReturnValue(jest.fn())
+  };
+});
 
 describe('Profile Component', () => {
   const originalError = console.error;
@@ -27,9 +38,11 @@ describe('Profile Component', () => {
 
   const renderWithProvider = () => {
     return render(
-      <UserProvider>
-        <Profile />
-      </UserProvider>
+      <BrowserRouter>
+        <UserProvider>
+          <Profile />
+        </UserProvider>
+      </BrowserRouter>
     );
   };
 
@@ -63,9 +76,11 @@ describe('Profile Component', () => {
 
     await act(async () => {
       render(
-        <UserProvider>
-          <Profile />
-        </UserProvider>
+        <BrowserRouter>
+          <UserProvider>
+            <Profile />
+          </UserProvider>
+        </BrowserRouter>
       );
     });
 
@@ -86,9 +101,11 @@ describe('Profile Component', () => {
 
     await act(async () => {
       render(
-        <UserProvider>
-          <Profile />
-        </UserProvider>
+        <BrowserRouter>
+          <UserProvider>
+            <Profile />
+          </UserProvider>
+        </BrowserRouter>
       );
     });
 
@@ -109,9 +126,11 @@ describe('Profile Component', () => {
 
     await act(async () => {
       render(
-        <UserProvider>
-          <Profile />
-        </UserProvider>
+        <BrowserRouter>
+          <UserProvider>
+            <Profile />
+          </UserProvider>
+        </BrowserRouter>
       );
     });
 
@@ -151,9 +170,11 @@ describe('Profile Component', () => {
 
     await act(async () => {
       render(
-        <UserProvider>
-          <Profile />
-        </UserProvider>
+        <BrowserRouter>
+          <UserProvider>
+            <Profile />
+          </UserProvider>
+        </BrowserRouter>
       );
     });
 
@@ -176,16 +197,18 @@ describe('Profile Component', () => {
 
     await act(async () => {
       render(
-        <UserProvider>
-          <Profile />
-        </UserProvider>
+        <BrowserRouter>
+          <UserProvider>
+            <Profile />
+          </UserProvider>
+        </BrowserRouter>
       );
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
   });
 
-  it('cancels edit mode without changes', async () => {
+  it('handles cancel button click', async () => {
     const mockUserData = {
       name: 'Test User',
       email: 'test@example.com'
@@ -199,12 +222,14 @@ describe('Profile Component', () => {
 
     await act(async () => {
       render(
-        <UserProvider>
-          <Profile />
-        </UserProvider>
+        <BrowserRouter>
+          <UserProvider>
+            <Profile />
+          </UserProvider>
+        </BrowserRouter>
       );
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
   });
-}); 
+});

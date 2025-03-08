@@ -15,7 +15,9 @@ import externalDataRouter from "./routes/externalData";
 import userDataRouter from "./routes/userData";
 import userDataSourcesRouter from "./routes/userDataSources";
 import authRouter from "./routes/authRoutes";
+import apiRouter from "./routes/apiRoutes";
 import testRouter from "./routes/testRoutes";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -54,6 +56,7 @@ app.use("/external-data", externalDataRouter);
 app.use("/user-data", userDataRouter);
 app.use("/user-data-sources", userDataSourcesRouter);
 app.use("/auth", authRouter);
+app.use("/api", apiRouter);
 app.use("/test", testRouter);
 
 // Only start server if run directly

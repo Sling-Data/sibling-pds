@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignupForm from './SignupForm';
 import DataInput from './DataInput';
 import Profile from './Profile';
+import ConnectPlaid from './ConnectPlaid';
 import { UserProvider, useUser } from '../context/UserContext';
 
 function AppContent() {
@@ -46,6 +47,16 @@ function AppContent() {
             )
           }
         />
+        <Route
+          path="/connect-plaid"
+          element={
+            userId ? (
+              <ConnectPlaid />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
       </Routes>
     </div>
   );
@@ -65,4 +76,4 @@ function App({ router: Router = BrowserRouter }: AppProps) {
   );
 }
 
-export default App; 
+export default App;

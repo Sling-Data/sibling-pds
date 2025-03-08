@@ -65,11 +65,18 @@ router.get("/callback", async (req, res) => {
       throw new AppError("Invalid state parameter format", 400);
     }
 
+    let tokens;
     // Exchange code for tokens
-    const tokens = await gmailClient.exchangeCodeForTokens(code);
+    try {
+      tokens = await gmailClient.exchangeCodeForTokens(code);
+    } catch (error) {
+      console.error("Failed to exchange code for tokens:", error);
+      throw new AppError("Failed to exchange code for tokens", 500);
+    }
 
     // Store credentials in UserDataSources
-    await UserDataSourcesModel.storeCredentials(
+    try {
+      await UserDataSourcesModel.storeCredentials(
       decodedState.userId,
       DataSourceType.GMAIL,
       {
@@ -77,16 +84,19 @@ router.get("/callback", async (req, res) => {
         refreshToken: tokens.refresh_token!,
         expiry: new Date(tokens.expiry_date!).toISOString(),
       }
-    );
+    );} catch (error) {
+      console.error("Failed to store credentials:", error);
+      throw new AppError("Failed to store credentials", 500);
+    }
 
     // Redirect to profile page with success status
-    res.redirect("http://localhost:3000/profile?status=success");
+    res.redirect("http://localhost:3001/profile?status=success");
   } catch (error) {
     console.error("OAuth callback error:", error);
     const message =
       error instanceof AppError ? error.message : "Authorization failed";
     res.redirect(
-      `http://localhost:3000/profile?status=error&message=${encodeURIComponent(
+      `http://localhost:3001/profile?status=error&message=${encodeURIComponent(
         message
       )}`
     );

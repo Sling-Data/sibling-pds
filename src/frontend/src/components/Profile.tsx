@@ -1,25 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { useUser } from '../context/UserContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/Profile.css';
 
+// Types
 interface UserData {
   name: string;
   email: string;
+  // Add other user data fields as needed
 }
 
 interface FormErrors {
   name?: string;
   email?: string;
+  // Add other form error fields as needed
 }
 
 interface PrivacySettings {
   dataSharing: boolean;
+  // Add other privacy settings as needed
 }
+
+// Helper function to safely use useLocation
+const useLocationSafe = () => {
+  try {
+    return useLocation();
+  } catch (e) {
+    // Return a mock location object when not in a Router context (for tests)
+    return { search: '', pathname: '', state: null, key: '', hash: '' };
+  }
+};
 
 function Profile() {
   const { userId } = useUser();
-  const [shouldRefetch, _setShouldRefetch] = useState(0);
+  const location = useLocationSafe();
+  const navigate = useNavigate();
+  const [shouldRefetch, setShouldRefetch] = useState(0);
   const { data: userData, loading, error: fetchError, refetch } = useFetch<UserData>(
     userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null,
     shouldRefetch
@@ -35,6 +52,10 @@ function Profile() {
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>({
     dataSharing: false
   });
+  const [authStatus, setAuthStatus] = useState<{
+    success?: boolean;
+    message?: string;
+  }>({});
 
   // Update formData when userData changes
   useEffect(() => {
@@ -43,201 +64,264 @@ function Profile() {
     }
   }, [userData]);
 
+  // Parse query parameters on component mount or location change
+  useEffect(() => {
+    if (!location || typeof location.search !== 'string') {
+      return;
+    }
+    
+    const params = new URLSearchParams(location.search);
+    const status = params.get('status');
+    const error = params.get('error');
+
+    if (status === 'success') {
+      setAuthStatus({
+        success: true,
+        message: 'Connected!'
+      });
+    } else if (error) {
+      setAuthStatus({
+        success: false,
+        message: decodeURIComponent(error)
+      });
+    } else {
+      setAuthStatus({});
+    }
+  }, [location]);
+
   const handleGmailConnect = () => {
     if (userId) {
+      // Use window.location.href for external redirects
       window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}`;
     }
   };
 
   const handlePlaidConnect = () => {
     if (userId) {
-      window.location.href = `${process.env.REACT_APP_API_URL}/auth/plaid?userId=${userId}`;
+      // Navigate to the ConnectPlaid component using react-router
+      navigate(`/connect-plaid?userId=${userId}`);
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    let isValid = true;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
 
+  const handlePrivacyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setPrivacySettings({
+      ...privacySettings,
+      [name]: checked
+    });
+  };
+
+  const validateForm = () => {
+    const errors: FormErrors = {};
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-      isValid = false;
+      errors.name = 'Name is required';
     }
-
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-      isValid = false;
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Email is invalid';
     }
-
-    setFormErrors(newErrors);
-    return isValid;
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm() || !userId) {
-      return;
-    }
+    const errors = validateForm();
+    setFormErrors(errors);
 
-    setIsSubmitting(true);
-    setSubmitStatus({});
+    if (Object.keys(errors).length === 0) {
+      setIsSubmitting(true);
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
 
-    try {
-      const updateResponse = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!updateResponse.ok) {
-        throw new Error(`HTTP error! status: ${updateResponse.status}`);
+        if (response.ok) {
+          setSubmitStatus({
+            success: true,
+            message: 'Profile updated successfully!'
+          });
+          setShouldRefetch(prev => prev + 1);
+          setIsEditing(false);
+        } else {
+          const errorData = await response.json();
+          setSubmitStatus({
+            success: false,
+            message: errorData.message || 'Failed to update profile.'
+          });
+        }
+      } catch (error) {
+        setSubmitStatus({
+          success: false,
+          message: 'An error occurred. Please try again.'
+        });
+      } finally {
+        setIsSubmitting(false);
       }
-
-      // Use refetch instead of shouldRefetch
-      await refetch();
-      
-      setSubmitStatus({
-        success: true,
-        message: 'Profile updated successfully!'
-      });
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setSubmitStatus({
-        success: false,
-        message: 'Failed to update profile'
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleInputChange = (field: keyof UserData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user makes a change
-    if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
   if (!userId) {
-    return <div>No user ID provided</div>;
+    return <div className="profile-container">No user ID provided</div>;
   }
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="profile-container">Loading user data...</div>;
   }
 
   if (fetchError) {
-    return <div>Error: {fetchError}</div>;
-  }
-
-  if (!userData) {
-    return <div className="error-message">No user data available</div>;
+    return (
+      <div className="profile-container">
+        <div className="error-message">Error loading user data: {fetchError}</div>
+        <button onClick={() => refetch()}>Retry</button>
+      </div>
+    );
   }
 
   return (
     <div className="profile-container">
-      {fetchError && (
-        <div className="error-message">
-          Error: {fetchError}
+      <h2>User Profile</h2>
+      
+      {/* Auth Status Messages */}
+      {authStatus.message && (
+        <div className={`auth-status ${authStatus.success ? 'success' : 'error'}`}>
+          {authStatus.message}
         </div>
       )}
-      <div className="profile-header">
-        <h2>User Profile</h2>
-        {!isEditing && (
-          <button className="edit-button" onClick={() => setIsEditing(true)}>
+      
+      {/* User Info Display */}
+      {!isEditing && userData && (
+        <div className="user-info">
+          <div className="info-row">
+            <span className="label">Name:</span>
+            <span className="value">{userData.name}</span>
+          </div>
+          <div className="info-row">
+            <span className="label">Email:</span>
+            <span className="value">{userData.email}</span>
+          </div>
+          <button 
+            className="edit-button"
+            onClick={() => setIsEditing(true)}
+          >
             Edit Profile
           </button>
-        )}
-      </div>
-
-      {submitStatus.message && (
-        <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
-          {submitStatus.message}
         </div>
       )}
-
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="profile-form">
+      
+      {/* Edit Form */}
+      {isEditing && (
+        <form onSubmit={handleSubmit} className="edit-form">
           <div className="form-group">
-            <label htmlFor="name">Name:</label>
+            <label htmlFor="name">Name</label>
             <input
-              id="name"
               type="text"
+              id="name"
+              name="name"
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Enter your name"
+              onChange={handleInputChange}
+              className={formErrors.name ? 'error' : ''}
             />
             {formErrors.name && <div className="error-message">{formErrors.name}</div>}
           </div>
-
+          
           <div className="form-group">
-            <label htmlFor="email">Email:</label>
+            <label htmlFor="email">Email</label>
             <input
-              id="email"
               type="email"
+              id="email"
+              name="email"
               value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="Enter your email"
+              onChange={handleInputChange}
+              className={formErrors.email ? 'error' : ''}
             />
             {formErrors.email && <div className="error-message">{formErrors.email}</div>}
           </div>
-
+          
+          <div className="form-group checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                name="dataSharing"
+                checked={privacySettings.dataSharing}
+                onChange={handlePrivacyChange}
+              />
+              Allow data sharing with third parties
+            </label>
+          </div>
+          
           <div className="button-group">
-            <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
             <button 
               type="button" 
               className="cancel-button"
-              onClick={() => {
-                setIsEditing(false);
-                setFormData(userData);
-                setFormErrors({});
-              }}
+              onClick={() => setIsEditing(false)}
             >
               Cancel
             </button>
+            <button 
+              type="submit" 
+              className="save-button"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
+          
+          {submitStatus.message && (
+            <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
+              {submitStatus.message}
+            </div>
+          )}
         </form>
-      ) : (
-        <div className="profile-details">
-          <div className="profile-field">
-            <label>Name:</label>
-            <span>{userData.name}</span>
-          </div>
-          <div className="profile-field">
-            <label>Email:</label>
-            <span>{userData.email}</span>
-          </div>
-        </div>
       )}
-
-      <div className="connected-services">
-        <h3 role="heading" aria-level={3}>Connected Services</h3>
-        <div className="service-buttons">
-          <button
-            className="connect-button"
-            onClick={handleGmailConnect}
-          >
-            Connect Gmail
-          </button>
-          <button
-            className="connect-button"
-            onClick={handlePlaidConnect}
-          >
-            Connect Plaid
-          </button>
+      
+      {/* External Connections */}
+      <div className="external-connections">
+        <h3>External Connections</h3>
+        
+        {authStatus.message && (
+          <div className={`auth-status ${authStatus.success ? 'success' : 'error'}`}>
+            {authStatus.message}
+          </div>
+        )}
+        
+        <div className="connections-content">
+          <div className="connection-control">
+            <label htmlFor="gmailConnection">Gmail:</label>
+            <button
+              id="gmailConnection"
+              className="connect-button"
+              onClick={handleGmailConnect}
+            >
+              Connect
+            </button>
+          </div>
+          <div className="connection-control">
+            <label htmlFor="plaidConnection">Bank Account:</label>
+            <button
+              id="plaidConnection"
+              className="connect-button"
+              onClick={handlePlaidConnect}
+            >
+              Connect
+            </button>
+          </div>
         </div>
       </div>
-
+      
+      {/* Privacy Settings */}
       <div className="privacy-settings">
         <h3>Privacy Settings</h3>
         <div className="privacy-content">
@@ -264,4 +348,4 @@ function Profile() {
   );
 }
 
-export default Profile; 
+export default Profile;

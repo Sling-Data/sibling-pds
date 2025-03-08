@@ -2,6 +2,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { act } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { UserProvider, useUser } from '../context/UserContext';
 import Profile from '../components/Profile';
 import '@testing-library/jest-dom';
@@ -60,7 +61,9 @@ describe('UserContext', () => {
     render(
       <UserProvider>
         <TestComponent />
-        <Profile />
+        <BrowserRouter>
+          <Profile />
+        </BrowserRouter>
       </UserProvider>
     );
 

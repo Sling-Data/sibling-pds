@@ -128,9 +128,9 @@ describe('App Component', () => {
     // Submit the data input form
     fireEvent.submit(dataInputForm);
 
-    // Navigate to profile page
+    // Wait for profile page to load
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 3, name: 'Connected Services' })).toBeInTheDocument();
+      expect(screen.getByText('External Connections')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 
@@ -208,8 +208,7 @@ describe('App Component', () => {
 
     // Wait for profile page to load
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 3, name: 'Connected Services' })).toBeInTheDocument();
+      expect(screen.getByText('External Connections')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 });
-
