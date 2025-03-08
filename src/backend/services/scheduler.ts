@@ -9,11 +9,13 @@ import { AppError } from "../middleware/errorHandler";
 interface SchedulerOptions {
   cronExpression?: string;
   enabled?: boolean;
+  runImmediately?: boolean;
 }
 
 const DEFAULT_OPTIONS: SchedulerOptions = {
   cronExpression: "0 2 * * *", // Daily at 2 AM UTC
   enabled: true,
+  runImmediately: false, // Default to false to prevent unnecessary API calls on server restarts
 };
 
 /**
@@ -109,6 +111,10 @@ async function runDataIngestion(): Promise<void> {
 /**
  * Starts the scheduler for data ingestion
  * @param options Scheduler options
+ *   - cronExpression: Cron expression for scheduling (default: '0 2 * * *', daily at 2 AM UTC)
+ *   - enabled: Whether the scheduler is enabled (default: true)
+ *   - runImmediately: Whether to run data ingestion immediately on startup (default: false)
+ *     Setting this to true will trigger data ingestion on every server restart, which may increase API usage and costs.
  */
 export function startScheduler(options: SchedulerOptions = {}): void {
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
@@ -128,10 +134,13 @@ export function startScheduler(options: SchedulerOptions = {}): void {
   });
 
   // Run immediately on startup (optional)
-  setTimeout(() => {
+  if (mergedOptions.runImmediately && process.env.NODE_ENV !== "test") {
     console.log("[Scheduler] Running initial data ingestion");
-    runDataIngestion();
-  }, 5000); // Wait 5 seconds after startup
+    // Use setTimeout to ensure database connection is fully established
+    setTimeout(() => {
+      runDataIngestion();
+    }, 5000); // Wait 5 seconds after startup
+  }
 
   console.log("[Scheduler] Scheduler started successfully");
 }
