@@ -131,4 +131,17 @@ router.get(
   })
 );
 
+router.post(
+  "/test-plaid-fetch",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { userId } = req.body;
+    if (!userId || typeof userId !== "string") {
+      throw new AppError("userId is required in the request body", 400);
+    }
+
+    const plaidData = await plaidClient.fetchPlaidData(userId);
+    res.json(plaidData);
+  })
+);
+
 export default router;

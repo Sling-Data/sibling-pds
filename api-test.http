@@ -144,19 +144,19 @@ Content-Type: {{contentType}}
     "userId": "{{userId}}",
     "dataSourceType": "plaid",
     "credentials": {
-        "accessToken": "access-sandbox-1234...",
-        "itemId": "M5eVJqLnv3tbzdW...",
+        "accessToken": "access-sandbox-e0d1c838-d760-46ce-808d-08d75ea61bdd",
+        "itemId": "KzAJNdml86IraWMqR61BuWAqkVeA9kiVvG9AL",
         "expiry": "2024-03-21T12:00:00.000Z"
     }
 }
 
 ### Get Gmail credentials
 # @name getGmailCredentials
-GET {{baseUrl}}/user-data-sources/{{userId}}/gmail
+GET {{baseUrl}}/user-data-sources/67cc33c5d7f80756cc98ce2f/gmail
 
 ### Get Plaid credentials
 # @name getPlaidCredentials
-GET {{baseUrl}}/user-data-sources/{{userId}}/plaid
+GET {{baseUrl}}/user-data-sources/67cc33c5d7f80756cc98ce2f/plaid
 
 ### Test validation errors for user data sources
 
@@ -215,6 +215,15 @@ Content-Type: {{contentType}}
 # @name testPlaidToken
 POST {{baseUrl}}/test/test-plaid-token
 Content-Type: application/json
+
+{
+    "userId": "{{userId}}"
+}
+
+### Test Plaid data fetching
+# @name plaidFetch
+POST {{baseUrl}}/test/test-plaid-fetch
+Content-Type: {{contentType}}
 
 {
     "userId": "{{userId}}"
