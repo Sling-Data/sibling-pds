@@ -14,8 +14,8 @@
     "test-once": "jest --runInBand",
     "test:backend": "jest --watch --selectProjects backend",
     "test:backend-once": "jest --runInBand --selectProjects backend",
-    "test:frontend": "jest --watch --selectProjects frontend",
-    "test:frontend-once": "jest --runInBand --selectProjects frontend",
+    "test:frontend": "cd src/frontend && npm test",
+    "test:frontend-once": "cd src/frontend && npm run test-once",
     "eject": "cd src/frontend && npm run eject",
     "start-proxy": "node proxy.js",
     "http-server": "http-server"
