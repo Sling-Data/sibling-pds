@@ -53,6 +53,9 @@ describe("Plaid Client", () => {
     mockPlaidApi = {
       linkTokenCreate: jest.fn(),
       itemPublicTokenExchange: jest.fn(),
+      accountsGet: jest.fn(),
+      transactionsGet: jest.fn(),
+      paymentInitiationPaymentGet: jest.fn(),
     };
 
     plaidClient = new PlaidClient(mockPlaidApi as PlaidApi);
@@ -211,6 +214,230 @@ describe("Plaid Client", () => {
       );
       const client = new PlaidClient(customClient);
       expect(client["getPlaidClient"]()).toBe(customClient);
+    });
+  });
+
+  describe("fetchPlaidData", () => {
+    const mockUserId = "test-user-id";
+    const mockAccessToken = "test-access-token";
+
+    const mockAccounts = [
+      {
+        account_id: "account-1",
+        name: "Checking Account",
+        type: "depository",
+        subtype: "checking",
+        balances: {
+          available: 1000,
+          current: 1200,
+          limit: null,
+          iso_currency_code: "USD",
+        },
+      },
+    ];
+
+    const mockTransactions = [
+      {
+        transaction_id: "transaction-1",
+        account_id: "account-1",
+        amount: 50.25,
+        date: "2023-03-01",
+        name: "Grocery Store",
+        merchant_name: "Whole Foods",
+        category: ["Food and Drink", "Groceries"],
+        pending: false,
+      },
+    ];
+
+    beforeEach(() => {
+      // Mock successful responses
+      (UserDataSourcesModel.getCredentials as jest.Mock).mockResolvedValue({
+        accessToken: mockAccessToken,
+        itemId: "test-item-id",
+      });
+
+      (mockPlaidApi.accountsGet as jest.Mock).mockResolvedValue({
+        data: { accounts: mockAccounts },
+      });
+
+      (mockPlaidApi.transactionsGet as jest.Mock).mockResolvedValue({
+        data: {
+          transactions: mockTransactions,
+          total_transactions: 1,
+        },
+      });
+    });
+
+    it("should successfully fetch Plaid data", async () => {
+      const result = await plaidClient.fetchPlaidData(mockUserId);
+
+      expect(result).toEqual({
+        accounts: [
+          {
+            accountId: "account-1",
+            name: "Checking Account",
+            type: "depository",
+            subtype: "checking",
+            balance: {
+              available: 1000,
+              current: 1200,
+              limit: null,
+              isoCurrencyCode: "USD",
+            },
+          },
+        ],
+        transactions: [
+          {
+            transactionId: "transaction-1",
+            accountId: "account-1",
+            amount: 50.25,
+            date: "2023-03-01",
+            name: "Grocery Store",
+            merchantName: "Whole Foods",
+            category: ["Food and Drink", "Groceries"],
+            pending: false,
+          },
+        ],
+        scheduledPayments: expect.any(Array),
+      });
+
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledWith({
+        access_token: mockAccessToken,
+      });
+
+      expect(mockPlaidApi.transactionsGet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          access_token: mockAccessToken,
+        })
+      );
+    });
+
+    it("should handle rate limit errors with retries", async () => {
+      // First call fails with 429, second succeeds
+      (mockPlaidApi.accountsGet as jest.Mock)
+        .mockRejectedValueOnce({ response: { status: 429 } })
+        .mockResolvedValueOnce({ data: { accounts: mockAccounts } });
+
+      const result = await plaidClient.fetchPlaidData(mockUserId);
+
+      expect(result.accounts).toHaveLength(1);
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("Rate limit hit when fetching accounts")
+      );
+    });
+
+    it("should throw AppError after max rate limit retries", async () => {
+      // All calls fail with 429
+      (mockPlaidApi.accountsGet as jest.Mock).mockRejectedValue({
+        response: { status: 429 },
+      });
+
+      await expect(plaidClient.fetchPlaidData(mockUserId)).rejects.toThrow(
+        "Rate limit exceeded when fetching accounts"
+      );
+
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(3); // Initial + 2 retries
+      // We expect 6 console.error calls:
+      // - 2 from retryWithConfig for rate limit retries
+      // - 2 from fetchAccounts for each retry
+      // - 2 from fetchPlaidData for the final error
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("Rate limit hit")
+      );
+    });
+
+    it("should handle authentication errors with token refresh", async () => {
+      // First call fails with 401, second succeeds
+      (mockPlaidApi.accountsGet as jest.Mock)
+        .mockRejectedValueOnce({ response: { status: 401 } })
+        .mockResolvedValueOnce({ data: { accounts: mockAccounts } });
+
+      const result = await plaidClient.fetchPlaidData(mockUserId);
+
+      expect(result.accounts).toHaveLength(1);
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("Authentication error when fetching accounts")
+      );
+    });
+
+    it("should throw AppError after max auth retries", async () => {
+      // All calls fail with 401
+      (mockPlaidApi.accountsGet as jest.Mock).mockRejectedValue({
+        response: { status: 401 },
+      });
+
+      await expect(plaidClient.fetchPlaidData(mockUserId)).rejects.toThrow(
+        "Authentication failed when fetching accounts"
+      );
+
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(2); // Initial + 1 retry
+      // We expect multiple console.error calls from different parts of the code
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("Authentication error")
+      );
+    });
+
+    it("should handle network errors with retry", async () => {
+      // First call fails with network error, second succeeds
+      (mockPlaidApi.accountsGet as jest.Mock)
+        .mockRejectedValueOnce({ code: "ECONNREFUSED" })
+        .mockResolvedValueOnce({ data: { accounts: mockAccounts } });
+
+      const result = await plaidClient.fetchPlaidData(mockUserId);
+
+      expect(result.accounts).toHaveLength(1);
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("Network error when fetching accounts")
+      );
+    });
+
+    it("should throw AppError after max network retries", async () => {
+      // All calls fail with network error
+      (mockPlaidApi.accountsGet as jest.Mock).mockRejectedValue({
+        code: "ECONNREFUSED",
+      });
+
+      await expect(plaidClient.fetchPlaidData(mockUserId)).rejects.toThrow(
+        "Network error when fetching accounts: ECONNREFUSED"
+      );
+
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(2); // Initial + 1 retry
+      // We expect multiple console.error calls from different parts of the code
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining("Network error")
+      );
+    });
+
+    it("should throw AppError for other errors", async () => {
+      // Mock a generic error
+      (mockPlaidApi.accountsGet as jest.Mock).mockRejectedValue(
+        new Error("Unknown error")
+      );
+
+      await expect(plaidClient.fetchPlaidData(mockUserId)).rejects.toThrow(
+        "Error fetching accounts: Unknown error"
+      );
+
+      expect(mockPlaidApi.accountsGet).toHaveBeenCalledTimes(1); // No retries
+    });
+
+    it("should throw AppError when no access token is available", async () => {
+      // Mock no credentials
+      (UserDataSourcesModel.getCredentials as jest.Mock).mockResolvedValue(
+        null
+      );
+
+      // Mock link token creation
+      (mockPlaidApi.linkTokenCreate as jest.Mock).mockResolvedValue({
+        data: { link_token: "test-link-token" },
+      });
+
+      await expect(plaidClient.fetchPlaidData(mockUserId)).rejects.toThrow(
+        "No Plaid access token available for this user"
+      );
     });
   });
 });

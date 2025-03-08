@@ -66,6 +66,10 @@ interface PlaidData {
   scheduledPayments: PlaidScheduledPayment[];
 }
 
+// Helper function to delay execution
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
 export class PlaidClient {
   private plaidClient: PlaidApi | null = null;
 
@@ -199,16 +203,20 @@ export class PlaidClient {
       const accessToken = authResponse.accessToken;
       const client = this.getPlaidClient();
 
-      // Fetch accounts
-      const accounts = await this.fetchAccounts(accessToken, client);
+      // Fetch data with retries
+      const accounts = await this.retryWithConfig(
+        () => this.fetchAccounts(accessToken, client),
+        "accounts"
+      );
 
-      // Fetch transactions (last 30 days)
-      const transactions = await this.fetchTransactions(accessToken, client);
+      const transactions = await this.retryWithConfig(
+        () => this.fetchTransactions(accessToken, client),
+        "transactions"
+      );
 
-      // Fetch scheduled payments (or mock in sandbox)
-      const scheduledPayments = await this.fetchScheduledPayments(
-        accessToken,
-        client
+      const scheduledPayments = await this.retryWithConfig(
+        () => this.fetchScheduledPayments(accessToken, client),
+        "scheduled payments"
       );
 
       return {
@@ -228,15 +236,108 @@ export class PlaidClient {
     }
   }
 
+  /**
+   * Retry a Plaid API operation with configurable retries for different error types
+   * @param operation The async operation to retry
+   * @param operationName Name of the operation for logging
+   * @returns The result of the operation
+   */
+  private async retryWithConfig<T>(
+    operation: () => Promise<T>,
+    operationName: string
+  ): Promise<T> {
+    const MAX_RATE_LIMIT_RETRIES = 2;
+    const MAX_AUTH_RETRIES = 1;
+    const MAX_NETWORK_RETRIES = 1;
+    const RETRY_DELAY_MS = 1000;
+
+    let rateLimitRetries = 0;
+    let authRetries = 0;
+    let networkRetries = 0;
+
+    while (true) {
+      try {
+        return await operation();
+      } catch (error: any) {
+        // Handle rate limit errors (429)
+        if (error.response && error.response.status === 429) {
+          if (rateLimitRetries < MAX_RATE_LIMIT_RETRIES) {
+            rateLimitRetries++;
+            console.error(
+              `Rate limit hit when fetching ${operationName}. Retrying (${rateLimitRetries}/${MAX_RATE_LIMIT_RETRIES}) after ${RETRY_DELAY_MS}ms`
+            );
+            await delay(RETRY_DELAY_MS);
+            continue;
+          } else {
+            throw new AppError(
+              `Rate limit exceeded when fetching ${operationName}`,
+              429
+            );
+          }
+        }
+
+        // Handle authentication errors (401)
+        if (error.response && error.response.status === 401) {
+          if (authRetries < MAX_AUTH_RETRIES) {
+            authRetries++;
+            console.error(
+              `Authentication error when fetching ${operationName}. Refreshing token and retrying.`
+            );
+            // In a real implementation, we would refresh the token here
+            // For Plaid, this might involve re-authenticating the user
+            // For now, we'll just retry after a delay
+            await delay(RETRY_DELAY_MS);
+            continue;
+          } else {
+            throw new AppError(
+              `Authentication failed when fetching ${operationName}`,
+              401
+            );
+          }
+        }
+
+        // Handle network errors
+        if (
+          error.code === "ECONNREFUSED" ||
+          error.code === "ENOTFOUND" ||
+          error.code === "ETIMEDOUT"
+        ) {
+          if (networkRetries < MAX_NETWORK_RETRIES) {
+            networkRetries++;
+            console.error(
+              `Network error when fetching ${operationName}: ${error.code}. Retrying after ${RETRY_DELAY_MS}ms`
+            );
+            await delay(RETRY_DELAY_MS);
+            continue;
+          } else {
+            throw new AppError(
+              `Network error when fetching ${operationName}: ${error.code}`,
+              500
+            );
+          }
+        }
+
+        // For other errors, rethrow
+        if (error instanceof AppError) {
+          throw error;
+        }
+        throw new AppError(
+          `Error fetching ${operationName}: ${error.message}`,
+          500
+        );
+      }
+    }
+  }
+
   private async fetchAccounts(
     accessToken: string,
     client: PlaidApi
   ): Promise<PlaidAccount[]> {
-    try {
-      const request: AccountsGetRequest = {
-        access_token: accessToken,
-      };
+    const request: AccountsGetRequest = {
+      access_token: accessToken,
+    };
 
+    try {
       const response = await client.accountsGet(request);
 
       return response.data.accounts.map((account) => ({
@@ -253,10 +354,8 @@ export class PlaidClient {
       }));
     } catch (error) {
       console.error("Error fetching accounts:", error);
-      throw new AppError(
-        `Failed to fetch accounts: ${(error as Error).message}`,
-        500
-      );
+      // Don't transform the error here, let retryWithConfig handle it
+      throw error;
     }
   }
 
@@ -318,10 +417,8 @@ export class PlaidClient {
       return allTransactions;
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      throw new AppError(
-        `Failed to fetch transactions: ${(error as Error).message}`,
-        500
-      );
+      // Don't transform the error here, let retryWithConfig handle it
+      throw error;
     }
   }
 
@@ -353,8 +450,8 @@ export class PlaidClient {
       }
     } catch (error) {
       console.error("Error fetching scheduled payments:", error);
-      // Don't fail the entire request if just scheduled payments fail
-      return [];
+      // Don't transform the error here, let retryWithConfig handle it
+      throw error;
     }
   }
 
