@@ -2,6 +2,7 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67c9dcd230beec3d0e0c19c6
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE1MTk4MzEsImV4cCI6MTc0MTYwNjIzMX0.SfO02oZ0rGymAZZCboUbWHvBX4QY3LfjbOmtaVyXjD0
 
 ### Test root endpoint
 # @name root
@@ -233,5 +234,79 @@ Content-Type: {{contentType}}
 # @name runDataIngestion
 POST {{baseUrl}}/test/run-data-ingestion
 Content-Type: {{contentType}}
+
+### JWT Authentication Tests ###
+# To use these tests:
+# 1. First run the "login" request to get a JWT token
+# 2. Copy the token from the response and replace the @jwtToken variable at the top of this file
+# 3. Then run the other JWT-authenticated requests
+
+### Login to get JWT token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}"
+}
+
+### Access protected route with JWT
+# @name protectedRoute
+GET {{baseUrl}}/auth/protected
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Access Gmail auth with JWT (will redirect to Google)
+# @name gmailAuthWithJWT
+GET {{baseUrl}}/auth/gmail
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Test protected route without token (should return 401)
+# @name protectedRouteUnauthorized
+GET {{baseUrl}}/auth/protected
+Content-Type: {{contentType}}
+
+### Test Gmail auth URL with JWT
+# @name gmailAuthUrlWithJWT
+GET {{baseUrl}}/test/gmail-auth-url
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Test Plaid auth URL with JWT
+# @name plaidAuthUrlWithJWT
+GET {{baseUrl}}/test/plaid-auth-url
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Test Gmail token with JWT
+# @name testGmailTokenWithJWT
+POST {{baseUrl}}/test/test-gmail-token
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Test Plaid token with JWT
+# @name testPlaidTokenWithJWT
+POST {{baseUrl}}/test/test-plaid-token
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Test Gmail data fetching with JWT
+# @name gmailFetchWithJWT
+POST {{baseUrl}}/test/test-gmail-fetch
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Test Plaid data fetching with JWT
+# @name plaidFetchWithJWT
+POST {{baseUrl}}/test/test-plaid-fetch
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
+
+### Manually trigger data ingestion with JWT
+# @name runDataIngestionWithJWT
+POST {{baseUrl}}/test/run-data-ingestion
+Content-Type: {{contentType}}
+Authorization: Bearer {{jwtToken}}
 
 ###

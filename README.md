@@ -49,11 +49,24 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 │   │   │   ├── BehavioralDataModel.ts
 │   │   │   ├── ExternalDataModel.ts
 │   │   │   ├── UserModel.ts
-│   │   │   └── VolunteeredDataModel.ts
+│   │   │   ├── VolunteeredDataModel.ts
+│   │   │   └── UserDataSourcesModel.ts
 │   │   ├── /routes     # Express routes
-│   │   │   └── users.ts
+│   │   │   ├── users.ts
+│   │   │   ├── volunteeredData.ts
+│   │   │   ├── behavioralData.ts
+│   │   │   ├── externalData.ts
+│   │   │   ├── userData.ts
+│   │   │   ├── userDataSources.ts
+│   │   │   ├── authRoutes.ts
+│   │   │   ├── apiRoutes.ts
+│   │   │   └── testRoutes.ts
+│   │   ├── /services   # Service implementations
+│   │   │   ├── scheduler.ts
+│   │   │   └── /apiClients  # API client implementations
 │   │   ├── /utils      # Utility functions
 │   │   │   └── encryption.ts
+│   │   ├── index.ts    # Main server entry point
 │   │   └── /.env       # Backend environment variables
 │   └── /frontend  # React/TypeScript frontend
 │       ├── /public     # Static assets

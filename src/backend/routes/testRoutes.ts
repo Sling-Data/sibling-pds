@@ -3,8 +3,13 @@ import { AppError } from "../middleware/errorHandler";
 import gmailClient from "../services/apiClients/gmailClient";
 import plaidClient from "../services/apiClients/plaidClient";
 import scheduler from "../services/scheduler";
+import { authenticateJWT } from "../middleware/auth";
+import config from "../config/config";
 
 const router = express.Router();
+
+// Apply JWT authentication to all routes in this router
+router.use(authenticateJWT as express.RequestHandler);
 
 interface PlaidTokenRequest {
   userId: string;
@@ -26,10 +31,11 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<any>) => {
 router.post(
   "/test-gmail-token",
   asyncHandler(async (req: Request, res: Response) => {
-    const { userId } = req.body;
+    // Use userId from JWT token
+    const userId = req.userId;
 
     if (!userId) {
-      throw new AppError("userId is required", 400);
+      throw new AppError("Authentication required", 401);
     }
 
     const accessToken = await gmailClient.getAccessToken(userId);
@@ -41,9 +47,10 @@ router.post(
 router.get(
   "/gmail-auth-url",
   asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.query.userId;
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required as a query parameter", 400);
+    // Use userId from JWT token
+    const userId = req.userId;
+    if (!userId) {
+      throw new AppError("Authentication required", 401);
     }
 
     // Generate state parameter with userId and random string for CSRF protection
@@ -61,9 +68,10 @@ router.get(
 
 router.post("/test-gmail-fetch", async (req, res) => {
   try {
-    const { userId } = req.body;
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required in request body", 400);
+    // Use userId from JWT token
+    const userId = req.userId;
+    if (!userId) {
+      throw new AppError("Authentication required", 401);
     }
 
     const data = await gmailClient.fetchGmailData(userId);
@@ -88,9 +96,10 @@ router.post(
   ) => {
     void (async () => {
       try {
-        const { userId } = req.body;
+        // Use userId from JWT token
+        const userId = req.userId;
         if (!userId) {
-          res.status(400).json({ error: "userId is required" });
+          res.status(401).json({ error: "Authentication required" });
           return;
         }
 
@@ -111,9 +120,10 @@ router.post(
 router.get(
   "/plaid-auth-url",
   asyncHandler(async (req: Request, res: Response) => {
-    const { userId } = req.query;
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required as a query parameter", 400);
+    // Use userId from JWT token
+    const userId = req.userId;
+    if (!userId) {
+      throw new AppError("Authentication required", 401);
     }
 
     const response = await plaidClient.getAccessToken(userId);
@@ -121,13 +131,12 @@ router.get(
     // Return the URL that would be redirected to
     if (response.type === "access_token") {
       return res.json({
-        redirectUrl:
-          "http://localhost:3000/connect-plaid?status=already_connected",
+        redirectUrl: `${config.FRONTEND_URL}/connect-plaid?status=already_connected`,
       });
     }
 
     return res.json({
-      redirectUrl: `http://localhost:3000/connect-plaid?linkToken=${response.linkToken}`,
+      redirectUrl: `${config.FRONTEND_URL}/connect-plaid?linkToken=${response.linkToken}`,
     });
   })
 );
@@ -135,9 +144,10 @@ router.get(
 router.post(
   "/test-plaid-fetch",
   asyncHandler(async (req: Request, res: Response) => {
-    const { userId } = req.body;
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required in the request body", 400);
+    // Use userId from JWT token
+    const userId = req.userId;
+    if (!userId) {
+      throw new AppError("Authentication required", 401);
     }
 
     const plaidData = await plaidClient.fetchPlaidData(userId);

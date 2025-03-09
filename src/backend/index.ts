@@ -7,6 +7,9 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, ".env") });
 
+// Import config
+import config from "./config/config";
+
 // Import routes
 import usersRouter from "./routes/users";
 import volunteeredDataRouter from "./routes/volunteeredData";
@@ -64,16 +67,15 @@ app.use("/test", testRouter);
 
 // Only start server if run directly
 if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
+  const PORT = config.PORT;
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     // Connect to MongoDB
-    const mongoUri =
-      process.env.MONGODB_URI || "mongodb://localhost:27018/sibling-pds";
+    const mongoUri = config.MONGODB_URI;
     connectDb(mongoUri)
       .then(() => {
         // Start the scheduler after database connection is established
-        const isDev = process.env.NODE_ENV === "development";
+        const isDev = config.NODE_ENV === "development";
         scheduler.startScheduler({
           // Use a more frequent schedule in development for testing
           cronExpression: isDev ? "*/5 * * * *" : "0 2 * * *",

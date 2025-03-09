@@ -1,10 +1,12 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import { AppError } from "../middleware/errorHandler";
 import gmailClient from "../services/apiClients/gmailClient";
 import plaidClient from "../services/apiClients/plaidClient";
 import UserDataSourcesModel, {
   DataSourceType,
 } from "../models/UserDataSourcesModel";
+import { authenticateJWT, generateToken } from "../middleware/auth";
+import config from "../config/config";
 
 const router = express.Router();
 
@@ -16,16 +18,47 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
       const message =
         error instanceof AppError ? error.message : "Internal server error";
       res.redirect(
-        `http://localhost:3001/profile?error=${encodeURIComponent(message)}`
+        `${config.FRONTEND_URL}/profile?error=${encodeURIComponent(message)}`
       );
     });
   };
 };
 
-router.get("/gmail", async (req, res) => {
-  const userId = req.query.userId;
-  if (!userId || typeof userId !== "string") {
-    throw new AppError("userId is required as a query parameter", 400);
+// Mock login endpoint to generate JWT token
+router.post("/login", ((req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    res.status(400).json({ message: "userId is required" });
+    return;
+  }
+
+  // Generate JWT token
+  const token = generateToken(userId);
+
+  // Return token
+  res.json({ token });
+  return;
+}) as RequestHandler);
+
+// Protected route example - requires JWT authentication
+router.get(
+  "/protected",
+  authenticateJWT as RequestHandler,
+  ((req, res) => {
+    res.json({
+      message: "This is a protected route",
+      userId: req.userId,
+    });
+    return;
+  }) as RequestHandler
+);
+
+// Apply JWT authentication to Gmail routes
+router.get("/gmail", authenticateJWT as RequestHandler, async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    throw new AppError("Authentication required", 401);
   }
 
   // Generate state parameter with userId and random string for CSRF protection
@@ -77,26 +110,27 @@ router.get("/callback", async (req, res) => {
     // Store credentials in UserDataSources
     try {
       await UserDataSourcesModel.storeCredentials(
-      decodedState.userId,
-      DataSourceType.GMAIL,
-      {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token!,
-        expiry: new Date(tokens.expiry_date!).toISOString(),
-      }
-    );} catch (error) {
+        decodedState.userId,
+        DataSourceType.GMAIL,
+        {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token!,
+          expiry: new Date(tokens.expiry_date!).toISOString(),
+        }
+      );
+    } catch (error) {
       console.error("Failed to store credentials:", error);
       throw new AppError("Failed to store credentials", 500);
     }
 
     // Redirect to profile page with success status
-    res.redirect("http://localhost:3001/profile?status=success");
+    res.redirect(`${config.FRONTEND_URL}/profile?status=success`);
   } catch (error) {
     console.error("OAuth callback error:", error);
     const message =
       error instanceof AppError ? error.message : "Authorization failed";
     res.redirect(
-      `http://localhost:3001/profile?status=error&message=${encodeURIComponent(
+      `${config.FRONTEND_URL}/profile?status=error&message=${encodeURIComponent(
         message
       )}`
     );
@@ -105,10 +139,11 @@ router.get("/callback", async (req, res) => {
 
 router.get(
   "/plaid",
+  authenticateJWT as RequestHandler,
   asyncHandler(async (req: Request, res: Response) => {
-    const { userId } = req.query;
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required as a query parameter", 400);
+    const userId = req.userId;
+    if (!userId) {
+      throw new AppError("Authentication required", 401);
     }
 
     const response = await plaidClient.getAccessToken(userId);
@@ -116,13 +151,13 @@ router.get(
     // If we got an access token, user is already authenticated
     if (response.type === "access_token") {
       return res.redirect(
-        "http://localhost:3001/connect-plaid?status=already_connected"
+        `${config.FRONTEND_URL}/connect-plaid?status=already_connected`
       );
     }
 
     // Otherwise, redirect with the link token
     return res.redirect(
-      `http://localhost:3001/connect-plaid?linkToken=${response.linkToken}`
+      `${config.FRONTEND_URL}/connect-plaid?linkToken=${response.linkToken}`
     );
   })
 );
@@ -145,7 +180,7 @@ router.get(
       await plaidClient.exchangePublicToken(public_token, userId);
 
       // Redirect to profile page with success status
-      res.redirect("http://localhost:3001/profile?status=success");
+      res.redirect(`${config.FRONTEND_URL}/profile?status=success`);
     } catch (error) {
       console.error("Plaid callback error:", error);
       const message =
@@ -153,7 +188,7 @@ router.get(
           ? error.message
           : "Failed to connect Plaid account";
       res.redirect(
-        `http://localhost:3001/profile?error=${encodeURIComponent(message)}`
+        `${config.FRONTEND_URL}/profile?error=${encodeURIComponent(message)}`
       );
     }
   })
