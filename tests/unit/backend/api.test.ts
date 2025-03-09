@@ -354,6 +354,15 @@ describe("JWT Authentication and Validation", () => {
     expect(response.body).toHaveProperty("token");
     expect(typeof response.body.token).toBe("string");
     expect(response.body.token.split(".").length).toBe(3); // JWT has 3 parts
+
+    // Check for refresh token
+    expect(response.body).toHaveProperty("refreshToken");
+    expect(typeof response.body.refreshToken).toBe("string");
+    // Opaque tokens don't have JWT structure
+
+    // Check for expiration time
+    expect(response.body).toHaveProperty("expiresIn");
+    expect(typeof response.body.expiresIn).toBe("number");
   });
 
   // Test login endpoint with invalid input
@@ -474,5 +483,77 @@ describe("JWT Authentication and Validation", () => {
     expect(response.body).toHaveProperty("status", "error");
     expect(response.body).toHaveProperty("message", "Validation error");
     expect(response.body.details).toContain("public_token is required");
+  });
+
+  // Test refresh token endpoint with valid input
+  it("should refresh access token with valid refresh token at POST /auth/refresh-token", async () => {
+    // First get a refresh token
+    const loginResponse = await request(server)
+      .post("/auth/login")
+      .send({ userId })
+      .expect(200);
+
+    const refreshToken = loginResponse.body.refreshToken;
+
+    // Then use it to get a new access token
+    const response = await request(server)
+      .post("/auth/refresh-token")
+      .send({ refreshToken })
+      .expect(200);
+
+    expect(response.body).toHaveProperty("accessToken");
+    expect(typeof response.body.accessToken).toBe("string");
+    expect(response.body.accessToken.split(".").length).toBe(3); // JWT has 3 parts
+
+    // Check for new refresh token (token rotation)
+    expect(response.body).toHaveProperty("refreshToken");
+    expect(typeof response.body.refreshToken).toBe("string");
+    expect(response.body.refreshToken).not.toBe(refreshToken); // Should be different from original
+
+    expect(response.body).toHaveProperty("message");
+    expect(response.body.message).toBe("Token refreshed successfully");
+
+    // Try to use the old refresh token again (should fail due to token rotation)
+    await request(server)
+      .post("/auth/refresh-token")
+      .send({ refreshToken })
+      .expect(401);
+  });
+
+  // Test refresh token endpoint with invalid input
+  it("should return 401 for invalid refresh token at POST /auth/refresh-token", async () => {
+    const response = await request(server)
+      .post("/auth/refresh-token")
+      .send({ refreshToken: "invalid-token" })
+      .expect(401);
+
+    expect(response.body).toHaveProperty("message");
+    expect(response.body.message).toBe("Invalid refresh token");
+  });
+
+  // Test refresh token endpoint with missing token
+  it("should return 400 for missing refresh token at POST /auth/refresh-token", async () => {
+    const response = await request(server)
+      .post("/auth/refresh-token")
+      .send({})
+      .expect(400);
+
+    expect(response.body).toHaveProperty("status", "error");
+    expect(response.body).toHaveProperty("message", "Validation error");
+    expect(response.body).toHaveProperty("details");
+    expect(response.body.details).toContain("refreshToken is required");
+  });
+
+  // Test refresh token endpoint with empty token
+  it("should return 400 for empty refresh token at POST /auth/refresh-token", async () => {
+    const response = await request(server)
+      .post("/auth/refresh-token")
+      .send({ refreshToken: "" })
+      .expect(400);
+
+    expect(response.body).toHaveProperty("status", "error");
+    expect(response.body).toHaveProperty("message", "Validation error");
+    expect(response.body).toHaveProperty("details");
+    expect(response.body.details).toContain("refreshToken cannot be empty");
   });
 });

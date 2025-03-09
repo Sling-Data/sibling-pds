@@ -79,6 +79,7 @@ if (require.main === module) {
         scheduler.startScheduler({
           // Use a more frequent schedule in development for testing
           cronExpression: isDev ? "*/5 * * * *" : "0 2 * * *",
+          // TODO: add config for this
           enabled: process.env.DISABLE_SCHEDULER !== "true",
           // Using default runImmediately: false to prevent unnecessary API calls on server restarts
         });

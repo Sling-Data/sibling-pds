@@ -5,7 +5,12 @@ import plaidClient from "../services/apiClients/plaidClient";
 import UserDataSourcesModel, {
   DataSourceType,
 } from "../models/UserDataSourcesModel";
-import { authenticateJWT, generateToken } from "../middleware/auth";
+import {
+  authenticateJWT,
+  generateToken,
+  generateRefreshToken,
+  refreshAccessToken,
+} from "../middleware/auth";
 import config from "../config/config";
 import { validate, schemas } from "../middleware/validation";
 
@@ -32,11 +37,16 @@ router.post(
   ((req, res) => {
     const { userId } = req.body;
 
-    // Generate JWT token
+    // Generate JWT token and refresh token
     const token = generateToken(userId);
+    const refreshToken = generateRefreshToken(userId);
 
-    // Return token
-    res.json({ token });
+    // Return tokens
+    res.json({
+      token,
+      refreshToken,
+      expiresIn: 3600, // 1 hour in seconds
+    });
     return;
   }) as RequestHandler
 );
@@ -192,6 +202,27 @@ router.get(
         `${config.FRONTEND_URL}/profile?error=${encodeURIComponent(message)}`
       );
     }
+  })
+);
+
+// Add refresh token endpoint
+router.post(
+  "/refresh-token",
+  validate(schemas.refreshToken),
+  asyncHandler(async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+
+    const tokens = refreshAccessToken(refreshToken);
+    if (!tokens) {
+      res.status(401).json({ message: "Invalid refresh token" });
+      return;
+    }
+
+    res.json({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      message: "Token refreshed successfully",
+    });
   })
 );
 

@@ -80,4 +80,12 @@ export const schemas = {
       "any.required": "userId is required",
     }),
   }),
+
+  // Add refreshToken schema
+  refreshToken: Joi.object({
+    refreshToken: Joi.string().required().messages({
+      "string.empty": "refreshToken cannot be empty",
+      "any.required": "refreshToken is required",
+    }),
+  }),
 };

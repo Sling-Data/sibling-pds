@@ -12,6 +12,7 @@ interface SchedulerOptions {
   runImmediately?: boolean;
 }
 
+// TODO: move to config
 const DEFAULT_OPTIONS: SchedulerOptions = {
   cronExpression: "0 2 * * *", // Daily at 2 AM UTC
   enabled: true,
