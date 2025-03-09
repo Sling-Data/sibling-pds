@@ -1,6 +1,8 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import { AppError } from "../middleware/errorHandler";
 import plaidClient from "../services/apiClients/plaidClient";
+import { validate, schemas } from "../middleware/validation";
+import Joi from "joi";
 
 const router = express.Router();
 
@@ -10,7 +12,8 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
     Promise.resolve(fn(req, res)).catch((error) => {
       console.error("API route error:", error);
       const status = error instanceof AppError ? error.statusCode : 500;
-      const message = error instanceof AppError ? error.message : "Internal server error";
+      const message =
+        error instanceof AppError ? error.message : "Internal server error";
       res.status(status).json({ error: message });
     });
   };
@@ -19,15 +22,12 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
 // Create a Plaid link token
 router.get(
   "/plaid/create-link-token",
+  validate(schemas.userId, "query") as RequestHandler,
   asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.query;
 
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required as a query parameter", 400);
-    }
-
     try {
-      const linkToken = await plaidClient.createLinkToken(userId);
+      const linkToken = await plaidClient.createLinkToken(userId as string);
       res.json({ link_token: linkToken });
     } catch (error) {
       console.error("Error creating link token:", error);
@@ -42,16 +42,20 @@ router.get(
 // Exchange a public token for an access token
 router.post(
   "/plaid/exchange-public-token",
+  validate(
+    Joi.object({
+      public_token: Joi.string().required().messages({
+        "string.empty": "public_token cannot be empty",
+        "any.required": "public_token is required",
+      }),
+      userId: Joi.string().required().messages({
+        "string.empty": "userId cannot be empty",
+        "any.required": "userId is required",
+      }),
+    })
+  ) as RequestHandler,
   asyncHandler(async (req: Request, res: Response) => {
     const { public_token, userId } = req.body;
-
-    if (!public_token || typeof public_token !== "string") {
-      throw new AppError("public_token is required in the request body", 400);
-    }
-
-    if (!userId || typeof userId !== "string") {
-      throw new AppError("userId is required in the request body", 400);
-    }
 
     try {
       await plaidClient.exchangePublicToken(public_token, userId);
@@ -59,7 +63,9 @@ router.post(
     } catch (error) {
       console.error("Error exchanging public token:", error);
       throw new AppError(
-        error instanceof Error ? error.message : "Failed to exchange public token",
+        error instanceof Error
+          ? error.message
+          : "Failed to exchange public token",
         500
       );
     }

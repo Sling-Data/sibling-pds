@@ -7,6 +7,7 @@ import UserDataSourcesModel, {
 } from "../models/UserDataSourcesModel";
 import { authenticateJWT, generateToken } from "../middleware/auth";
 import config from "../config/config";
+import { validate, schemas } from "../middleware/validation";
 
 const router = express.Router();
 
@@ -25,21 +26,20 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
 };
 
 // Mock login endpoint to generate JWT token
-router.post("/login", ((req, res) => {
-  const { userId } = req.body;
+router.post(
+  "/login",
+  validate(schemas.login) as RequestHandler,
+  ((req, res) => {
+    const { userId } = req.body;
 
-  if (!userId) {
-    res.status(400).json({ message: "userId is required" });
+    // Generate JWT token
+    const token = generateToken(userId);
+
+    // Return token
+    res.json({ token });
     return;
-  }
-
-  // Generate JWT token
-  const token = generateToken(userId);
-
-  // Return token
-  res.json({ token });
-  return;
-}) as RequestHandler);
+  }) as RequestHandler
+);
 
 // Protected route example - requires JWT authentication
 router.get(
@@ -164,6 +164,7 @@ router.get(
 
 router.get(
   "/plaid-callback",
+  validate(schemas.plaidCallback, "query") as RequestHandler,
   asyncHandler(async (req: Request, res: Response) => {
     const { public_token, userId } = req.query;
 

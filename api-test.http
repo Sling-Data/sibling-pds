@@ -309,4 +309,52 @@ POST {{baseUrl}}/test/run-data-ingestion
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
+### JWT Authentication Tests with Validation ###
+
+### Login with empty userId (should return 400)
+# @name loginValidationError
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "userId": ""
+}
+
+### Login with missing userId (should return 400)
+# @name loginValidationErrorMissing
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+}
+
+### Test API validation with empty userId (should return 400)
+# @name apiValidationError
+GET {{baseUrl}}/api/plaid/create-link-token?userId=
+Content-Type: {{contentType}}
+
+### Test API validation with missing userId (should return 400)
+# @name apiValidationErrorMissing
+GET {{baseUrl}}/api/plaid/create-link-token
+Content-Type: {{contentType}}
+
+### Test API validation with missing fields (should return 400)
+# @name apiValidationErrorMissingFields
+POST {{baseUrl}}/api/plaid/exchange-public-token
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}"
+}
+
+### Test API validation with empty fields (should return 400)
+# @name apiValidationErrorEmptyFields
+POST {{baseUrl}}/api/plaid/exchange-public-token
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "public_token": ""
+}
+
 ###
