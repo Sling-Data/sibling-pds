@@ -9,17 +9,20 @@ import {
 import UserModel from "@backend/models/UserModel";
 import * as encryption from "@backend/utils/encryption";
 import { AppError } from "@backend/middleware/errorHandler";
+import { hashPassword } from "@backend/utils/userUtils";
 
 // Types
 interface UserRequest {
   name: string;
   email: string;
+  password?: string;
 }
 
 interface UserDocument extends Document {
   _id: mongoose.Types.ObjectId;
   name: encryption.EncryptedData;
   email: encryption.EncryptedData;
+  password: encryption.EncryptedData;
 }
 
 interface RequestWithParams extends Request {
@@ -72,7 +75,7 @@ describe("Users Controller", () => {
 
   describe("createUser", () => {
     it("should create a new user with valid data", async () => {
-      const userData = { name: "Test User", email: "test@example.com" };
+      const userData = { name: "Test User", email: "test@example.com", password: "testPassword123" };
       mockRequest = {
         body: userData,
       };
@@ -89,7 +92,7 @@ describe("Users Controller", () => {
 
     it("should throw AppError when name is missing", async () => {
       mockRequest = {
-        body: { email: "test@example.com" },
+        body: { email: "test@example.com", password: "testPassword123" },
       };
 
       await expect(
@@ -99,7 +102,7 @@ describe("Users Controller", () => {
 
     it("should throw AppError when email is missing", async () => {
       mockRequest = {
-        body: { name: "Test User" },
+        body: { name: "Test User", password: "testPassword123" },
       };
 
       await expect(
@@ -114,9 +117,13 @@ describe("Users Controller", () => {
       const userData = { name: "Get User", email: "get@example.com" };
       const encryptedName = encryption.encrypt(userData.name);
       const encryptedEmail = encryption.encrypt(userData.email);
+      const hashedPassword = await hashPassword("testPassword123");
+      const encryptedPassword = encryption.encrypt(hashedPassword);
+      
       const user = (await new UserModel({
         name: encryptedName,
         email: encryptedEmail,
+        password: encryptedPassword
       }).save()) as UserDocument;
 
       mockRequest = {
@@ -150,9 +157,13 @@ describe("Users Controller", () => {
       };
       const encryptedName = encryption.encrypt(initialData.name);
       const encryptedEmail = encryption.encrypt(initialData.email);
+      const hashedPassword = await hashPassword("testPassword123");
+      const encryptedPassword = encryption.encrypt(hashedPassword);
+      
       const user = (await new UserModel({
         name: encryptedName,
         email: encryptedEmail,
+        password: encryptedPassword
       }).save()) as UserDocument;
 
       const updateData = { name: "Updated User", email: "updated@example.com" };
@@ -197,9 +208,13 @@ describe("Users Controller", () => {
     });
 
     it("should throw AppError when update data is invalid", async () => {
+      const hashedPassword = await hashPassword("testPassword123");
+      const encryptedPassword = encryption.encrypt(hashedPassword);
+      
       const user = (await new UserModel({
         name: encryption.encrypt("Test User"),
         email: encryption.encrypt("test@example.com"),
+        password: encryptedPassword
       }).save()) as UserDocument;
 
       mockRequest = {

@@ -2,8 +2,8 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67c9dcd230beec3d0e0c19c6
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE2MTAwNjgsImV4cCI6MTc0MTYxMzY2OH0.cY_u7_5V5pXdkrVt9DidByzD8Md1trJZ2oM9uAZ226g
-@refreshToken = 4d3ca349f1f5eb53eeff0da3694e226528742bf02847d54684d5b9a1884769df483937fa3e668991
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE2Mjg3MDUsImV4cCI6MTc0MTYzMjMwNX0.vL9MmwakRNEx2YAVqLLF4fxpTA3Q0AOgK2cCE8RO_Vo
+@refreshToken = 123e006f1f7fd1ffbc491147a42778eb542dbf54b63ca7442a1b194268474bb9ee2e0739632dd486
 
 ### ==========================================
 ### BASIC API TESTS
@@ -53,6 +53,17 @@ Content-Type: {{contentType}}
 ### ==========================================
 ### AUTHENTICATION
 ### ==========================================
+
+### Sign up a new user
+# @name signup
+POST {{baseUrl}}/auth/signup
+Content-Type: {{contentType}}
+
+{
+    "name": "New Test User",
+    "email": "newuser@example.com",
+    "password": "securePassword123"
+}
 
 ### Login to get JWT token
 # @name login
@@ -150,8 +161,8 @@ Content-Type: {{contentType}}
     "userId": "{{userId}}",
     "dataSourceType": "gmail",
     "credentials": {
-        "accessToken": "ya29.a0AfB_byC...",
-        "refreshToken": "1//04u...",
+        "accessToken": "ya29.a0AeXRPp5Ee53nSXTO1mPq547yx23b-aBaQA_MGkDfNW61BL3yMGPlydH_Ragt3G0Im0YMLkXp0VnftU-vTEkAOKxMo3WrFu0sc2gPE5TS3t3QdSTEAipb5zTezrM-VSeywnHoat1wV-WrTSWT9kurcyBuurwhHifDoGhAgiMrzQaCgYKARcSARASFQHGX2Mi-cLABfhkCYvFxhC8RSgXkQ0177",
+        "refreshToken": "1//03QcFvnaB15vDCgYIARAAGAMSNwF-L9IrN7ZPZfBoswFLVOq0GWbgnolY2QScJ-Zx2Wux42J9wWvDGmo_7xwQeIJUIH5RyxSkyNQ",
         "expiry": "2024-03-21T12:00:00.000Z"
     }
 }

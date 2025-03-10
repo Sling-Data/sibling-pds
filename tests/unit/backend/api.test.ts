@@ -318,6 +318,7 @@ describe("JWT Authentication and Validation", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let userId: string;
+  let password: string;
   let validToken: string;
 
   beforeAll(async () => {
@@ -331,9 +332,10 @@ describe("JWT Authentication and Validation", () => {
     // Create a test user
     const userResponse = await request(server)
       .post("/users")
-      .send({ name: "Auth Test User", email: "auth@example.com" });
+      .send({ name: "Auth Test User", email: "auth@example.com", password: "securePassword123" });
 
     userId = userResponse.body._id;
+    password = "securePassword123";
     validToken = generateToken(userId);
   });
 
@@ -348,7 +350,7 @@ describe("JWT Authentication and Validation", () => {
   it("should generate a JWT token with valid userId at POST /auth/login", async () => {
     const response = await request(server)
       .post("/auth/login")
-      .send({ userId })
+      .send({ userId, password })
       .expect(200);
 
     expect(response.body).toHaveProperty("token");
@@ -369,7 +371,7 @@ describe("JWT Authentication and Validation", () => {
   it("should return 400 for missing userId at POST /auth/login", async () => {
     const response = await request(server)
       .post("/auth/login")
-      .send({})
+      .send({ password })
       .expect(400);
 
     expect(response.body).toHaveProperty("status", "error");
@@ -490,7 +492,7 @@ describe("JWT Authentication and Validation", () => {
     // First get a refresh token
     const loginResponse = await request(server)
       .post("/auth/login")
-      .send({ userId })
+      .send({ userId, password })
       .expect(200);
 
     const refreshToken = loginResponse.body.refreshToken;

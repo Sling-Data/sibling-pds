@@ -9,7 +9,7 @@ import { saveUser, updateUserPassword } from "../utils/userUtils";
 interface UserDocument extends Document {
   name: EncryptedData;
   email: EncryptedData;
-  password?: EncryptedData;
+  password: EncryptedData;
 }
 
 interface UserRequest {
@@ -28,8 +28,11 @@ export const createUser = async (
     throw new AppError("Name and email are required", 400);
   }
 
+  // Generate a secure random password if none provided
+  const finalPassword = password || `temp_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  
   // Use the saveUser utility function which handles password hashing and encryption
-  const savedUser = await saveUser(name, email, password);
+  const savedUser = await saveUser(name, email, finalPassword);
 
   res.status(201).json({
     _id: savedUser._id,

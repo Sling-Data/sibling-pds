@@ -13,32 +13,23 @@ export const hashPassword = async (password: string): Promise<string> => {
 };
 
 /**
- * Save a user with encrypted name, email, and optionally a password
+ * Save a user with encrypted name, email, and password
  * @param name User's name
  * @param email User's email
- * @param password Optional password (will use default if not provided)
+ * @param password User's password
  * @returns Saved user document
  */
 export const saveUser = async (
   name: string,
   email: string,
-  password?: string
+  password: string
 ) => {
   const encryptedName = encrypt(name);
   const encryptedEmail = encrypt(email);
 
-  // If password is provided, hash it and encrypt it
-  // Otherwise use a temporary default password
-  let encryptedPassword;
-  if (password) {
-    // First hash the password with bcrypt, then encrypt the hash
-    const hashedPassword = await hashPassword(password);
-    encryptedPassword = encrypt(hashedPassword);
-  } else {
-    // Create a temporary default password
-    const defaultPassword = await hashPassword("temporary_" + Date.now());
-    encryptedPassword = encrypt(defaultPassword);
-  }
+  // Hash the password with bcrypt, then encrypt the hash
+  const hashedPassword = await hashPassword(password);
+  const encryptedPassword = encrypt(hashedPassword);
 
   const user = new UserModel({
     name: encryptedName,

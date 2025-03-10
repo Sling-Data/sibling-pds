@@ -51,8 +51,27 @@ export const schemas = {
       "string.empty": "userId cannot be empty",
       "any.required": "userId is required",
     }),
-    password: Joi.string().optional().messages({
+    password: Joi.string().required().messages({
       "string.empty": "password cannot be empty",
+      "any.required": "password is required",
+    }),
+  }),
+
+  // Signup validation schema
+  signup: Joi.object({
+    name: Joi.string().required().messages({
+      "string.empty": "name cannot be empty",
+      "any.required": "name is required",
+    }),
+    email: Joi.string().email().required().messages({
+      "string.empty": "email cannot be empty",
+      "string.email": "email must be a valid email address",
+      "any.required": "email is required",
+    }),
+    password: Joi.string().min(8).required().messages({
+      "string.empty": "password cannot be empty",
+      "string.min": "password must be at least 8 characters long",
+      "any.required": "password is required",
     }),
   }),
 
