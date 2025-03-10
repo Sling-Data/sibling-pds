@@ -32,7 +32,7 @@ function AppContent() {
           path="/signup"
           element={
             isAuthenticated ? (
-              <Navigate to="/profile" replace />
+              <Navigate to="/data-input" replace />
             ) : (
               <SignupForm onSuccess={handleSignupSuccess} />
             )

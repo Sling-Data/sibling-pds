@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import '../styles/DataInput.css';
 
 interface FormData {
   interests: string[];

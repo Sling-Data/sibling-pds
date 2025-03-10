@@ -11,9 +11,10 @@ import { UserProvider } from '../context/UserContext';
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
 
 // Mock useNavigate
+const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useNavigate: () => jest.fn(),
+  useNavigate: () => mockNavigate,
 }));
 
 const mockUserId = 'test-user-123';
@@ -34,6 +35,7 @@ describe('SignupForm Component', () => {
   beforeEach(() => {
     global.fetch = jest.fn();
     mockOnSuccess.mockClear();
+    mockNavigate.mockClear();
     localStorage.clear();
   });
 
@@ -50,7 +52,7 @@ describe('SignupForm Component', () => {
     renderSignupForm();
     
     await act(async () => {
-      fireEvent.click(screen.getByRole('form'));
+      fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     });
     
     await waitFor(() => {
@@ -73,7 +75,7 @@ describe('SignupForm Component', () => {
       target: { value: 'password123' },
     });
     
-    fireEvent.click(screen.getByRole('form'));
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
@@ -93,24 +95,19 @@ describe('SignupForm Component', () => {
       target: { value: 'short' },
     });
     
-    fireEvent.click(screen.getByRole('form'));
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     
     await waitFor(() => {
       expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument();
     });
   });
 
-  it('successfully submits form with valid data', async () => {
-    // Mock user creation response
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ _id: mockUserId }),
-    });
-    
+  it('successfully submits form with valid data and navigates to dataInput page', async () => {
     // Mock auth signup response
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ 
+        userId: mockUserId,
         token: 'mock-token',
         refreshToken: 'mock-refresh-token'
       }),
@@ -129,29 +126,15 @@ describe('SignupForm Component', () => {
         target: { value: 'password123' },
       });
       
-      fireEvent.click(screen.getByRole('form'));
+      fireEvent.submit(screen.getByRole('form'));
     });
     
     await waitFor(() => {
       expect(mockOnSuccess).toHaveBeenCalledWith(mockUserId);
+      expect(mockNavigate).toHaveBeenCalledWith('/data-input');
     });
 
-    // Check first fetch call (user creation)
-    expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:3000/users',
-      expect.objectContaining({
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: 'Test User',
-          email: 'test@example.com',
-        }),
-      })
-    );
-    
-    // Check second fetch call (auth signup)
+    // Check fetch call (auth signup with all user data)
     expect(global.fetch).toHaveBeenCalledWith(
       'http://localhost:3000/auth/signup',
       expect.objectContaining({
@@ -160,7 +143,8 @@ describe('SignupForm Component', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: mockUserId,
+          name: 'Test User',
+          email: 'test@example.com',
           password: 'password123',
         }),
       })
@@ -171,6 +155,7 @@ describe('SignupForm Component', () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 400,
+      json: () => Promise.resolve({ message: 'Email already in use' }),
     });
 
     renderSignupForm();
@@ -186,11 +171,12 @@ describe('SignupForm Component', () => {
         target: { value: 'password123' },
       });
       
-      fireEvent.click(screen.getByRole('form'));
+      fireEvent.submit(screen.getByRole('form'));
     });
     
     await waitFor(() => {
-      expect(screen.getByText('Failed to sign up')).toBeInTheDocument();
+      expect(screen.getByText('Email already in use')).toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 });

@@ -72,8 +72,8 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
     setIsSubmitting(true);
     
     try {
-      // First create the user
-      const userResponse = await fetch(`${process.env.REACT_APP_API_URL}/users`, {
+      // Sign up with auth endpoint directly
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,49 +81,32 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
         body: JSON.stringify({
           name,
           email,
-        }),
-      });
-
-      if (!userResponse.ok) {
-        throw new Error(`HTTP error! status: ${userResponse.status}`);
-      }
-
-      const userData = await userResponse.json();
-      const userId = userData._id;
-
-      // Then sign up with auth endpoint
-      const authResponse = await fetch(`${process.env.REACT_APP_API_URL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
           password,
         }),
       });
 
-      if (!authResponse.ok) {
-        throw new Error(`Auth HTTP error! status: ${authResponse.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
-      const authData = await authResponse.json();
+      const authData = await response.json();
       
       // Store tokens using context
       setToken(authData.token);
       setRefreshToken(authData.refreshToken);
       
-      // Update user context
-      setUserId(userId);
+      // Update user context with userId from response
+      setUserId(authData.userId);
       
       // Call onSuccess callback
-      onSuccess(userId);
+      onSuccess(authData.userId);
       
-      // Navigate to profile page
-      navigate('/profile');
+      // Navigate to data-input page
+      navigate('/data-input');
     } catch (error) {
       setErrors({
-        submit: 'Failed to sign up'
+        submit: error instanceof Error ? error.message : 'Failed to sign up'
       });
       console.error('Signup error:', error);
     } finally {
@@ -148,7 +131,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
   return (
     <div className="signup-container">
       <h2>Create Your Account</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} role="form">
         <div className="form-group">
           <label htmlFor="name">Name</label>
           <input
@@ -189,7 +172,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
           <div className="error-message submit-error">{errors.submit}</div>
         )}
         
-        <button type="submit" disabled={isSubmitting} role="form">
+        <button type="submit" disabled={isSubmitting}>
           Create Account
         </button>
         
