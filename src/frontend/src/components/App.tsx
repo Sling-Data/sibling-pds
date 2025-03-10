@@ -1,13 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SignupForm from './SignupForm';
+import LoginForm from './LoginForm';
 import DataInput from './DataInput';
 import Profile from './Profile';
 import ConnectPlaid from './ConnectPlaid';
 import { UserProvider, useUser } from '../context/UserContext';
 
 function AppContent() {
-  const { userId, setUserId } = useUser();
+  const { userId, setUserId, isAuthenticated } = useUser();
 
   const handleSignupSuccess = (newUserId: string) => {
     setUserId(newUserId);
@@ -20,40 +21,60 @@ function AppContent() {
         <Route
           path="/"
           element={
-            !userId ? (
-              <SignupForm onSuccess={handleSignupSuccess} />
+            isAuthenticated ? (
+              <Navigate to="/profile" replace />
             ) : (
-              <Navigate to="/data-input" replace />
+              <Navigate to="/signup" replace />
+            )
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/profile" replace />
+            ) : (
+              <SignupForm onSuccess={handleSignupSuccess} />
+            )
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/profile" replace />
+            ) : (
+              <LoginForm />
             )
           }
         />
         <Route
           path="/data-input"
           element={
-            userId ? (
-              <DataInput userId={userId} onSubmitted={() => {}} />
+            isAuthenticated ? (
+              <DataInput userId={userId as string} onSubmitted={() => {}} />
             ) : (
-              <Navigate to="/profile" replace />
+              <Navigate to="/login" replace />
             )
           }
         />
         <Route
           path="/profile"
           element={
-            userId ? (
+            isAuthenticated ? (
               <Profile />
             ) : (
-              <Navigate to="/" replace />
+              <Navigate to="/login" replace />
             )
           }
         />
         <Route
           path="/connect-plaid"
           element={
-            userId ? (
+            isAuthenticated ? (
               <ConnectPlaid />
             ) : (
-              <Navigate to="/" replace />
+              <Navigate to="/login" replace />
             )
           }
         />

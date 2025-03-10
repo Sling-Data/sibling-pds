@@ -2,8 +2,8 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67c9dcd230beec3d0e0c19c6
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE1MTk4MzEsImV4cCI6MTc0MTYwNjIzMX0.SfO02oZ0rGymAZZCboUbWHvBX4QY3LfjbOmtaVyXjD0
-@refreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE1NTEzMTQsImV4cCI6MTc0MjE1NjExNH0.kQT1WMh66NMuEbBQwLHjAUXPFBXnbjQPcpYIkw0YL0U
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE2MTAwNjgsImV4cCI6MTc0MTYxMzY2OH0.cY_u7_5V5pXdkrVt9DidByzD8Md1trJZ2oM9uAZ226g
+@refreshToken = 4d3ca349f1f5eb53eeff0da3694e226528742bf02847d54684d5b9a1884769df483937fa3e668991
 
 ### ==========================================
 ### BASIC API TESTS
@@ -40,9 +40,9 @@ PUT {{baseUrl}}/users/{{userId}}
 Content-Type: {{contentType}}
 
 {
-    "name": "Updated User",
-    "email": "updated@example.com",
-    "password": "newSecurePassword456"
+    "name": "Tomé",
+    "email": "tome.m.dj@gmail.com",
+    "password": "securePassword123"
 }
 
 ### Test invalid user ID (should return 404)
@@ -65,7 +65,7 @@ Content-Type: {{contentType}}
 }
 
 ### Refresh access token using refresh token
-# @name refreshToken
+# @name refreshJWTToken
 POST {{baseUrl}}/auth/refresh-token
 Content-Type: {{contentType}}
 

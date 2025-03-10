@@ -1,10 +1,15 @@
 // @ts-expect-error React is used implicitly with JSX
-import React from 'react';
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface UserState {
   userId: string | null;
   setUserId: (id: string | null) => void;
+  token: string | null;
+  setToken: (token: string | null) => void;
+  refreshToken: string | null;
+  setRefreshToken: (token: string | null) => void;
+  isAuthenticated: boolean;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserState | undefined>(undefined);
@@ -12,14 +17,38 @@ const UserContext = createContext<UserState | undefined>(undefined);
 interface UserProviderProps {
   children: ReactNode;
   initialUserId?: string | null;
+  initialToken?: string | null;
+  initialRefreshToken?: string | null;
 }
 
-export function UserProvider({ children, initialUserId = null }: UserProviderProps) {
+export function UserProvider({ 
+  children, 
+  initialUserId = null, 
+  initialToken = null, 
+  initialRefreshToken = null 
+}: UserProviderProps) {
   const [userId, setUserId] = useState<string | null>(initialUserId);
+  const [token, setToken] = useState<string | null>(initialToken);
+  const [refreshToken, setRefreshToken] = useState<string | null>(initialRefreshToken);
+
+  // Logout function to clear all auth data
+  const logout = () => {
+    setUserId(null);
+    setToken(null);
+    setRefreshToken(null);
+  };
+
+  const isAuthenticated = !!userId && !!token;
 
   const value = {
     userId,
-    setUserId
+    setUserId,
+    token,
+    setToken,
+    refreshToken,
+    setRefreshToken,
+    isAuthenticated,
+    logout
   };
 
   return (
@@ -36,5 +65,3 @@ export function useUser(): UserState {
   }
   return context;
 }
-
-export default UserContext; 
