@@ -13,6 +13,9 @@ import {
 } from "../middleware/auth";
 import config from "../config/config";
 import { validate, schemas } from "../middleware/validation";
+import UserModel from "../models/UserModel";
+import bcrypt from "bcrypt";
+import { decrypt } from "../utils/encryption";
 
 const router = express.Router();
 
@@ -30,25 +33,61 @@ const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
   };
 };
 
-// Mock login endpoint to generate JWT token
+// Login endpoint to authenticate user and generate JWT token
 router.post(
   "/login",
   validate(schemas.login) as RequestHandler,
-  ((req, res) => {
-    const { userId } = req.body;
+  asyncHandler(async (req: Request, res: Response) => {
+    const { userId, password } = req.body;
 
-    // Generate JWT token and refresh token
-    const token = generateToken(userId);
-    const refreshToken = generateRefreshToken(userId);
+    try {
+      // Find user by ID
+      const user = await UserModel.findById(userId);
+      
+      if (!user) {
+        res.status(401).json({ message: "Invalid credentials" });
+        return;
+      }
 
-    // Return tokens
-    res.json({
-      token,
-      refreshToken,
-      expiresIn: 3600, // 1 hour in seconds
-    });
-    return;
-  }) as RequestHandler
+      // If password is provided, we need to validate it
+      if (password) {
+        // If user has no password set but password was provided
+        if (!user.password) {
+          res.status(401).json({ message: "Invalid credentials" });
+          return;
+        }
+
+        // Decrypt the stored password
+        const decryptedPassword = decrypt(user.password);
+        
+        // Compare the provided password with the decrypted password using bcrypt
+        const isValid = await bcrypt.compare(password, decryptedPassword);
+
+        if (!isValid) {
+          res.status(401).json({ message: "Invalid password" });
+          return;
+        }
+      } else {
+        // If no password provided, this is for backward compatibility
+        // In the future, this path can be removed when passwords are required
+        console.log("Login without password for userId:", userId);
+      }
+
+      // Generate JWT token and refresh token
+      const token = generateToken(userId);
+      const refreshToken = generateRefreshToken(userId);
+
+      // Return tokens
+      res.json({
+        token,
+        refreshToken,
+        expiresIn: 3600, // 1 hour in seconds
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  })
 );
 
 // Protected route example - requires JWT authentication

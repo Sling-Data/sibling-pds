@@ -51,6 +51,9 @@ export const schemas = {
       "string.empty": "userId cannot be empty",
       "any.required": "userId is required",
     }),
+    password: Joi.string().optional().messages({
+      "string.empty": "password cannot be empty",
+    }),
   }),
 
   // Gmail auth validation schema
