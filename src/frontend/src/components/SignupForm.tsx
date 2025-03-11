@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../styles/SignupForm.css';
+import '../styles/AuthForm.css';
 import { useUser } from '../context/UserContext';
 
 interface FormErrors {
@@ -16,8 +15,7 @@ export const SignupForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, setUserId } = useUser();
-  const navigate = useNavigate();
+  const { login, setUserId, checkUserDataAndNavigate } = useUser();
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -77,8 +75,11 @@ export const SignupForm: React.FC = () => {
       // Set userId from response
       setUserId(data.userId);
       
-      // Navigate to data input page
-      navigate('/data-input');
+      // Check if user has volunteered data and navigate accordingly
+      // This will automatically navigate to data-input if no data exists
+      setTimeout(() => {
+        checkUserDataAndNavigate();
+      }, 100); // Small delay to ensure tokens are properly set
     } catch (error) {
       setErrors({
         submit: error instanceof Error ? error.message : 'Failed to sign up'

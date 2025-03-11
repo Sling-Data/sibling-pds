@@ -6,6 +6,19 @@ import { BrowserRouter } from 'react-router-dom';
 import { UserProvider, useUser } from '../context/UserContext';
 import Profile from '../components/Profile';
 import '@testing-library/jest-dom';
+import * as tokenUtils from '../utils/TokenManager';
+
+// Mock TokenManager functions
+jest.mock('../utils/TokenManager', () => ({
+  getUserId: jest.fn().mockReturnValue(null),
+  isTokenValid: jest.fn().mockReturnValue(false),
+  storeTokens: jest.fn(),
+  clearTokens: jest.fn(),
+  getRefreshToken: jest.fn().mockReturnValue('mock-refresh-token'),
+  shouldRefresh: jest.fn().mockReturnValue(false),
+  getAccessToken: jest.fn().mockReturnValue('mock-access-token'),
+  getTokenExpiry: jest.fn().mockReturnValue(Date.now() / 1000 + 3600)
+}));
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
@@ -20,8 +33,8 @@ function TestComponent() {
   const { userId, setUserId } = useUser();
   return (
     <div>
-      <div>{userId || 'no-user'}</div>
-      <button onClick={() => setUserId('test-123')}>Set User</button>
+      <div data-testid="user-id-display">{userId || 'no-user'}</div>
+      <button data-testid="set-user-button" onClick={() => setUserId('test-123')}>Set User</button>
     </div>
   );
 }
@@ -29,6 +42,7 @@ function TestComponent() {
 describe('UserContext', () => {
   beforeEach(() => {
     global.fetch = jest.fn();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -36,6 +50,9 @@ describe('UserContext', () => {
   });
 
   it('provides userId and setUserId', async () => {
+    // Set up initial state
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue(null);
+    
     render(
       <UserProvider>
         <TestComponent />
@@ -44,11 +61,22 @@ describe('UserContext', () => {
 
     expect(screen.getByText('no-user')).toBeInTheDocument();
     
+    // Mock the getUserId to return the new ID after setUserId is called
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue('test-123');
+    
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /set user/i }));
+      fireEvent.click(screen.getByTestId('set-user-button'));
     });
 
-    expect(screen.getByText('test-123')).toBeInTheDocument();
+    // Mock the refreshTokenIfExpired call to prevent infinite loop
+    jest.spyOn(global, 'setInterval').mockImplementation(() => {
+      return {} as any;
+    });
+
+    await waitFor(() => {
+      const userIdElement = screen.getByTestId('user-id-display');
+      expect(userIdElement.textContent).toBe('test-123');
+    });
   });
 
   it('Profile component uses userId from context', async () => {
@@ -57,6 +85,14 @@ describe('UserContext', () => {
       ok: true,
       json: async () => mockUserData
     });
+
+    // Mock setInterval to prevent infinite loop
+    jest.spyOn(global, 'setInterval').mockImplementation(() => {
+      return {} as any;
+    });
+    
+    // Set up initial state - no user ID
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue(null);
 
     render(
       <UserProvider>
@@ -68,11 +104,15 @@ describe('UserContext', () => {
     );
 
     // Initially shows no user message
-    expect(screen.getByText('No user ID provided')).toBeInTheDocument();
+    const profileElement = screen.getByText(/no user id provided/i);
+    expect(profileElement).toBeInTheDocument();
 
+    // Set user ID and update the mock
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue('test-123');
+    
     // Set user ID
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /set user/i }));
+      fireEvent.click(screen.getByTestId('set-user-button'));
     });
 
     // Wait for profile data to load

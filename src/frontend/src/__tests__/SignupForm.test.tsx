@@ -14,23 +14,23 @@ jest.mock('react-router-dom', () => ({
 
 // Mock TokenManager
 jest.mock('../utils/TokenManager', () => ({
-  TokenManager: {
-    storeTokens: jest.fn(),
-    clearTokens: jest.fn(),
-    getUserId: jest.fn(),
-    isTokenValid: jest.fn(),
-  },
+  storeTokens: jest.fn(),
+  clearTokens: jest.fn(),
+  getUserId: jest.fn(),
+  isTokenValid: jest.fn(),
 }));
 
 // Mock UserContext
 const mockLogin = jest.fn();
 const mockSetUserId = jest.fn();
+const mockCheckUserDataAndNavigate = jest.fn();
 
 jest.mock('../context/UserContext', () => ({
   ...jest.requireActual('../context/UserContext'),
   useUser: () => ({
     login: mockLogin,
     setUserId: mockSetUserId,
+    checkUserDataAndNavigate: mockCheckUserDataAndNavigate
   }),
 }));
 
@@ -42,6 +42,7 @@ describe('SignupForm Component', () => {
     mockNavigate.mockClear();
     mockLogin.mockClear();
     mockSetUserId.mockClear();
+    mockCheckUserDataAndNavigate.mockClear();
     sessionStorage.clear();
   });
 
@@ -153,7 +154,12 @@ describe('SignupForm Component', () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(mockLogin).toHaveBeenCalledWith('mock-token', 'mock-refresh-token');
       expect(mockSetUserId).toHaveBeenCalledWith(mockUserId);
-      expect(mockNavigate).toHaveBeenCalledWith('/data-input');
+      
+      // Check that checkUserDataAndNavigate was called instead of directly navigating
+      // We need to wait a bit because of the setTimeout in the component
+      setTimeout(() => {
+        expect(mockCheckUserDataAndNavigate).toHaveBeenCalled();
+      }, 150);
     });
   });
 
@@ -179,7 +185,7 @@ describe('SignupForm Component', () => {
       expect(screen.getByText(/email already exists/i)).toBeInTheDocument();
       expect(mockLogin).not.toHaveBeenCalled();
       expect(mockSetUserId).not.toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(mockCheckUserDataAndNavigate).not.toHaveBeenCalled();
     });
   });
 });

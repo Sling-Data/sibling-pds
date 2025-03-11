@@ -33,7 +33,7 @@ const useLocationSafe = () => {
 };
 
 function Profile() {
-  const { userId } = useUser();
+  const { userId, refreshTokenIfExpired } = useUser();
   const location = useLocationSafe();
   const navigate = useNavigate();
   const { data: userData, loading, error: fetchError, refetch } = useFetch<UserData>(
@@ -62,6 +62,13 @@ function Profile() {
     }
   }, [userData]);
 
+  // Check token validity and refresh if needed on component mount
+  useEffect(() => {
+    if (userId) {
+      refreshTokenIfExpired();
+    }
+  }, [userId, refreshTokenIfExpired]);
+
   // Parse query parameters on component mount or location change
   useEffect(() => {
     if (!location || typeof location.search !== 'string') {
@@ -87,17 +94,25 @@ function Profile() {
     }
   }, [location]);
 
-  const handleGmailConnect = () => {
+  const handleGmailConnect = async () => {
     if (userId) {
-      // Use window.location.href for external redirects
-      window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}`;
+      // Refresh token if needed before connecting to Gmail
+      const refreshSuccessful = await refreshTokenIfExpired();
+      if (refreshSuccessful) {
+        // Use window.location.href for external redirects
+        window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}`;
+      }
     }
   };
 
-  const handlePlaidConnect = () => {
+  const handlePlaidConnect = async () => {
     if (userId) {
-      // Navigate to the ConnectPlaid component using react-router
-      navigate(`/connect-plaid?userId=${userId}`);
+      // Refresh token if needed before navigating to Plaid connection
+      const refreshSuccessful = await refreshTokenIfExpired();
+      if (refreshSuccessful) {
+        // Navigate to the ConnectPlaid component using react-router
+        navigate(`/connect-plaid?userId=${userId}`);
+      }
     }
   };
 
@@ -130,6 +145,12 @@ function Profile() {
     if (Object.keys(errors).length === 0) {
       setIsSubmitting(true);
       try {
+        // Refresh token if needed before submitting form
+        const refreshSuccessful = await refreshTokenIfExpired();
+        if (!refreshSuccessful) {
+          throw new Error('Authentication failed. Please log in again.');
+        }
+
         const response = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
           method: 'PUT',
           headers: {
@@ -155,7 +176,7 @@ function Profile() {
       } catch (error) {
         setSubmitStatus({
           success: false,
-          message: 'An error occurred. Please try again.'
+          message: error instanceof Error ? error.message : 'An error occurred. Please try again.'
         });
       } finally {
         setIsSubmitting(false);
@@ -203,8 +224,8 @@ function Profile() {
             <span className="value">{userData.email}</span>
           </div>
           <button 
-            className="edit-button"
             onClick={() => setIsEditing(true)}
+            className="edit-button"
           >
             Edit Profile
           </button>
@@ -215,7 +236,7 @@ function Profile() {
       {isEditing && (
         <form onSubmit={handleSubmit} className="edit-form">
           <div className="form-group">
-            <label htmlFor="name">Name</label>
+            <label htmlFor="name">Name:</label>
             <input
               type="text"
               id="name"
@@ -228,7 +249,7 @@ function Profile() {
           </div>
           
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Email:</label>
             <input
               type="email"
               id="email"
@@ -240,20 +261,20 @@ function Profile() {
             {formErrors.email && <div className="error-message">{formErrors.email}</div>}
           </div>
           
-          <div className="button-group">
-            <button 
-              type="button" 
-              className="cancel-button"
-              onClick={() => setIsEditing(false)}
-            >
-              Cancel
-            </button>
+          <div className="form-actions">
             <button 
               type="submit" 
-              className="save-button"
               disabled={isSubmitting}
+              className="save-button"
             >
               {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setIsEditing(false)}
+              className="cancel-button"
+            >
+              Cancel
             </button>
           </div>
           
@@ -265,37 +286,22 @@ function Profile() {
         </form>
       )}
       
-      {/* External Connections */}
-      <div className="external-connections">
-        <h3>External Connections</h3>
-        
-        {authStatus.message && (
-          <div className={`auth-status ${authStatus.success ? 'success' : 'error'}`}>
-            {authStatus.message}
-          </div>
-        )}
-        
-        <div className="connections-content">
-          <div className="connection-control">
-            <label htmlFor="gmailConnection">Gmail:</label>
-            <button
-              id="gmailConnection"
-              className="connect-button"
-              onClick={handleGmailConnect}
-            >
-              Connect
-            </button>
-          </div>
-          <div className="connection-control">
-            <label htmlFor="plaidConnection">Bank Account:</label>
-            <button
-              id="plaidConnection"
-              className="connect-button"
-              onClick={handlePlaidConnect}
-            >
-              Connect
-            </button>
-          </div>
+      {/* Connect Services Section */}
+      <div className="connect-services">
+        <h3>Connect Services</h3>
+        <div className="service-buttons">
+          <button 
+            onClick={handleGmailConnect}
+            className="gmail-button"
+          >
+            Connect Gmail
+          </button>
+          <button 
+            onClick={handlePlaidConnect}
+            className="plaid-button"
+          >
+            Connect Bank Account
+          </button>
         </div>
       </div>
       

@@ -234,24 +234,32 @@ describe('Profile Component', () => {
   });
 
   it('successfully updates user profile and refetches data', async () => {
-    // Mock user data
-    const mockUserData = { name: 'Test User', email: 'test@example.com' };
-    const updatedUserData = { name: 'Updated User', email: 'updated@example.com' };
-    
-    // Set up fetch mock
+    const mockUserData = {
+      name: 'Test User',
+      email: 'test@example.com'
+    };
+
+    const updatedUserData = {
+      name: 'Updated User',
+      email: 'updated@example.com'
+    };
+
     const mockFetch = global.fetch as jest.Mock;
     
-    // Mock first fetch call to return initial user data
+    // Initial fetch
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockUserData
     });
     
     // Mock the user ID
-    jest.spyOn(require('../context/UserContext'), 'useUser').mockReturnValue({ userId: 'test-user-id' });
+    jest.spyOn(require('../context/UserContext'), 'useUser').mockReturnValue({ 
+      userId: 'test-user-id',
+      refreshTokenIfExpired: jest.fn().mockResolvedValue(true)
+    });
     
     // Render the component
-    const { getByText, getByLabelText, getByRole } = render(
+    render(
       <BrowserRouter>
         <UserProvider>
           <Profile />
@@ -265,14 +273,14 @@ describe('Profile Component', () => {
     });
     
     // Verify initial data is displayed
-    expect(getByText('Test User')).toBeInTheDocument();
+    expect(screen.getByText(/Test User/)).toBeInTheDocument();
     
     // Click edit button
-    fireEvent.click(getByText('Edit Profile'));
+    fireEvent.click(screen.getByText('Edit Profile'));
     
     // Change form values
-    fireEvent.change(getByLabelText('Name'), { target: { value: 'Updated User' } });
-    fireEvent.change(getByLabelText('Email'), { target: { value: 'updated@example.com' } });
+    fireEvent.change(screen.getByLabelText('Name:'), { target: { value: 'Updated User' } });
+    fireEvent.change(screen.getByLabelText('Email:'), { target: { value: 'updated@example.com' } });
     
     // Mock the update request
     mockFetch.mockResolvedValueOnce({
@@ -288,16 +296,22 @@ describe('Profile Component', () => {
     
     // Submit the form
     await act(async () => {
-      fireEvent.click(getByRole('button', { name: 'Save Changes' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     });
     
     // Wait for the async operations to complete
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500)); // Increased timeout
     });
     
-    // Verify the updated data is displayed
-    expect(getByText('Updated User')).toBeInTheDocument();
-    expect(getByText('updated@example.com')).toBeInTheDocument();
+    // Debug what's in the document
+    console.log(document.body.innerHTML);
+    
+    // Verify the updated data is displayed using a more flexible approach
+    const nameElement = screen.getByText(/Name:/);
+    const emailElement = screen.getByText(/Email:/);
+    
+    expect(nameElement.nextElementSibling?.textContent).toBe('Updated User');
+    expect(emailElement.nextElementSibling?.textContent).toBe('updated@example.com');
   });
 });

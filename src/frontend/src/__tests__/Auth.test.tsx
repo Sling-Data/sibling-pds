@@ -3,16 +3,16 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UserProvider, useUser } from '../context/UserContext';
-import { TokenManager } from '../utils/TokenManager';
+import * as tokenUtils from '../utils/TokenManager';
 
-// Mock TokenManager
+// Mock TokenManager functions
 jest.mock('../utils/TokenManager', () => ({
-  TokenManager: {
-    getUserId: jest.fn(),
-    isTokenValid: jest.fn(),
-    storeTokens: jest.fn(),
-    clearTokens: jest.fn(),
-  },
+  getUserId: jest.fn(),
+  isTokenValid: jest.fn(),
+  storeTokens: jest.fn(),
+  clearTokens: jest.fn(),
+  getRefreshToken: jest.fn(),
+  shouldRefresh: jest.fn(),
 }));
 
 // Test component that uses the UserContext
@@ -31,8 +31,8 @@ const TestComponent = () => {
 describe('User Authentication Context', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (TokenManager.getUserId as jest.Mock).mockReturnValue(null);
-    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(false);
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue(null);
+    (tokenUtils.isTokenValid as jest.Mock).mockReturnValue(false);
   });
 
   it('starts with unauthenticated state', () => {
@@ -48,10 +48,10 @@ describe('User Authentication Context', () => {
 
   it('updates authentication state when tokens are set', () => {
     // Mock token storage response
-    (TokenManager.storeTokens as jest.Mock).mockImplementation(() => {});
-    (TokenManager.getUserId as jest.Mock)
+    (tokenUtils.storeTokens as jest.Mock).mockImplementation(() => {});
+    (tokenUtils.getUserId as jest.Mock)
       .mockReturnValue('test-user-123');
-    (TokenManager.isTokenValid as jest.Mock)
+    (tokenUtils.isTokenValid as jest.Mock)
       .mockReturnValue(true);
 
     render(
@@ -66,7 +66,7 @@ describe('User Authentication Context', () => {
     });
 
     // Verify state updates
-    expect(TokenManager.storeTokens).toHaveBeenCalledWith({
+    expect(tokenUtils.storeTokens).toHaveBeenCalledWith({
       accessToken: 'test-access',
       refreshToken: 'test-refresh',
     });
@@ -76,8 +76,8 @@ describe('User Authentication Context', () => {
 
   it('clears authentication state on logout', () => {
     // Mock initial authenticated state
-    (TokenManager.getUserId as jest.Mock).mockReturnValue('test-user-123');
-    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(true);
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue('test-user-123');
+    (tokenUtils.isTokenValid as jest.Mock).mockReturnValue(true);
 
     render(
       <UserProvider>
@@ -90,8 +90,8 @@ describe('User Authentication Context', () => {
     expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
 
     // Mock state after logout
-    (TokenManager.getUserId as jest.Mock).mockReturnValue(null);
-    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(false);
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue(null);
+    (tokenUtils.isTokenValid as jest.Mock).mockReturnValue(false);
 
     // Click logout button
     act(() => {
@@ -99,15 +99,15 @@ describe('User Authentication Context', () => {
     });
 
     // Verify state is cleared
-    expect(TokenManager.clearTokens).toHaveBeenCalled();
+    expect(tokenUtils.clearTokens).toHaveBeenCalled();
     expect(screen.getByTestId('user-id')).toHaveTextContent('no-user');
     expect(screen.getByTestId('auth-status')).toHaveTextContent('not-authenticated');
   });
 
   it('initializes with provided values', () => {
     // Mock initial state with existing user
-    (TokenManager.getUserId as jest.Mock).mockReturnValue('existing-user-123');
-    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(true);
+    (tokenUtils.getUserId as jest.Mock).mockReturnValue('existing-user-123');
+    (tokenUtils.isTokenValid as jest.Mock).mockReturnValue(true);
 
     render(
       <UserProvider>

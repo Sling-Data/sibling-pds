@@ -200,8 +200,9 @@ describe('UserContext and useFetch Integration', () => {
       jest.advanceTimersByTime(100);
       // Second retry delay (200ms)
       jest.advanceTimersByTime(200);
-      // Run all remaining timers
-      jest.runAllTimers();
+      // Instead of running all timers which can cause infinite loop,
+      // just advance by a reasonable amount of time
+      jest.advanceTimersByTime(1000);
     });
 
     // Should display user data after successful retry

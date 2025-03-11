@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/SignupForm.css'; 
+import '../styles/AuthForm.css'; 
 import { useUser } from '../context/UserContext';
 
 interface LoginFormProps {
