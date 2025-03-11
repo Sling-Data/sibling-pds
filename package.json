@@ -19,6 +19,7 @@
     "install:frontend": "cd src/frontend && npm install",
     "test:frontend": "cd src/frontend && npm test",
     "test:frontend-once": "cd src/frontend && npm run test-once",
+    "validate:cascade": "cd src/frontend && npm run validate:cascade",
     "eject": "cd src/frontend && npm run eject",
     "start-proxy": "node proxy.js",
     "http-server": "http-server"

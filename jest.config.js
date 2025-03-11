@@ -28,6 +28,11 @@ module.exports = {
       testEnvironment: 'jsdom',
       rootDir: path.resolve(__dirname, 'src/frontend'),
       testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}'],
+      verbose: false,
+      silent: true,
+      testEnvironmentOptions: {
+        pretendToBeVisual: true,
+      },
       transform: {
         '^.+\\.(ts|tsx|js|jsx)$': ['babel-jest', {
           presets: [

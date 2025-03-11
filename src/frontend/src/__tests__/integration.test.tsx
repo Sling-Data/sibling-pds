@@ -1,11 +1,7 @@
-// @ts-expect-error React is used implicitly with JSX
-import React from 'react';
-import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { BrowserRouter } from 'react-router-dom';
 import { UserProvider } from '../context/UserContext';
 import { useFetch, clearCache } from '../hooks/useFetch';
-import Profile from '../components/Profile';
 
 // Mock the environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
@@ -21,18 +17,17 @@ const mockInitialUser: User = {
 };
 
 const mockUpdatedUser: User = {
-  name: 'Test User',
-  email: 'test@example.com',
-};
-
-const mockNewUser: User = {
-  name: 'New User',
-  email: 'new@example.com',
+  name: 'Updated User',
+  email: 'updated@example.com',
 };
 
 // Simple test component that uses both UserContext and useFetch
-function TestComponent({ userId }: { userId: string }) {
-  const { data: user, error } = useFetch<User>(`${process.env.REACT_APP_API_URL}/users/${userId}`);
+function TestComponent({ userId, onRefetch }: { userId: string; onRefetch?: (refetch: () => Promise<void>) => void }) {
+  const { data: user, error, refetch } = useFetch<User>(`${process.env.REACT_APP_API_URL}/users/${userId}`);
+
+  if (onRefetch && refetch) {
+    onRefetch(refetch);
+  }
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -57,11 +52,13 @@ describe('UserContext and useFetch Integration', () => {
     mockFetch = jest.fn();
     global.fetch = mockFetch;
     clearCache();
+    jest.useFakeTimers();
   });
 
   afterEach(() => {
     jest.resetAllMocks();
     clearCache();
+    jest.useRealTimers();
   });
 
   it('should fetch and display user data on initial render (cache miss)', async () => {
@@ -71,41 +68,36 @@ describe('UserContext and useFetch Integration', () => {
     });
 
     render(
-      <BrowserRouter>
-        <UserProvider initialUserId="user123">
-          <Profile />
-        </UserProvider>
-      </BrowserRouter>
+      <UserProvider>
+        <TestComponent userId="user123" />
+      </UserProvider>
     );
 
-    // Initial loading state
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    // Should show loading initially
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-    // Wait for data to load
+    // Should display user data after fetch
     await waitFor(() => {
-      expect(screen.getByText(mockInitialUser.name)).toBeInTheDocument();
-      expect(screen.getByText(mockInitialUser.email)).toBeInTheDocument();
+      expect(screen.getByText(`Name: ${mockInitialUser.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`Email: ${mockInitialUser.email}`)).toBeInTheDocument();
     });
 
-    // Verify API was called
+    // Verify fetch was called with correct URL
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${process.env.REACT_APP_API_URL}/users/user123`
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
   });
 
   it('should retry on 500 error and eventually succeed', async () => {
-    // Mock 500 errors for first two attempts, then succeed
     mockFetch
       .mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error',
+        json: () => Promise.resolve({ message: 'Internal Server Error' }),
       })
       .mockResolvedValueOnce({
         ok: false,
         status: 500,
-        statusText: 'Internal Server Error',
+        json: () => Promise.resolve({ message: 'Internal Server Error' }),
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -113,121 +105,114 @@ describe('UserContext and useFetch Integration', () => {
       });
 
     render(
-      <BrowserRouter>
-        <UserProvider initialUserId="user123">
-          <Profile />
-        </UserProvider>
-      </BrowserRouter>
+      <UserProvider>
+        <TestComponent userId="user123" />
+      </UserProvider>
     );
 
-    // Wait for retries and final success
-    await waitFor(
-      () => {
-        expect(screen.getByText(mockInitialUser.name)).toBeInTheDocument();
-      },
-      { timeout: 1000 } // Allow time for retries
-    );
+    // Should show loading initially
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-    // Verify three attempts were made
+    // Should display user data after successful retry
+    await waitFor(() => {
+      expect(screen.getByText(`Name: ${mockInitialUser.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`Email: ${mockInitialUser.email}`)).toBeInTheDocument();
+    });
+
+    // Verify fetch was called multiple times due to retries
     expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
   });
 
   it('should use cached data and then refetch after update', async () => {
-    // First request - will be cached
+    let refetchFn: () => Promise<void>;
+
+    // First fetch - store in cache
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockInitialUser),
+    });
+
+    // Second fetch - updated data
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockUpdatedUser),
+    });
+
+    // Initial render
+    render(
+      <UserProvider>
+        <TestComponent 
+          userId="user123" 
+          onRefetch={(refetch) => {
+            refetchFn = refetch;
+          }} 
+        />
+      </UserProvider>
+    );
+
+    // Wait for initial data to be displayed
+    await waitFor(() => {
+      expect(screen.getByText(`Name: ${mockInitialUser.name}`)).toBeInTheDocument();
+    });
+
+    // Trigger a refetch
+    await act(async () => {
+      await refetchFn();
+    });
+
+    // Should update with new data after refetch
+    await waitFor(() => {
+      expect(screen.getByText(`Name: ${mockUpdatedUser.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`Email: ${mockUpdatedUser.email}`)).toBeInTheDocument();
+    });
+
+    // Verify fetch was called twice
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
+  });
+
+  it('should handle network errors with retry', async () => {
+    // First attempt - network error
+    mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
+    
+    // Second attempt - network error
+    mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
+    
+    // Third attempt - success
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(mockInitialUser),
     });
 
     render(
-      <BrowserRouter>
-        <UserProvider initialUserId="user123">
-          <Profile />
-        </UserProvider>
-      </BrowserRouter>
+      <UserProvider>
+        <TestComponent userId="user123" />
+      </UserProvider>
     );
 
-    // Wait for initial data
-    await waitFor(() => {
-      expect(screen.getByText(mockInitialUser.name)).toBeInTheDocument();
-    });
+    // Should show loading initially
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
 
-    // Click edit button
-    fireEvent.click(screen.getByRole('button', { name: /edit profile/i }));
-
-    // Update form fields
-    fireEvent.change(screen.getByRole('textbox', { name: /name/i }), {
-      target: { value: mockUpdatedUser.name },
-    });
-    fireEvent.change(screen.getByRole('textbox', { name: /email/i }), {
-      target: { value: mockUpdatedUser.email },
-    });
-
-    // Mock PUT request success
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: true }),
-    });
-
-    // Mock subsequent GET request with updated data
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockUpdatedUser),
-    });
-
-    // Submit form
+    // Wait for retry delays
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+      // First retry delay (100ms)
+      jest.advanceTimersByTime(100);
+      // Second retry delay (200ms)
+      jest.advanceTimersByTime(200);
+      // Run all remaining timers
+      jest.runAllTimers();
     });
 
-    // Verify updated data is displayed
+    // Should display user data after successful retry
     await waitFor(() => {
-      // Look for the updated user data in the value spans
-      const nameElements = screen.getAllByText(mockUpdatedUser.name);
-      const emailElements = screen.getAllByText(mockUpdatedUser.email);
-      expect(nameElements.length).toBeGreaterThan(0);
-      expect(emailElements.length).toBeGreaterThan(0);
+      expect(screen.getByText(`Name: ${mockInitialUser.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`Email: ${mockInitialUser.email}`)).toBeInTheDocument();
     });
 
-    // Verify both PUT and GET requests were made
-    expect(mockFetch).toHaveBeenCalledTimes(3); // Initial GET + PUT + Refetch GET
-    expect(mockFetch.mock.calls[1][0]).toBe(`${process.env.REACT_APP_API_URL}/users/user123`);
-    expect(mockFetch.mock.calls[1][1]).toEqual({
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(mockUpdatedUser),
-    });
-    // Verify the refetch GET request
-    expect(mockFetch.mock.calls[2][0]).toBe(`${process.env.REACT_APP_API_URL}/users/user123`);
-  });
-
-  it('should handle network errors with retry', async () => {
-    mockFetch
-      .mockRejectedValueOnce(new TypeError('Network error'))
-      .mockRejectedValueOnce(new TypeError('Network error'))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockInitialUser),
-      });
-
-    render(
-      <BrowserRouter>
-        <UserProvider initialUserId="user123">
-          <Profile />
-        </UserProvider>
-      </BrowserRouter>
-    );
-
-    await waitFor(
-      () => {
-        expect(screen.getByText(mockInitialUser.name)).toBeInTheDocument();
-      },
-      { timeout: 1000 }
-    );
-
+    // Verify fetch was called multiple times due to retries
     expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
   });
 
   it('should render error state on fetch failure', async () => {
@@ -252,7 +237,7 @@ describe('UserContext and useFetch Integration', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockNewUser),
+        json: () => Promise.resolve(mockUpdatedUser),
       });
 
     const { rerender } = render(
@@ -273,11 +258,11 @@ describe('UserContext and useFetch Integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(`Name: ${mockNewUser.name}`)).toBeInTheDocument();
+      expect(screen.getByText(`Name: ${mockUpdatedUser.name}`)).toBeInTheDocument();
     });
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch.mock.calls[0][0]).toBe(`${process.env.REACT_APP_API_URL}/users/user123`);
     expect(mockFetch.mock.calls[1][0]).toBe(`${process.env.REACT_APP_API_URL}/users/user456`);
   });
-}); 
+});

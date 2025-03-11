@@ -1,100 +1,67 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import SignupForm from './SignupForm';
-import LoginForm from './LoginForm';
-import DataInput from './DataInput';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { LoginForm } from './LoginForm';
+import { SignupForm } from './SignupForm';
 import Profile from './Profile';
+import DataInput from './DataInput';
 import ConnectPlaid from './ConnectPlaid';
 import { UserProvider, useUser } from '../context/UserContext';
 
-function AppContent() {
-  const { userId, setUserId, isAuthenticated } = useUser();
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useUser();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+};
 
-  const handleSignupSuccess = (newUserId: string) => {
-    setUserId(newUserId);
-  };
+const AppRoutes: React.FC = () => {
+  const { isAuthenticated } = useUser();
 
   return (
-    <div className="app-container">
-      <h1>Hello, Sibling!</h1>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/profile" replace />
-            ) : (
-              <Navigate to="/signup" replace />
-            )
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/data-input" replace />
-            ) : (
-              <SignupForm onSuccess={handleSignupSuccess} />
-            )
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/profile" replace />
-            ) : (
-              <LoginForm />
-            )
-          }
-        />
-        <Route
-          path="/data-input"
-          element={
-            isAuthenticated ? (
-              <DataInput userId={userId as string} onSubmitted={() => {}} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            isAuthenticated ? (
-              <Profile />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-        <Route
-          path="/connect-plaid"
-          element={
-            isAuthenticated ? (
-              <ConnectPlaid />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-      </Routes>
-    </div>
+    <Routes>
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/profile" /> : <LoginForm />}
+      />
+      <Route
+        path="/signup"
+        element={isAuthenticated ? <Navigate to="/data-input" /> : <SignupForm />}
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/data-input"
+        element={
+          <PrivateRoute>
+            <DataInput />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/connect-plaid"
+        element={
+          <PrivateRoute>
+            <ConnectPlaid />
+          </PrivateRoute>
+        }
+      />
+      <Route path="/" element={<Navigate to="/login" />} />
+    </Routes>
   );
-}
+};
 
-interface AppProps {
-  router?: React.ComponentType<{ children: React.ReactNode }>;
-}
-
-function App({ router: Router = BrowserRouter }: AppProps) {
+const App: React.FC = () => {
   return (
     <Router>
       <UserProvider>
-        <AppContent />
+        <AppRoutes />
       </UserProvider>
     </Router>
   );
-}
+};
 
 export default App;

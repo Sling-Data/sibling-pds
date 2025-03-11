@@ -1,100 +1,122 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UserProvider, useUser } from '../context/UserContext';
+import { TokenManager } from '../utils/TokenManager';
 
-// Test component that displays authentication state
-function AuthStateDisplay() {
-  const { isAuthenticated, userId, token, setUserId, setToken, setRefreshToken, logout } = useUser();
-  
+// Mock TokenManager
+jest.mock('../utils/TokenManager', () => ({
+  TokenManager: {
+    getUserId: jest.fn(),
+    isTokenValid: jest.fn(),
+    storeTokens: jest.fn(),
+    clearTokens: jest.fn(),
+  },
+}));
+
+// Test component that uses the UserContext
+const TestComponent = () => {
+  const { userId, isAuthenticated, login, logout } = useUser();
   return (
     <div>
-      <div data-testid="auth-state">{isAuthenticated ? 'Authenticated' : 'Not Authenticated'}</div>
-      <div data-testid="user-id">{userId || 'No User ID'}</div>
-      <div data-testid="token">{token ? 'Has Token' : 'No Token'}</div>
-      <button 
-        data-testid="login-button" 
-        onClick={() => {
-          setUserId('test-user');
-          setToken('test-token');
-          setRefreshToken('test-refresh-token');
-        }}
-      >
-        Log In
-      </button>
-      <button 
-        data-testid="logout-button" 
-        onClick={logout}
-      >
-        Log Out
-      </button>
+      <div data-testid="user-id">{userId || 'no-user'}</div>
+      <div data-testid="auth-status">{isAuthenticated ? 'authenticated' : 'not-authenticated'}</div>
+      <button onClick={() => login('test-access', 'test-refresh')}>Login</button>
+      <button onClick={logout}>Logout</button>
     </div>
   );
-}
+};
 
 describe('User Authentication Context', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (TokenManager.getUserId as jest.Mock).mockReturnValue(null);
+    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(false);
+  });
+
   it('starts with unauthenticated state', () => {
     render(
       <UserProvider>
-        <AuthStateDisplay />
+        <TestComponent />
       </UserProvider>
     );
 
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('Not Authenticated');
-    expect(screen.getByTestId('user-id')).toHaveTextContent('No User ID');
-    expect(screen.getByTestId('token')).toHaveTextContent('No Token');
+    expect(screen.getByTestId('user-id')).toHaveTextContent('no-user');
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('not-authenticated');
   });
 
   it('updates authentication state when tokens are set', () => {
+    // Mock token storage response
+    (TokenManager.storeTokens as jest.Mock).mockImplementation(() => {});
+    (TokenManager.getUserId as jest.Mock)
+      .mockReturnValue('test-user-123');
+    (TokenManager.isTokenValid as jest.Mock)
+      .mockReturnValue(true);
+
     render(
       <UserProvider>
-        <AuthStateDisplay />
+        <TestComponent />
       </UserProvider>
     );
 
-    // Use the button to update the context
-    fireEvent.click(screen.getByTestId('login-button'));
+    // Click login button
+    act(() => {
+      screen.getByText('Login').click();
+    });
 
-    // Check that the state was updated
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('Authenticated');
-    expect(screen.getByTestId('user-id')).toHaveTextContent('test-user');
-    expect(screen.getByTestId('token')).toHaveTextContent('Has Token');
+    // Verify state updates
+    expect(TokenManager.storeTokens).toHaveBeenCalledWith({
+      accessToken: 'test-access',
+      refreshToken: 'test-refresh',
+    });
+    expect(screen.getByTestId('user-id')).toHaveTextContent('test-user-123');
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
   });
 
   it('clears authentication state on logout', () => {
+    // Mock initial authenticated state
+    (TokenManager.getUserId as jest.Mock).mockReturnValue('test-user-123');
+    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(true);
+
     render(
-      <UserProvider initialUserId="test-user" initialToken="test-token">
-        <AuthStateDisplay />
+      <UserProvider>
+        <TestComponent />
       </UserProvider>
     );
 
-    // Verify we start authenticated
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('Authenticated');
-    
-    // Log out
-    fireEvent.click(screen.getByTestId('logout-button'));
-    
-    // Check that the state was updated
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('Not Authenticated');
-    expect(screen.getByTestId('user-id')).toHaveTextContent('No User ID');
-    expect(screen.getByTestId('token')).toHaveTextContent('No Token');
+    // Verify initial state
+    expect(screen.getByTestId('user-id')).toHaveTextContent('test-user-123');
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
+
+    // Mock state after logout
+    (TokenManager.getUserId as jest.Mock).mockReturnValue(null);
+    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(false);
+
+    // Click logout button
+    act(() => {
+      screen.getByText('Logout').click();
+    });
+
+    // Verify state is cleared
+    expect(TokenManager.clearTokens).toHaveBeenCalled();
+    expect(screen.getByTestId('user-id')).toHaveTextContent('no-user');
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('not-authenticated');
   });
 
   it('initializes with provided values', () => {
+    // Mock initial state with existing user
+    (TokenManager.getUserId as jest.Mock).mockReturnValue('existing-user-123');
+    (TokenManager.isTokenValid as jest.Mock).mockReturnValue(true);
+
     render(
-      <UserProvider 
-        initialUserId="initial-user" 
-        initialToken="initial-token"
-        initialRefreshToken="initial-refresh-token"
-      >
-        <AuthStateDisplay />
+      <UserProvider>
+        <TestComponent />
       </UserProvider>
     );
 
-    // Check that the state was initialized correctly
-    expect(screen.getByTestId('auth-state')).toHaveTextContent('Authenticated');
-    expect(screen.getByTestId('user-id')).toHaveTextContent('initial-user');
-    expect(screen.getByTestId('token')).toHaveTextContent('Has Token');
+    // Verify state is initialized from TokenManager
+    expect(screen.getByTestId('user-id')).toHaveTextContent('existing-user-123');
+    expect(screen.getByTestId('auth-status')).toHaveTextContent('authenticated');
   });
 });

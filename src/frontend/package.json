@@ -8,6 +8,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-router-dom": "^5.3.3",
+    "jwt-decode": "^4.0.0",
     "plaid": "^31.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -37,6 +38,8 @@
     "build:test": "react-scripts build && npm run test-once",
     "test": "react-scripts test --env=jsdom",
     "test-once": "react-scripts test --env=jsdom --watchAll=false",
+    "test:write": "react-scripts test --env=jsdom --watchAll=false --json --outputFile=test-output.json --silent",
+    "validate:cascade": "npm run build && npm run test:write",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

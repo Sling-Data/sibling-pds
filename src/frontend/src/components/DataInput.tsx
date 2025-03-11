@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../styles/DataInput.css';
+import { useUser } from '../context/UserContext';
 
 interface FormData {
   interests: string[];
@@ -26,12 +27,9 @@ interface FormErrors {
   age?: string;
 }
 
-interface DataInputProps {
-  userId: string;
-  onSubmitted?: () => void;
-}
-
-const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
+const DataInput: React.FC = () => {
+  const navigate = useNavigate();
+  const { userId } = useUser();
   const [formData, setFormData] = useState<FormData>({
     interests: [],
     primaryGoal: '',
@@ -50,7 +48,6 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
     success?: boolean;
     message?: string;
   }>({});
-  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   const validateAge = (age: string) => {
     const ageNum = parseInt(age);
@@ -143,9 +140,9 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          userId,
           type: 'onboarding',
-          value: JSON.stringify(formData),
-          userId: userId
+          value: formData
         }),
       });
 
@@ -174,13 +171,8 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
         age: ''
       });
 
-      // Call onSubmitted callback if provided
-      if (onSubmitted) {
-        onSubmitted();
-      }
-
-      // Set redirect flag
-      setShouldRedirect(true);
+      // Navigate to profile page
+      navigate('/profile');
     } catch (error) {
       setSubmitStatus({
         success: false,
@@ -217,10 +209,6 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
-
-  if (shouldRedirect) {
-    return <Navigate to="/profile" replace />;
-  }
 
   return (
     <div className="data-input-container">
@@ -392,4 +380,4 @@ const DataInput: React.FC<DataInputProps> = ({ userId, onSubmitted }) => {
   );
 };
 
-export default DataInput; 
+export default DataInput;

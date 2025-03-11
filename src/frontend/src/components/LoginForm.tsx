@@ -1,91 +1,57 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/SignupForm.css'; // Reuse the same styles for now
+import '../styles/SignupForm.css'; 
 import { useUser } from '../context/UserContext';
 
-interface FormErrors {
-  userId?: string;
-  password?: string;
-  submit?: string;
+interface LoginFormProps {
+  onSuccess?: () => void;
 }
 
-export default function LoginForm() {
+export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, setUserId: setContextUserId } = useUser();
   const navigate = useNavigate();
-  const { setUserId: setUserIdContext, setToken, setRefreshToken } = useUser();
-
-  const validateForm = () => {
-    const newErrors: FormErrors = {};
-    
-    if (!userId.trim()) {
-      newErrors.userId = 'User ID is required';
-    }
-    
-    if (!password) {
-      newErrors.password = 'Password is required';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+    setError(null);
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId,
-          password,
-        }),
+        body: JSON.stringify({ userId, password }),
       });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          setErrors({
-            submit: 'Invalid credentials'
-          });
-          return;
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+
+      login(data.token, data.refreshToken);
+      setContextUserId(userId);  // Use the userId from the login form since that's what we authenticated with
       
-      // Store tokens using context
-      setToken(data.token);
-      setRefreshToken(data.refreshToken);
-      
-      // Update user context
-      setUserIdContext(userId);
-      
-      // Navigate to profile page
-      navigate('/profile');
-    } catch (error) {
-      setErrors({
-        submit: 'Failed to log in'
-      });
-      console.error('Login error:', error);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/profile');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during login');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="signup-container">
+    <div className="auth-form-container">
       <h2>Log In to Your Account</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -96,10 +62,10 @@ export default function LoginForm() {
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
             placeholder="Enter your user ID"
+            required
           />
-          {errors.userId && <div className="error-message">{errors.userId}</div>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="password">Password</label>
           <input
@@ -108,22 +74,20 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
+            required
           />
-          {errors.password && <div className="error-message">{errors.password}</div>}
         </div>
-        
-        {errors.submit && (
-          <div className="error-message submit-error">{errors.submit}</div>
-        )}
-        
+
+        {error && <div className="error-message">{error}</div>}
+
         <button type="submit" disabled={isSubmitting}>
-          Log In
+          {isSubmitting ? 'Logging in...' : 'Log In'}
         </button>
-        
+
         <div className="signup-link">
           Don't have an account? <a href="/signup">Sign up</a>
         </div>
       </form>
     </div>
   );
-}
+};

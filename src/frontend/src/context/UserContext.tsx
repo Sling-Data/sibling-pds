@@ -1,67 +1,53 @@
-// @ts-expect-error React is used implicitly with JSX
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { TokenManager } from '../utils/TokenManager';
 
-interface UserState {
+interface UserContextType {
   userId: string | null;
-  setUserId: (id: string | null) => void;
-  token: string | null;
-  setToken: (token: string | null) => void;
-  refreshToken: string | null;
-  setRefreshToken: (token: string | null) => void;
   isAuthenticated: boolean;
+  setUserId: (userId: string | null) => void;
+  login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
 }
 
-const UserContext = createContext<UserState | undefined>(undefined);
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
-interface UserProviderProps {
-  children: ReactNode;
-  initialUserId?: string | null;
-  initialToken?: string | null;
-  initialRefreshToken?: string | null;
-}
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [userId, setUserId] = useState<string | null>(TokenManager.getUserId());
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(TokenManager.isTokenValid());
 
-export function UserProvider({ 
-  children, 
-  initialUserId = null, 
-  initialToken = null, 
-  initialRefreshToken = null 
-}: UserProviderProps) {
-  const [userId, setUserId] = useState<string | null>(initialUserId);
-  const [token, setToken] = useState<string | null>(initialToken);
-  const [refreshToken, setRefreshToken] = useState<string | null>(initialRefreshToken);
+  useEffect(() => {
+    // Check token validity on mount and update state
+    const isValid = TokenManager.isTokenValid();
+    const currentUserId = TokenManager.getUserId();
+    setIsAuthenticated(isValid);
+    setUserId(currentUserId);
+  }, []);
 
-  // Logout function to clear all auth data
-  const logout = () => {
-    setUserId(null);
-    setToken(null);
-    setRefreshToken(null);
+  const login = (accessToken: string, refreshToken: string) => {
+    TokenManager.storeTokens({ accessToken, refreshToken });
+    setUserId(TokenManager.getUserId());
+    setIsAuthenticated(true);
   };
 
-  const isAuthenticated = !!userId && !!token;
-
-  const value = {
-    userId,
-    setUserId,
-    token,
-    setToken,
-    refreshToken,
-    setRefreshToken,
-    isAuthenticated,
-    logout
+  const logout = () => {
+    TokenManager.clearTokens();
+    setUserId(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <UserContext.Provider value={value}>
+    <UserContext.Provider value={{ userId, isAuthenticated, setUserId, login, logout }}>
       {children}
     </UserContext.Provider>
   );
-}
+};
 
-export function useUser(): UserState {
+export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
-}
+};
+
+export default UserContext;

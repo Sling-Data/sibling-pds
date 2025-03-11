@@ -3,10 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/SignupForm.css';
 import { useUser } from '../context/UserContext';
 
-interface SignupFormProps {
-  onSuccess: (userId: string) => void;
-}
-
 interface FormErrors {
   name?: string;
   email?: string;
@@ -14,32 +10,14 @@ interface FormErrors {
   submit?: string;
 }
 
-export default function SignupForm({ onSuccess }: SignupFormProps) {
+export const SignupForm: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, setUserId } = useUser();
   const navigate = useNavigate();
-  const { setUserId, setToken, setRefreshToken } = useUser();
-
-  const validateEmail = (email: string) => {
-    if (!email.trim()) {
-      return 'Email is required';
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
-      return 'Please enter a valid email address';
-    }
-    return '';
-  };
-
-  const validatePassword = (password: string) => {
-    if (!password) {
-      return 'Password is required';
-    } else if (password.length < 8) {
-      return 'Password must be at least 8 characters long';
-    }
-    return '';
-  };
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -48,16 +26,18 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
       newErrors.name = 'Name is required';
     }
     
-    const emailError = validateEmail(email);
-    if (emailError) {
-      newErrors.email = emailError;
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+      newErrors.email = 'Email is invalid';
     }
     
-    const passwordError = validatePassword(password);
-    if (passwordError) {
-      newErrors.password = passwordError;
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
-    
+    console.log({newErrors}); 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -70,9 +50,9 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
     }
     
     setIsSubmitting(true);
+    setErrors({});
     
     try {
-      // Sign up with auth endpoint directly
       const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
@@ -85,53 +65,33 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(data.message || 'Failed to sign up');
       }
 
-      const authData = await response.json();
-      
       // Store tokens using context
-      setToken(authData.token);
-      setRefreshToken(authData.refreshToken);
+      login(data.token, data.refreshToken);
       
-      // Update user context with userId from response
-      setUserId(authData.userId);
+      // Set userId from response
+      setUserId(data.userId);
       
-      // Call onSuccess callback
-      onSuccess(authData.userId);
-      
-      // Navigate to data-input page
+      // Navigate to data input page
       navigate('/data-input');
     } catch (error) {
       setErrors({
         submit: error instanceof Error ? error.message : 'Failed to sign up'
       });
-      console.error('Signup error:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    const emailError = validateEmail(newEmail);
-    setErrors(prev => ({ ...prev, email: emailError || undefined }));
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    const passwordError = validatePassword(newPassword);
-    setErrors(prev => ({ ...prev, password: passwordError || undefined }));
-  };
-
   return (
-    <div className="signup-container">
+    <div className="auth-form-container">
       <h2>Create Your Account</h2>
-      <form onSubmit={handleSubmit} role="form">
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Name</label>
           <input
@@ -148,9 +108,9 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
           <label htmlFor="email">Email</label>
           <input
             id="email"
-            type="email"
+            type="text"
             value={email}
-            onChange={handleEmailChange}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
           />
           {errors.email && <div className="error-message">{errors.email}</div>}
@@ -162,7 +122,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
             id="password"
             type="password"
             value={password}
-            onChange={handlePasswordChange}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
           />
           {errors.password && <div className="error-message">{errors.password}</div>}
@@ -173,7 +133,7 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
         )}
         
         <button type="submit" disabled={isSubmitting}>
-          Create Account
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
         </button>
         
         <div className="login-link">
@@ -182,4 +142,4 @@ export default function SignupForm({ onSuccess }: SignupFormProps) {
       </form>
     </div>
   );
-}
+};

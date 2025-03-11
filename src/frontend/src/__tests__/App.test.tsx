@@ -1,115 +1,148 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import App from '../components/App';
-import { UserProvider } from '../context/UserContext';
-import { MemoryRouter } from 'react-router-dom';
 
 // Mock the environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
 
-// Helper function to render App with context
-const renderApp = (initialUserId: string | null = null, initialToken: string | null = null) => {
-  return render(
-    <UserProvider initialUserId={initialUserId} initialToken={initialToken}>
-      <App router={MemoryRouter} />
-    </UserProvider>
-  );
-};
+// Mock jwt-decode to always return a valid token payload
+jest.mock('jwt-decode', () => ({
+  jwtDecode: () => ({
+    userId: 'test-user-123',
+    exp: Math.floor(Date.now() / 1000) + 3600, // Token expires in 1 hour
+    iat: Math.floor(Date.now() / 1000)
+  })
+}));
 
 // Mock fetch globally
 global.fetch = jest.fn();
 
+// Mock window.location to handle navigation
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate
+}));
+
 describe('App Component', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
-    // Reset fetch mock
-    jest.resetAllMocks();
+    (global.fetch as jest.Mock).mockClear();
+    mockNavigate.mockClear();
+    sessionStorage.clear();
+    window.history.pushState({}, '', '/');
   });
 
-  it('redirects to signup when not authenticated', async () => {
-    renderApp();
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('redirects to login when not authenticated', async () => {
+    render(<App />);
     
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /create your account/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /log in to your account/i })).toBeInTheDocument();
     });
   });
 
-  // Skip this test for now as we've verified the functionality in Auth.test.tsx
-  it.skip('redirects to profile when authenticated', async () => {
-    // Mock the user data fetch for Profile component
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({ name: 'Test User', email: 'test@example.com' }),
-    });
+  it('redirects to profile when authenticated', async () => {
+    // Set up authenticated state in session storage
+    sessionStorage.setItem('userId', 'test-user-123');
+    sessionStorage.setItem('accessToken', 'mock-token');
+    sessionStorage.setItem('refreshToken', 'mock-refresh-token');
 
-    // Render with authentication
-    renderApp('test-user-123', 'mock-token');
-    
-    // When authenticated, the app should not show the signup form
-    await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /create your account/i })).not.toBeInTheDocument();
-    });
-  });
-
-  it('shows signup form at /signup route', async () => {
-    renderApp();
-    
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /create your account/i })).toBeInTheDocument();
-    });
-  });
-
-  // Skip this test for now as we've verified the functionality in Auth.test.tsx
-  it.skip('shows profile after successful authentication', async () => {
-    const mockUserId = '123';
-    
-    // Mock user creation response
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ _id: mockUserId }),
-    });
-    
-    // Mock auth signup response
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ 
-        token: 'mock-token',
-        refreshToken: 'mock-refresh-token'
-      }),
-    });
-    
     // Mock user data fetch for Profile component
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ name: 'Test User', email: 'test@example.com' }),
     });
 
-    renderApp();
+    render(<App />);
+    
+    // When authenticated, we should be redirected to profile
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /log in to your account/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /user profile/i })).toBeInTheDocument();
+    });
+  });
+
+  it('redirects to data-input after successful signup', async () => {
+    // Start at the signup page
+    window.history.pushState({}, '', '/signup');
+    render(<App />);
+
+    // Wait for signup form to appear
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /create your account/i })).toBeInTheDocument();
+    });
+
+    // Mock signup response and verify request payload
+    (global.fetch as jest.Mock).mockImplementationOnce(async (url, init) => {
+      if (url === `${process.env.REACT_APP_API_URL}/auth/signup` && init?.method === 'POST') {
+        // Verify request payload
+        const body = JSON.parse(init.body as string);
+        expect(body).toEqual({
+          name: 'Test User',
+          email: 'test@example.com',
+          password: 'password123'
+        });
+
+        // Store the userId in session storage (this is done by the SignupForm component)
+        sessionStorage.setItem('userId', 'test-user-123');
+
+        return {
+          ok: true,
+          json: async () => ({
+            userId: 'test-user-123',
+            token: 'mock-token',
+            refreshToken: 'mock-refresh-token'
+          })
+        };
+      }
+      return { ok: false };
+    });
 
     // Fill in the signup form
     const nameInput = screen.getByLabelText(/name/i);
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
-    const form = screen.getByRole('form');
 
     fireEvent.change(nameInput, { target: { value: 'Test User' } });
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
     
-    // Submit the form
-    fireEvent.submit(form);
+    // Submit the form by clicking the submit button
+    const submitButton = screen.getByRole('button', { name: /create account/i });
+    fireEvent.click(submitButton);
 
-    // Wait for fetch to complete and navigation to occur
+    // After successful signup, we should be redirected to data-input
+    // Note: DataInput is a protected route, so we need to be authenticated to see it
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(3);
+      // First verify that we're authenticated
+      expect(sessionStorage.getItem('userId')).toBe('test-user-123');
+      expect(sessionStorage.getItem('accessToken')).toBe('mock-token');
+      expect(sessionStorage.getItem('refreshToken')).toBe('mock-refresh-token');
+      // Then verify we see the DataInput component
+      expect(screen.getByRole('heading', { name: /personal information/i })).toBeInTheDocument();
     });
+  });
 
-    // When authenticated, the app should not show the signup form
-    await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /create your account/i })).not.toBeInTheDocument();
-    }, { timeout: 3000 });
+  it('protects routes when not authenticated', async () => {
+    // Try to access protected routes without authentication
+    const protectedRoutes = ['/profile', '/data-input', '/connect-plaid'];
+
+    for (const route of protectedRoutes) {
+      window.history.pushState({}, '', route);
+      render(<App />);
+
+      // Should be redirected to login
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /log in to your account/i })).toBeInTheDocument();
+      });
+
+      // Cleanup after each render
+      cleanup();
+    }
   });
 });
