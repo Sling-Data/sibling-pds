@@ -15,7 +15,7 @@ declare global {
 // JWT configuration
 const JWT_CONFIG = {
   secret: process.env.JWT_SECRET || ("default-secret" as Secret),
-  accessTokenExpiry: "1m" as const,
+  accessTokenExpiry: "1h" as const,
   refreshTokenExpiry: 7 * 24 * 60 * 60, // 7 days in seconds
 };
 
