@@ -2,7 +2,6 @@ const path = require('path');
 
 /** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
-  verbose: true,
   testTimeout: 10000,
   projects: [
     {
@@ -28,8 +27,6 @@ module.exports = {
       testEnvironment: 'jsdom',
       rootDir: path.resolve(__dirname, 'src/frontend'),
       testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}'],
-      verbose: false,
-      silent: true,
       testEnvironmentOptions: {
         pretendToBeVisual: true,
       },

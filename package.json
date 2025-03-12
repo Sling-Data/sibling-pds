@@ -16,6 +16,7 @@
     "test-once": "jest --runInBand",
     "test:backend": "jest --watch --selectProjects backend",
     "test:backend-once": "jest --runInBand --selectProjects backend",
+    "validate:cascade:backend": "jest --runInBand --selectProjects backend --json --outputFile=./src/backend/test-output.json",
     "install:frontend": "cd src/frontend && npm install",
     "test:frontend": "cd src/frontend && npm test",
     "test:frontend-once": "cd src/frontend && npm run test-once",
