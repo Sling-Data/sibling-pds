@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { useUser } from '../context/UserContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getAccessToken } from '../utils/TokenManager';
 import '../styles/Profile.css';
 
 // Types
@@ -99,8 +100,26 @@ function Profile() {
       // Refresh token if needed before connecting to Gmail
       const refreshSuccessful = await refreshTokenIfExpired();
       if (refreshSuccessful) {
-        // Use window.location.href for external redirects
-        window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}`;
+        try {
+          // Get the current access token
+          const accessToken = getAccessToken();
+          
+          if (!accessToken) {
+            throw new Error('No access token available');
+          }
+          
+          // The simplest approach: directly navigate to the endpoint
+          // The browser will automatically include the Authorization header
+          // from the current session, and the backend will handle the redirect
+          window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}//&token=${encodeURIComponent(accessToken)}`;
+          
+        } catch (error) {
+          console.error('Error connecting to Gmail:', error);
+          setAuthStatus({
+            success: false,
+            message: error instanceof Error ? error.message : 'Failed to connect to Gmail'
+          });
+        }
       }
     }
   };
@@ -308,24 +327,19 @@ function Profile() {
       {/* Privacy Settings */}
       <div className="privacy-settings">
         <h3>Privacy Settings</h3>
-        <div className="privacy-content">
-          <p className="privacy-message">
-            Coming soon - manage your data sharing preferences
-          </p>
-          <div className="privacy-control">
-            <label htmlFor="dataSharing">Data Sharing:</label>
-            <button
+        <div className="setting-item">
+          <label htmlFor="dataSharing">
+            <input
+              type="checkbox"
               id="dataSharing"
-              className={`toggle-button ${privacySettings.dataSharing ? 'active' : ''}`}
-              onClick={() => setPrivacySettings(prev => ({
-                ...prev,
-                dataSharing: !prev.dataSharing
-              }))}
-              aria-pressed={privacySettings.dataSharing}
-            >
-              {privacySettings.dataSharing ? 'Enabled' : 'Disabled'}
-            </button>
-          </div>
+              checked={privacySettings.dataSharing}
+              onChange={(e) => setPrivacySettings({
+                ...privacySettings,
+                dataSharing: e.target.checked
+              })}
+            />
+            Allow data sharing with third-party services
+          </label>
         </div>
       </div>
     </div>

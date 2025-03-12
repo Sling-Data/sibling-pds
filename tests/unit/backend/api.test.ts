@@ -422,7 +422,7 @@ describe("JWT Authentication and Validation", () => {
 
     expect(response.body).toHaveProperty(
       "message",
-      "Access denied. No token provided."
+      "Access denied. Invalid token format."
     );
   });
 

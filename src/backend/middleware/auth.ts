@@ -31,7 +31,7 @@ const refreshTokens: RefreshTokenStore = {};
 
 /**
  * JWT Authentication middleware
- * Verifies the JWT token from the Authorization header
+ * Verifies the JWT token from the Authorization header or query parameter
  * Adds userId to the request object if token is valid
  */
 export const authenticateJWT = (
@@ -39,22 +39,25 @@ export const authenticateJWT = (
   res: Response,
   next: NextFunction
 ): void => {
-  // Get the auth header value
+  // Get the auth header value or token from query parameter
   const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    res.status(401).json({ message: "Access denied. No token provided." });
+  const queryToken = req.query.token as string | undefined;
+  
+  let token: string | undefined;
+  
+  if (authHeader) {
+    // Format should be "Bearer [token]"
+    token = authHeader.split(" ")[1];
+  } else if (queryToken) {
+    token = queryToken;
+  }
+  
+  if (!token) {
+    res.status(401).json({ message: "Access denied. Invalid token format." });
     return;
   }
 
   try {
-    // Format should be "Bearer [token]"
-    const token = authHeader.split(" ")[1];
-    if (!token) {
-      res.status(401).json({ message: "Access denied. Invalid token format." });
-      return;
-    }
-
     // Verify token
     const decoded = jwt.verify(token, JWT_CONFIG.secret) as {
       userId: string;
