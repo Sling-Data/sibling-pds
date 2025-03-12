@@ -1,1 +1,476 @@
-{"numFailedTestSuites":0,"numFailedTests":0,"numPassedTestSuites":9,"numPassedTests":44,"numPendingTestSuites":0,"numPendingTests":0,"numRuntimeErrorTestSuites":0,"numTodoTests":0,"numTotalTestSuites":9,"numTotalTests":44,"openHandles":[],"snapshot":{"added":0,"didUpdate":false,"failure":false,"filesAdded":0,"filesRemoved":0,"filesRemovedList":[],"filesUnmatched":0,"filesUpdated":0,"matched":0,"total":0,"unchecked":0,"uncheckedKeysByFile":[],"unmatched":0,"updated":0},"startTime":1741728688174,"success":true,"testResults":[{"assertionResults":[{"ancestorTitles":["ConnectPlaid Component"],"failureMessages":[],"fullName":"ConnectPlaid Component shows loading state initially","location":null,"status":"passed","title":"shows loading state initially"},{"ancestorTitles":["ConnectPlaid Component"],"failureMessages":[],"fullName":"ConnectPlaid Component shows error when API call fails","location":null,"status":"passed","title":"shows error when API call fails"},{"ancestorTitles":["ConnectPlaid Component"],"failureMessages":[],"fullName":"ConnectPlaid Component shows connect button when link token is successfully fetched","location":null,"status":"passed","title":"shows connect button when link token is successfully fetched"}],"endTime":1741728691750,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\ConnectPlaid.test.tsx","startTime":1741728690186,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["User Authentication Context"],"failureMessages":[],"fullName":"User Authentication Context starts with unauthenticated state","location":null,"status":"passed","title":"starts with unauthenticated state"},{"ancestorTitles":["User Authentication Context"],"failureMessages":[],"fullName":"User Authentication Context updates authentication state when tokens are set","location":null,"status":"passed","title":"updates authentication state when tokens are set"},{"ancestorTitles":["User Authentication Context"],"failureMessages":[],"fullName":"User Authentication Context clears authentication state on logout","location":null,"status":"passed","title":"clears authentication state on logout"},{"ancestorTitles":["User Authentication Context"],"failureMessages":[],"fullName":"User Authentication Context initializes with provided values","location":null,"status":"passed","title":"initializes with provided values"}],"endTime":1741728691799,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\Auth.test.tsx","startTime":1741728690164,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["UserContext and useFetch Integration"],"failureMessages":[],"fullName":"UserContext and useFetch Integration should fetch and display user data on initial render (cache miss)","location":null,"status":"passed","title":"should fetch and display user data on initial render (cache miss)"},{"ancestorTitles":["UserContext and useFetch Integration"],"failureMessages":[],"fullName":"UserContext and useFetch Integration should retry on 500 error and eventually succeed","location":null,"status":"passed","title":"should retry on 500 error and eventually succeed"},{"ancestorTitles":["UserContext and useFetch Integration"],"failureMessages":[],"fullName":"UserContext and useFetch Integration should use cached data and then refetch after update","location":null,"status":"passed","title":"should use cached data and then refetch after update"},{"ancestorTitles":["UserContext and useFetch Integration"],"failureMessages":[],"fullName":"UserContext and useFetch Integration should handle network errors with retry","location":null,"status":"passed","title":"should handle network errors with retry"},{"ancestorTitles":["UserContext and useFetch Integration"],"failureMessages":[],"fullName":"UserContext and useFetch Integration should render error state on fetch failure","location":null,"status":"passed","title":"should render error state on fetch failure"},{"ancestorTitles":["UserContext and useFetch Integration"],"failureMessages":[],"fullName":"UserContext and useFetch Integration should update display when user ID changes","location":null,"status":"passed","title":"should update display when user ID changes"}],"endTime":1741728691814,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\integration.test.tsx","startTime":1741728690168,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["useFetch"],"failureMessages":[],"fullName":"useFetch should fetch data successfully","location":null,"status":"passed","title":"should fetch data successfully"},{"ancestorTitles":["useFetch"],"failureMessages":[],"fullName":"useFetch should use cached data on subsequent requests","location":null,"status":"passed","title":"should use cached data on subsequent requests"},{"ancestorTitles":["useFetch"],"failureMessages":[],"fullName":"useFetch should retry on network error but not on JSON parsing error","location":null,"status":"passed","title":"should retry on network error but not on JSON parsing error"},{"ancestorTitles":["useFetch"],"failureMessages":[],"fullName":"useFetch should refetch and bypass cache when requested","location":null,"status":"passed","title":"should refetch and bypass cache when requested"}],"endTime":1741728691980,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\useFetch.test.tsx","startTime":1741728690163,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["SignupForm Component"],"failureMessages":[],"fullName":"SignupForm Component renders without crashing","location":null,"status":"passed","title":"renders without crashing"},{"ancestorTitles":["SignupForm Component"],"failureMessages":[],"fullName":"SignupForm Component shows validation errors for empty form submission","location":null,"status":"passed","title":"shows validation errors for empty form submission"},{"ancestorTitles":["SignupForm Component"],"failureMessages":[],"fullName":"SignupForm Component shows validation error for invalid email","location":null,"status":"passed","title":"shows validation error for invalid email"},{"ancestorTitles":["SignupForm Component"],"failureMessages":[],"fullName":"SignupForm Component shows validation error for short password","location":null,"status":"passed","title":"shows validation error for short password"},{"ancestorTitles":["SignupForm Component"],"failureMessages":[],"fullName":"SignupForm Component successfully submits form with valid data and navigates to dataInput page","location":null,"status":"passed","title":"successfully submits form with valid data and navigates to dataInput page"},{"ancestorTitles":["SignupForm Component"],"failureMessages":[],"fullName":"SignupForm Component handles submission errors gracefully","location":null,"status":"passed","title":"handles submission errors gracefully"}],"endTime":1741728692061,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\SignupForm.test.tsx","startTime":1741728690166,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["DataInput Component"],"failureMessages":[],"fullName":"DataInput Component renders all form fields","location":null,"status":"passed","title":"renders all form fields"},{"ancestorTitles":["DataInput Component"],"failureMessages":[],"fullName":"DataInput Component shows validation errors when submitting empty form","location":null,"status":"passed","title":"shows validation errors when submitting empty form"},{"ancestorTitles":["DataInput Component"],"failureMessages":[],"fullName":"DataInput Component validates age input correctly","location":null,"status":"passed","title":"validates age input correctly"},{"ancestorTitles":["DataInput Component"],"failureMessages":[],"fullName":"DataInput Component submits form successfully with valid data and redirects to profile page","location":null,"status":"passed","title":"submits form successfully with valid data and redirects to profile page"},{"ancestorTitles":["DataInput Component"],"failureMessages":[],"fullName":"DataInput Component handles submission error gracefully","location":null,"status":"passed","title":"handles submission error gracefully"}],"endTime":1741728692343,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\DataInput.test.tsx","startTime":1741728690164,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["UserContext"],"failureMessages":[],"fullName":"UserContext provides userId and setUserId","location":null,"status":"passed","title":"provides userId and setUserId"},{"ancestorTitles":["UserContext"],"failureMessages":[],"fullName":"UserContext Profile component uses userId from context","location":null,"status":"passed","title":"Profile component uses userId from context"},{"ancestorTitles":["UserContext"],"failureMessages":[],"fullName":"UserContext throws error when useUser is used outside of UserProvider","location":null,"status":"passed","title":"throws error when useUser is used outside of UserProvider"}],"endTime":1741728692639,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\UserContext.test.tsx","startTime":1741728690181,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["App Component"],"failureMessages":[],"fullName":"App Component redirects to login when not authenticated","location":null,"status":"passed","title":"redirects to login when not authenticated"},{"ancestorTitles":["App Component"],"failureMessages":[],"fullName":"App Component redirects to profile when authenticated","location":null,"status":"passed","title":"redirects to profile when authenticated"},{"ancestorTitles":["App Component"],"failureMessages":[],"fullName":"App Component redirects to data-input after successful signup","location":null,"status":"passed","title":"redirects to data-input after successful signup"},{"ancestorTitles":["App Component"],"failureMessages":[],"fullName":"App Component protects routes when not authenticated","location":null,"status":"passed","title":"protects routes when not authenticated"}],"endTime":1741728692871,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\App.test.tsx","startTime":1741728690167,"status":"passed","summary":""},{"assertionResults":[{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component renders loading state initially","location":null,"status":"passed","title":"renders loading state initially"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component shows error message when fetch fails","location":null,"status":"passed","title":"shows error message when fetch fails"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component displays user data when fetch succeeds","location":null,"status":"passed","title":"displays user data when fetch succeeds"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component shows edit form when edit button is clicked","location":null,"status":"passed","title":"shows edit form when edit button is clicked"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component shows validation errors for empty form submission","location":null,"status":"passed","title":"shows validation errors for empty form submission"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component successfully updates user profile","location":null,"status":"passed","title":"successfully updates user profile"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component handles update errors gracefully","location":null,"status":"passed","title":"handles update errors gracefully"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component handles cancel button click","location":null,"status":"passed","title":"handles cancel button click"},{"ancestorTitles":["Profile Component"],"failureMessages":[],"fullName":"Profile Component successfully updates user profile and refetches data","location":null,"status":"passed","title":"successfully updates user profile and refetches data"}],"endTime":1741728693325,"message":"","name":"C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\Profile.test.tsx","startTime":1741728690164,"status":"passed","summary":""}],"wasInterrupted":false}
+{
+  "numFailedTestSuites": 0,
+  "numFailedTests": 0,
+  "numPassedTestSuites": 9,
+  "numPassedTests": 44,
+  "numPendingTestSuites": 0,
+  "numPendingTests": 0,
+  "numRuntimeErrorTestSuites": 0,
+  "numTodoTests": 0,
+  "numTotalTestSuites": 9,
+  "numTotalTests": 44,
+  "openHandles": [],
+  "snapshot": {
+    "added": 0,
+    "didUpdate": false,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0
+  },
+  "startTime": 1741728688174,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["ConnectPlaid Component"],
+          "failureMessages": [],
+          "fullName": "ConnectPlaid Component shows loading state initially",
+          "location": null,
+          "status": "passed",
+          "title": "shows loading state initially"
+        },
+        {
+          "ancestorTitles": ["ConnectPlaid Component"],
+          "failureMessages": [],
+          "fullName": "ConnectPlaid Component shows error when API call fails",
+          "location": null,
+          "status": "passed",
+          "title": "shows error when API call fails"
+        },
+        {
+          "ancestorTitles": ["ConnectPlaid Component"],
+          "failureMessages": [],
+          "fullName": "ConnectPlaid Component shows connect button when link token is successfully fetched",
+          "location": null,
+          "status": "passed",
+          "title": "shows connect button when link token is successfully fetched"
+        }
+      ],
+      "endTime": 1741728691750,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\ConnectPlaid.test.tsx",
+      "startTime": 1741728690186,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["User Authentication Context"],
+          "failureMessages": [],
+          "fullName": "User Authentication Context starts with unauthenticated state",
+          "location": null,
+          "status": "passed",
+          "title": "starts with unauthenticated state"
+        },
+        {
+          "ancestorTitles": ["User Authentication Context"],
+          "failureMessages": [],
+          "fullName": "User Authentication Context updates authentication state when tokens are set",
+          "location": null,
+          "status": "passed",
+          "title": "updates authentication state when tokens are set"
+        },
+        {
+          "ancestorTitles": ["User Authentication Context"],
+          "failureMessages": [],
+          "fullName": "User Authentication Context clears authentication state on logout",
+          "location": null,
+          "status": "passed",
+          "title": "clears authentication state on logout"
+        },
+        {
+          "ancestorTitles": ["User Authentication Context"],
+          "failureMessages": [],
+          "fullName": "User Authentication Context initializes with provided values",
+          "location": null,
+          "status": "passed",
+          "title": "initializes with provided values"
+        }
+      ],
+      "endTime": 1741728691799,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\Auth.test.tsx",
+      "startTime": 1741728690164,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["UserContext and useFetch Integration"],
+          "failureMessages": [],
+          "fullName": "UserContext and useFetch Integration should fetch and display user data on initial render (cache miss)",
+          "location": null,
+          "status": "passed",
+          "title": "should fetch and display user data on initial render (cache miss)"
+        },
+        {
+          "ancestorTitles": ["UserContext and useFetch Integration"],
+          "failureMessages": [],
+          "fullName": "UserContext and useFetch Integration should retry on 500 error and eventually succeed",
+          "location": null,
+          "status": "passed",
+          "title": "should retry on 500 error and eventually succeed"
+        },
+        {
+          "ancestorTitles": ["UserContext and useFetch Integration"],
+          "failureMessages": [],
+          "fullName": "UserContext and useFetch Integration should use cached data and then refetch after update",
+          "location": null,
+          "status": "passed",
+          "title": "should use cached data and then refetch after update"
+        },
+        {
+          "ancestorTitles": ["UserContext and useFetch Integration"],
+          "failureMessages": [],
+          "fullName": "UserContext and useFetch Integration should handle network errors with retry",
+          "location": null,
+          "status": "passed",
+          "title": "should handle network errors with retry"
+        },
+        {
+          "ancestorTitles": ["UserContext and useFetch Integration"],
+          "failureMessages": [],
+          "fullName": "UserContext and useFetch Integration should render error state on fetch failure",
+          "location": null,
+          "status": "passed",
+          "title": "should render error state on fetch failure"
+        },
+        {
+          "ancestorTitles": ["UserContext and useFetch Integration"],
+          "failureMessages": [],
+          "fullName": "UserContext and useFetch Integration should update display when user ID changes",
+          "location": null,
+          "status": "passed",
+          "title": "should update display when user ID changes"
+        }
+      ],
+      "endTime": 1741728691814,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\integration.test.tsx",
+      "startTime": 1741728690168,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["useFetch"],
+          "failureMessages": [],
+          "fullName": "useFetch should fetch data successfully",
+          "location": null,
+          "status": "passed",
+          "title": "should fetch data successfully"
+        },
+        {
+          "ancestorTitles": ["useFetch"],
+          "failureMessages": [],
+          "fullName": "useFetch should use cached data on subsequent requests",
+          "location": null,
+          "status": "passed",
+          "title": "should use cached data on subsequent requests"
+        },
+        {
+          "ancestorTitles": ["useFetch"],
+          "failureMessages": [],
+          "fullName": "useFetch should retry on network error but not on JSON parsing error",
+          "location": null,
+          "status": "passed",
+          "title": "should retry on network error but not on JSON parsing error"
+        },
+        {
+          "ancestorTitles": ["useFetch"],
+          "failureMessages": [],
+          "fullName": "useFetch should refetch and bypass cache when requested",
+          "location": null,
+          "status": "passed",
+          "title": "should refetch and bypass cache when requested"
+        }
+      ],
+      "endTime": 1741728691980,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\useFetch.test.tsx",
+      "startTime": 1741728690163,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["SignupForm Component"],
+          "failureMessages": [],
+          "fullName": "SignupForm Component renders without crashing",
+          "location": null,
+          "status": "passed",
+          "title": "renders without crashing"
+        },
+        {
+          "ancestorTitles": ["SignupForm Component"],
+          "failureMessages": [],
+          "fullName": "SignupForm Component shows validation errors for empty form submission",
+          "location": null,
+          "status": "passed",
+          "title": "shows validation errors for empty form submission"
+        },
+        {
+          "ancestorTitles": ["SignupForm Component"],
+          "failureMessages": [],
+          "fullName": "SignupForm Component shows validation error for invalid email",
+          "location": null,
+          "status": "passed",
+          "title": "shows validation error for invalid email"
+        },
+        {
+          "ancestorTitles": ["SignupForm Component"],
+          "failureMessages": [],
+          "fullName": "SignupForm Component shows validation error for short password",
+          "location": null,
+          "status": "passed",
+          "title": "shows validation error for short password"
+        },
+        {
+          "ancestorTitles": ["SignupForm Component"],
+          "failureMessages": [],
+          "fullName": "SignupForm Component successfully submits form with valid data and navigates to dataInput page",
+          "location": null,
+          "status": "passed",
+          "title": "successfully submits form with valid data and navigates to dataInput page"
+        },
+        {
+          "ancestorTitles": ["SignupForm Component"],
+          "failureMessages": [],
+          "fullName": "SignupForm Component handles submission errors gracefully",
+          "location": null,
+          "status": "passed",
+          "title": "handles submission errors gracefully"
+        }
+      ],
+      "endTime": 1741728692061,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\SignupForm.test.tsx",
+      "startTime": 1741728690166,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["DataInput Component"],
+          "failureMessages": [],
+          "fullName": "DataInput Component renders all form fields",
+          "location": null,
+          "status": "passed",
+          "title": "renders all form fields"
+        },
+        {
+          "ancestorTitles": ["DataInput Component"],
+          "failureMessages": [],
+          "fullName": "DataInput Component shows validation errors when submitting empty form",
+          "location": null,
+          "status": "passed",
+          "title": "shows validation errors when submitting empty form"
+        },
+        {
+          "ancestorTitles": ["DataInput Component"],
+          "failureMessages": [],
+          "fullName": "DataInput Component validates age input correctly",
+          "location": null,
+          "status": "passed",
+          "title": "validates age input correctly"
+        },
+        {
+          "ancestorTitles": ["DataInput Component"],
+          "failureMessages": [],
+          "fullName": "DataInput Component submits form successfully with valid data and redirects to profile page",
+          "location": null,
+          "status": "passed",
+          "title": "submits form successfully with valid data and redirects to profile page"
+        },
+        {
+          "ancestorTitles": ["DataInput Component"],
+          "failureMessages": [],
+          "fullName": "DataInput Component handles submission error gracefully",
+          "location": null,
+          "status": "passed",
+          "title": "handles submission error gracefully"
+        }
+      ],
+      "endTime": 1741728692343,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\DataInput.test.tsx",
+      "startTime": 1741728690164,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["UserContext"],
+          "failureMessages": [],
+          "fullName": "UserContext provides userId and setUserId",
+          "location": null,
+          "status": "passed",
+          "title": "provides userId and setUserId"
+        },
+        {
+          "ancestorTitles": ["UserContext"],
+          "failureMessages": [],
+          "fullName": "UserContext Profile component uses userId from context",
+          "location": null,
+          "status": "passed",
+          "title": "Profile component uses userId from context"
+        },
+        {
+          "ancestorTitles": ["UserContext"],
+          "failureMessages": [],
+          "fullName": "UserContext throws error when useUser is used outside of UserProvider",
+          "location": null,
+          "status": "passed",
+          "title": "throws error when useUser is used outside of UserProvider"
+        }
+      ],
+      "endTime": 1741728692639,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\UserContext.test.tsx",
+      "startTime": 1741728690181,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["App Component"],
+          "failureMessages": [],
+          "fullName": "App Component redirects to login when not authenticated",
+          "location": null,
+          "status": "passed",
+          "title": "redirects to login when not authenticated"
+        },
+        {
+          "ancestorTitles": ["App Component"],
+          "failureMessages": [],
+          "fullName": "App Component redirects to profile when authenticated",
+          "location": null,
+          "status": "passed",
+          "title": "redirects to profile when authenticated"
+        },
+        {
+          "ancestorTitles": ["App Component"],
+          "failureMessages": [],
+          "fullName": "App Component redirects to data-input after successful signup",
+          "location": null,
+          "status": "passed",
+          "title": "redirects to data-input after successful signup"
+        },
+        {
+          "ancestorTitles": ["App Component"],
+          "failureMessages": [],
+          "fullName": "App Component protects routes when not authenticated",
+          "location": null,
+          "status": "passed",
+          "title": "protects routes when not authenticated"
+        }
+      ],
+      "endTime": 1741728692871,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\App.test.tsx",
+      "startTime": 1741728690167,
+      "status": "passed",
+      "summary": ""
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component renders loading state initially",
+          "location": null,
+          "status": "passed",
+          "title": "renders loading state initially"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component shows error message when fetch fails",
+          "location": null,
+          "status": "passed",
+          "title": "shows error message when fetch fails"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component displays user data when fetch succeeds",
+          "location": null,
+          "status": "passed",
+          "title": "displays user data when fetch succeeds"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component shows edit form when edit button is clicked",
+          "location": null,
+          "status": "passed",
+          "title": "shows edit form when edit button is clicked"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component shows validation errors for empty form submission",
+          "location": null,
+          "status": "passed",
+          "title": "shows validation errors for empty form submission"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component successfully updates user profile",
+          "location": null,
+          "status": "passed",
+          "title": "successfully updates user profile"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component handles update errors gracefully",
+          "location": null,
+          "status": "passed",
+          "title": "handles update errors gracefully"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component handles cancel button click",
+          "location": null,
+          "status": "passed",
+          "title": "handles cancel button click"
+        },
+        {
+          "ancestorTitles": ["Profile Component"],
+          "failureMessages": [],
+          "fullName": "Profile Component successfully updates user profile and refetches data",
+          "location": null,
+          "status": "passed",
+          "title": "successfully updates user profile and refetches data"
+        }
+      ],
+      "endTime": 1741728693325,
+      "message": "",
+      "name": "C:\\Users\\tomem\\Projects\\sibling-pds\\src\\frontend\\src\\__tests__\\Profile.test.tsx",
+      "startTime": 1741728690164,
+      "status": "passed",
+      "summary": ""
+    }
+  ],
+  "wasInterrupted": false
+}

@@ -18,8 +18,12 @@ import externalDataRouter from "./routes/externalData";
 import userDataRouter from "./routes/userData";
 import userDataSourcesRouter from "./routes/userDataSources";
 import authRouter from "./routes/authRoutes";
+import unprotectedAuthRouter from "./routes/unprotectedAuthRoutes";
 import apiRouter from "./routes/apiRoutes";
 import testRouter from "./routes/testRoutes";
+
+// Import middleware
+import { authenticateJWT } from "./middleware/auth";
 
 // Import scheduler
 import scheduler from "./services/scheduler";
@@ -54,14 +58,20 @@ export const disconnectDb = async () => {
   isConnected = false;
 };
 
-// Mount routers
+// Mount unprotected auth routes (login and signup) before JWT middleware
+app.use("/auth", unprotectedAuthRouter);
+
+// Apply JWT authentication middleware to all other routes
+app.use(authenticateJWT);
+
+// Mount protected routers
 app.use("/users", usersRouter);
 app.use("/volunteered-data", volunteeredDataRouter);
 app.use("/behavioral-data", behavioralDataRouter);
 app.use("/external-data", externalDataRouter);
 app.use("/user-data", userDataRouter);
 app.use("/user-data-sources", userDataSourcesRouter);
-app.use("/auth", authRouter);
+app.use("/auth", authRouter); // All other auth routes will be protected
 app.use("/api", apiRouter);
 app.use("/test", testRouter);
 
