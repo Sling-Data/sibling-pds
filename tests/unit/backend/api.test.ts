@@ -6,6 +6,36 @@ import dotenv from "dotenv";
 import app, { connectDb, disconnectDb } from "@backend/index";
 import { generateRefreshToken, generateToken } from "@backend/middleware/auth";
 
+// Mock the Plaid client
+jest.mock("@backend/services/apiClients/plaidClient", () => {
+  return {
+    __esModule: true,
+    default: {
+      createLinkToken: jest.fn().mockImplementation((userId) => {
+        if (!userId) {
+          throw new Error("userId is required");
+        }
+        return Promise.resolve("mock-link-token");
+      }),
+      exchangePublicToken: jest.fn().mockResolvedValue(undefined),
+      getAccessToken: jest.fn().mockImplementation((userId) => {
+        if (!userId) {
+          throw new Error("userId is required");
+        }
+        return Promise.resolve({
+          type: "link_token",
+          linkToken: "mock-link-token",
+        });
+      }),
+      fetchPlaidData: jest.fn().mockResolvedValue({
+        accounts: [],
+        transactions: [],
+        scheduledPayments: [],
+      }),
+    },
+  };
+});
+
 // Load test environment variables
 dotenv.config({ path: path.join(__dirname, ".env.test") });
 
@@ -22,7 +52,7 @@ describe("User API", () => {
     process.env.ENCRYPTION_KEY = "68656c6c6f31323334353637383930616263646566"; // 32-byte hex key
     await connectDb(mongoUri);
     server = app;
-    
+
     // Create a test token for authentication
     testToken = generateToken("test-user-id");
   });
@@ -280,9 +310,9 @@ describe("User API", () => {
       .send({ name: "Updated User", email: "updated@example.com" })
       .expect(404);
     // Update the test to match the actual response format
-    expect(response.body).toEqual({ 
-      status: "error", 
-      message: "User not found" 
+    expect(response.body).toEqual({
+      status: "error",
+      message: "User not found",
     });
   });
 
@@ -316,6 +346,8 @@ describe("JWT Authentication and Validation", () => {
   let userId: string;
   let password: string;
   let token: string;
+  let testUserEmail: string;
+  let testUserName: string;
 
   beforeAll(async () => {
     // Use MongoMemoryServer for isolated testing
@@ -327,8 +359,18 @@ describe("JWT Authentication and Validation", () => {
     server = app;
 
     // Set up test user and credentials
-    userId = "test-auth-user-id";
+    testUserName = "Auth Test User";
+    testUserEmail = "authtest@example.com";
     password = "securePassword123";
+
+    // Create a test user for login test
+    const signupResponse = await request(server).post("/auth/signup").send({
+      name: testUserName,
+      email: testUserEmail,
+      password: password,
+    });
+
+    userId = signupResponse.body.userId;
     token = generateToken(userId);
   });
 
@@ -345,8 +387,8 @@ describe("JWT Authentication and Validation", () => {
     const response = await request(server)
       .post("/auth/signup")
       .send({
-        name: "Auth Test User",
-        email: "authtest@example.com",
+        name: "Another Test User",
+        email: "anothertest@example.com",
         password: "securePassword123",
       })
       .expect(201);
@@ -355,8 +397,8 @@ describe("JWT Authentication and Validation", () => {
     expect(response.body).toHaveProperty("refreshToken");
   });
 
-  // Skip the login test for now since we don't have a proper user setup in the test database
-  it.skip("should allow login without authentication", async () => {
+  // Login test with proper user setup
+  it("should allow login without authentication", async () => {
     const response = await request(server)
       .post("/auth/login")
       .send({
@@ -374,16 +416,20 @@ describe("JWT Authentication and Validation", () => {
       .get("/auth/protected")
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
-    expect(response.body).toHaveProperty("message", "This is a protected route");
+    expect(response.body).toHaveProperty(
+      "message",
+      "This is a protected route"
+    );
     expect(response.body).toHaveProperty("userId", userId);
   });
 
   // Test protected route without token
   it("should deny access to protected route without token", async () => {
-    const response = await request(server)
-      .get("/auth/protected")
-      .expect(401);
-    expect(response.body).toHaveProperty("message", "Access denied. Invalid token format.");
+    const response = await request(server).get("/auth/protected").expect(401);
+    expect(response.body).toHaveProperty(
+      "message",
+      "Access denied. Invalid token format."
+    );
   });
 
   // Test protected route with invalid token
@@ -399,26 +445,29 @@ describe("JWT Authentication and Validation", () => {
   it("should refresh token with valid refresh token", async () => {
     // Generate a new refresh token
     const refreshToken = generateRefreshToken(userId);
-    
+
     const response = await request(server)
       .post("/auth/refresh-token")
       .set("Authorization", `Bearer ${token}`)
       .send({ refreshToken })
       .expect(200);
-    
+
     expect(response.body).toHaveProperty("accessToken");
     expect(response.body).toHaveProperty("refreshToken");
-    expect(response.body).toHaveProperty("message", "Token refreshed successfully");
+    expect(response.body).toHaveProperty(
+      "message",
+      "Token refreshed successfully"
+    );
     expect(response.body.refreshToken).not.toBe(refreshToken);
   });
 
-  // Skip the Plaid tests for now
-  it.skip("should accept valid userId for /api/plaid/create-link-token", async () => {
+  // Test Plaid link token creation
+  it("should accept valid userId for /api/plaid/create-link-token", async () => {
     const response = await request(server)
       .get(`/api/plaid/create-link-token?userId=${userId}`)
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
-    expect(response.body).toHaveProperty("linkToken");
+    expect(response.body).toHaveProperty("link_token");
   });
 
   // Test API validation with empty userId
