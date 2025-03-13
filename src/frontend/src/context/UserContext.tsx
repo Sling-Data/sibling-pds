@@ -43,13 +43,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // First store the tokens
     storeTokens({ accessToken, refreshToken });
     
-    // Then update the state with a small delay to ensure tokens are saved
-    // This helps prevent race conditions where we check for tokens before they're saved
-    setTimeout(() => {
-      const userId = getUserId();
-      setUserId(userId);
-      setIsAuthenticated(true);
-    }, 50);
+    // Update the state immediately
+    const userId = getUserId();
+    setUserId(userId);
+    setIsAuthenticated(true);
   }, []);
 
   const logout = useCallback(() => {

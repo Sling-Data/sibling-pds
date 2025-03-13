@@ -40,7 +40,7 @@ describe('ConnectPlaid Component', () => {
 
     render(
       <BrowserRouter>
-        <UserProvider initialUserId="test-user-id">
+        <UserProvider >
           <ConnectPlaid />
         </UserProvider>
       </BrowserRouter>
@@ -61,7 +61,7 @@ describe('ConnectPlaid Component', () => {
 
     render(
       <BrowserRouter>
-        <UserProvider initialUserId="test-user-id">
+        <UserProvider >
           <ConnectPlaid />
         </UserProvider>
       </BrowserRouter>
@@ -88,7 +88,7 @@ describe('ConnectPlaid Component', () => {
 
     render(
       <BrowserRouter>
-        <UserProvider initialUserId="test-user-id">
+        <UserProvider >
           <ConnectPlaid />
         </UserProvider>
       </BrowserRouter>

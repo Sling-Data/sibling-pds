@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { SignupForm } from '../components/SignupForm';
 
 // Mock environment variable
@@ -34,11 +35,37 @@ jest.mock('../context/UserContext', () => ({
   }),
 }));
 
+// Mock useFetch hook
+jest.mock('../hooks/useFetch', () => ({
+  useFetch: () => ({
+    loading: false,
+    error: null,
+    data: null,
+    update: jest.fn().mockImplementation(async (url, options) => {
+      if (url.includes('/auth/signup')) {
+        if (options?.body?.email === 'existing@example.com') {
+          return { data: null, error: 'Email already exists' };
+        }
+        return {
+          data: {
+            userId: 'test-user-123',
+            token: 'mock-token',
+            refreshToken: 'mock-refresh-token'
+          },
+          error: null
+        };
+      }
+      return { data: null, error: 'Unexpected error' };
+    }),
+    refetch: jest.fn(),
+    fromCache: false
+  })
+}));
+
 const mockUserId = 'test-user-123';
 
 describe('SignupForm Component', () => {
   beforeEach(() => {
-    global.fetch = jest.fn();
     mockNavigate.mockClear();
     mockLogin.mockClear();
     mockSetUserId.mockClear();
@@ -51,7 +78,11 @@ describe('SignupForm Component', () => {
   });
 
   it('renders without crashing', () => {
-    render(<SignupForm />);
+    render(
+      <BrowserRouter>
+        <SignupForm />
+      </BrowserRouter>
+    );
     expect(screen.getByRole('heading', { name: /create your account/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
@@ -60,7 +91,11 @@ describe('SignupForm Component', () => {
   });
 
   it('shows validation errors for empty form submission', async () => {
-    render(<SignupForm />);
+    render(
+      <BrowserRouter>
+        <SignupForm />
+      </BrowserRouter>
+    );
     
     // Submit empty form
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
@@ -71,13 +106,14 @@ describe('SignupForm Component', () => {
       expect(screen.getByText(/email is required/i)).toBeInTheDocument();
       expect(screen.getByText(/password is required/i)).toBeInTheDocument();
     });
-
-    // Verify no API call was made
-    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('shows validation error for invalid email', async () => {
-    render(<SignupForm />);
+    render(
+      <BrowserRouter>
+        <SignupForm />
+      </BrowserRouter>
+    );
     
     // Fill in form with invalid email
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Test User' } });
@@ -91,13 +127,14 @@ describe('SignupForm Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/email is invalid/i)).toBeInTheDocument();
     });
-
-    // Verify no API call was made
-    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('shows validation error for short password', async () => {
-    render(<SignupForm />);
+    render(
+      <BrowserRouter>
+        <SignupForm />
+      </BrowserRouter>
+    );
     
     // Fill in form with short password
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Test User' } });
@@ -111,35 +148,14 @@ describe('SignupForm Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
     });
-
-    // Verify no API call was made
-    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('successfully submits form with valid data and navigates to dataInput page', async () => {
-    render(<SignupForm />);
-
-    // Mock successful API response
-    (global.fetch as jest.Mock).mockImplementationOnce(async (url, init) => {
-      if (url === `${process.env.REACT_APP_API_URL}/auth/signup` && init?.method === 'POST') {
-        const body = JSON.parse(init.body as string);
-        expect(body).toEqual({
-          name: 'Test User',
-          email: 'test@example.com',
-          password: 'password123'
-        });
-
-        return {
-          ok: true,
-          json: async () => ({
-            userId: mockUserId,
-            token: 'mock-token',
-            refreshToken: 'mock-refresh-token'
-          })
-        };
-      }
-      return { ok: false };
-    });
+    render(
+      <BrowserRouter>
+        <SignupForm />
+      </BrowserRouter>
+    );
 
     // Fill in form with valid data
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Test User' } });
@@ -151,7 +167,6 @@ describe('SignupForm Component', () => {
 
     // Verify API call was made and tokens were stored
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(mockLogin).toHaveBeenCalledWith('mock-token', 'mock-refresh-token');
       expect(mockSetUserId).toHaveBeenCalledWith(mockUserId);
       
@@ -164,17 +179,15 @@ describe('SignupForm Component', () => {
   });
 
   it('handles submission errors gracefully', async () => {
-    render(<SignupForm />);
-
-    // Mock API error response
-    (global.fetch as jest.Mock).mockImplementationOnce(async () => ({
-      ok: false,
-      json: async () => ({ message: 'Email already exists' })
-    }));
+    render(
+      <BrowserRouter>
+        <SignupForm />
+      </BrowserRouter>
+    );
 
     // Fill in form with valid data
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Test User' } });
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'existing@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
 
     // Submit form

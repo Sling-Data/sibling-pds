@@ -5,10 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import DataInput from '../components/DataInput';
 import { UserProvider } from '../context/UserContext';
 
-// Mock fetch
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
-
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
 
@@ -17,6 +13,33 @@ const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
+}));
+
+// Mock useFetch hook
+const mockUpdate = jest.fn();
+const mockRefetch = jest.fn();
+
+// Create a function to get the default mock response
+const getMockResponse = (data: any = null, loading = false, error = null) => ({
+  loading,
+  error,
+  data,
+  update: mockUpdate,
+  refetch: mockRefetch,
+  fromCache: false
+});
+
+jest.mock('../hooks/useFetch', () => ({
+  useFetch: () => getMockResponse()
+}));
+
+// Mock UserContext
+const mockUserId = 'test-user-123';
+jest.mock('../context/UserContext', () => ({
+  ...jest.requireActual('../context/UserContext'),
+  useUser: () => ({
+    userId: mockUserId
+  })
 }));
 
 // Test wrapper component
@@ -106,9 +129,10 @@ describe('DataInput Component', () => {
   });
 
   it('submits form successfully with valid data and redirects to profile page', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({ success: true }),
+    // Mock successful form submission
+    mockUpdate.mockResolvedValueOnce({
+      data: { success: true },
+      error: null
     });
 
     render(<DataInput />, { wrapper: TestWrapper });
@@ -138,14 +162,18 @@ describe('DataInput Component', () => {
 
     // Verify API call
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockUpdate).toHaveBeenCalledWith(
         `${process.env.REACT_APP_API_URL}/volunteered-data`,
         expect.objectContaining({
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: expect.stringContaining('"interests":["Sports"]'),
+          body: expect.objectContaining({
+            type: 'onboarding',
+            value: expect.objectContaining({
+              interests: ['Sports'],
+              dailyAvailability: ['Morning'],
+              learningStyle: ['Visual']
+            })
+          })
         })
       );
     });
@@ -157,7 +185,11 @@ describe('DataInput Component', () => {
   });
 
   it('handles submission error gracefully', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+    // Mock failed form submission
+    mockUpdate.mockResolvedValueOnce({
+      data: null,
+      error: 'Network error'
+    });
 
     render(<DataInput />, { wrapper: TestWrapper });
 

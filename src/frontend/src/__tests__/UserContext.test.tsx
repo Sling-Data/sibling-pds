@@ -123,7 +123,8 @@ describe('UserContext', () => {
 
     // Verify fetch was called with correct URL
     expect(mockFetch).toHaveBeenCalledWith(
-      `${process.env.REACT_APP_API_URL}/users/test-123`
+      `${process.env.REACT_APP_API_URL}/users/test-123`,
+      { headers: {}, method: "GET" }
     );
   });
 

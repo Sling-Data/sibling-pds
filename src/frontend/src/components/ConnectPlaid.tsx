@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePlaidLink } from 'react-plaid-link';
 import { useUser } from '../context/UserContext';
+import { useFetch } from '../hooks/useFetch';
 
 // Helper to check if we're in a test environment
 const isTestEnvironment = (): boolean => {
@@ -16,9 +17,28 @@ const ConnectPlaid: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Setup useFetch for getting link token
+  const { update: fetchLinkToken } = useFetch<{ link_token: string }>(
+    null,
+    {
+      method: 'GET'
+    }
+  );
+
+  // Setup useFetch for exchanging public token
+  const { update: exchangePublicToken } = useFetch<{ success: boolean }>(
+    null,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }
+  );
+
   // Fetch link token from the API
   useEffect(() => {
-    const fetchLinkToken = async () => {
+    const getLinkToken = async () => {
       const params = new URLSearchParams(location.search);
       const userIdFromParams = params.get('userId') || userId;
 
@@ -35,15 +55,15 @@ const ConnectPlaid: React.FC = () => {
           throw new Error('Authentication failed. Please log in again.');
         }
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/plaid/create-link-token?userId=${userIdFromParams}`);
+        const { data, error: fetchError } = await fetchLinkToken(
+          `${process.env.REACT_APP_API_URL}/api/plaid/create-link-token?userId=${userIdFromParams}`
+        );
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch link token: ${response.status}`);
+        if (fetchError) {
+          throw new Error(`Failed to fetch link token: ${fetchError}`);
         }
         
-        const data = await response.json();
-        
-        if (data.link_token) {
+        if (data?.link_token) {
           setLinkToken(data.link_token);
         } else {
           throw new Error('No link token returned from API');
@@ -56,8 +76,8 @@ const ConnectPlaid: React.FC = () => {
       }
     };
 
-    fetchLinkToken();
-  }, [location.search, userId, refreshTokenIfExpired]);
+    getLinkToken();
+  }, [location.search, userId, refreshTokenIfExpired, fetchLinkToken]);
 
   // Handle successful Plaid Link connection
   const onSuccess = useCallback(
@@ -70,20 +90,18 @@ const ConnectPlaid: React.FC = () => {
         }
 
         // Exchange the public token for an access token
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/plaid/exchange-public-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            public_token,
-            userId: userId,
-          }),
-        });
+        const { error: exchangeError } = await exchangePublicToken(
+          `${process.env.REACT_APP_API_URL}/api/plaid/exchange-public-token`,
+          {
+            body: {
+              public_token,
+              userId: userId || ''
+            },
+          }
+        );
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to exchange token');
+        if (exchangeError) {
+          throw new Error(exchangeError || 'Failed to exchange token');
         }
 
         // Redirect to profile with success message
@@ -94,7 +112,7 @@ const ConnectPlaid: React.FC = () => {
         navigate(`/profile?error=${encodeURIComponent(errorMessage)}`);
       }
     },
-    [userId, navigate, refreshTokenIfExpired]
+    [userId, navigate, refreshTokenIfExpired, exchangePublicToken]
   );
 
   // Handle Plaid Link exit

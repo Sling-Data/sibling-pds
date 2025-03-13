@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../styles/AuthForm.css'; 
 import { useUser } from '../context/UserContext';
+import { useFetch } from '../hooks/useFetch';
 
 interface LoginFormProps {
   onSuccess?: () => void;
+}
+
+interface LoginResponse {
+  token: string;
+  refreshToken: string;
+  message?: string;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
@@ -12,8 +18,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, setUserId: setContextUserId } = useUser();
-  const navigate = useNavigate();
+  const { login, setUserId: setContextUserId, checkUserDataAndNavigate } = useUser();
+
+  // Setup useFetch for login
+  const { loading: submitLoading, error: submitError, update: submitLogin } = useFetch<LoginResponse>(
+    null,
+    {
+      method: 'POST',
+      skipCache: true,
+      retryOnAuth: false,
+      skipAuth: true
+    }
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,27 +37,30 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, password }),
-      });
+      const result = await submitLogin(
+        `${process.env.REACT_APP_API_URL}/auth/login`,
+        {
+          method: 'POST',
+          body: { userId, password }
+        }
+      );
 
-      const data = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Invalid credentials');
+      const data = result.data;
+      if (!data) {
+        throw new Error('No response data received');
       }
 
       login(data.token, data.refreshToken);
-      setContextUserId(userId);  // Use the userId from the login form since that's what we authenticated with
+      setContextUserId(userId); 
       
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate('/profile');
+        checkUserDataAndNavigate();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during login');
@@ -78,10 +97,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           />
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {(error || submitError) && (
+          <div className="error-message">{error || submitError}</div>
+        )}
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Logging in...' : 'Log In'}
+        <button type="submit" disabled={isSubmitting || submitLoading}>
+          {isSubmitting || submitLoading ? 'Logging in...' : 'Log In'}
         </button>
 
         <div className="signup-link">

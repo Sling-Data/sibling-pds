@@ -71,7 +71,7 @@ export function shouldRefresh(): boolean {
   return timeRemaining < 30;
 }
 
-export function getUserId(): string | null {
+export function getUserId(): string | null {  
   const token = getAccessToken();
   if (!token) return null;
 

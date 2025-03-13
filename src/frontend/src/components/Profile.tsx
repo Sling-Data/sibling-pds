@@ -37,9 +37,19 @@ function Profile() {
   const { userId, refreshTokenIfExpired } = useUser();
   const location = useLocationSafe();
   const navigate = useNavigate();
-  const { data: userData, loading, error: fetchError, refetch } = useFetch<UserData>(
+  const { data: userData, loading: fetchLoading, error: fetchError, refetch } = useFetch<UserData>(
     userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null
   );
+
+  // For profile updates, we'll use a separate useFetch instance with a null URL initially
+  const { loading: updateLoading, error: updateError, update: updateProfile } = useFetch<{ message: string }>(
+    null,
+    {
+      method: 'PUT',
+      skipCache: true
+    }
+  );
+
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserData>({ name: '', email: '' });
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -111,7 +121,7 @@ function Profile() {
           // The simplest approach: directly navigate to the endpoint
           // The browser will automatically include the Authorization header
           // from the current session, and the backend will handle the redirect
-          window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}//&token=${encodeURIComponent(accessToken)}`;
+          window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}&token=${encodeURIComponent(accessToken)}`;
           
         } catch (error) {
           console.error('Error connecting to Gmail:', error);
@@ -170,28 +180,26 @@ function Profile() {
           throw new Error('Authentication failed. Please log in again.');
         }
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/users/${userId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        });
+        // Call updateProfile with the URL and body
+        const result = await updateProfile(
+          userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null,
+          {
+            method: 'PUT',
+            body: formData,
+            skipCache: true
+          }
+        );
 
-        if (response.ok) {
-          setSubmitStatus({
-            success: true,
-            message: 'Profile updated successfully!'
-          });
-          setIsEditing(false);
-          refetch();
-        } else {
-          const errorData = await response.json();
-          setSubmitStatus({
-            success: false,
-            message: errorData.message || 'Failed to update profile.'
-          });
+        if (result.error) {
+          throw new Error(result.error);
         }
+
+        setSubmitStatus({
+          success: true,
+          message: 'Profile updated successfully!'
+        });
+        setIsEditing(false);
+        refetch();
       } catch (error) {
         setSubmitStatus({
           success: false,
@@ -207,18 +215,24 @@ function Profile() {
     return <div className="profile-container">No user ID provided</div>;
   }
 
-  if (loading) {
+  if (fetchLoading) {
     return <div className="profile-container">Loading user data...</div>;
   }
 
   if (fetchError) {
     return (
-      <div className="profile-container">
-        <div className="error-message">Error loading user data: {fetchError}</div>
+      <div className="profile-container error">
+        <p>Error: {fetchError}</p>
         <button onClick={() => refetch()}>Retry</button>
       </div>
     );
   }
+
+  // Show loading state during update
+  const isUpdating = isSubmitting || updateLoading;
+
+  // Show any update errors
+  const displayError = updateError || submitStatus.message;
 
   return (
     <div className="profile-container">
@@ -283,10 +297,10 @@ function Profile() {
           <div className="form-actions">
             <button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isUpdating}
               className="save-button"
             >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isUpdating ? 'Saving...' : 'Save Changes'}
             </button>
             <button 
               type="button" 
@@ -297,9 +311,9 @@ function Profile() {
             </button>
           </div>
           
-          {submitStatus.message && (
+          {displayError && (
             <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
-              {submitStatus.message}
+              {displayError}
             </div>
           )}
         </form>

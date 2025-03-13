@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/AuthForm.css';
 import { useUser } from '../context/UserContext';
+import { useFetch } from '../hooks/useFetch';
 
 interface FormErrors {
   name?: string;
@@ -9,13 +10,31 @@ interface FormErrors {
   submit?: string;
 }
 
+interface SignupResponse {
+  userId: string;
+  token: string;
+  refreshToken: string;
+  message?: string;
+}
+
 export const SignupForm: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, setUserId, checkUserDataAndNavigate } = useUser();
+  const { login, setUserId } = useUser();
+
+  // Setup useFetch for signup
+  const { loading: submitLoading, error: submitError, update: submitSignup } = useFetch<SignupResponse>(
+    null,
+    {
+      method: 'POST',
+      skipCache: true,
+      retryOnAuth: false,
+      skipAuth: true
+    }
+  );
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -51,22 +70,25 @@ export const SignupForm: React.FC = () => {
     setErrors({});
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
+      const result = await submitSignup(
+        `${process.env.REACT_APP_API_URL}/auth/signup`,
+        {
+          method: 'POST',
+          body: {
+            name,
+            email,
+            password,
+          }
+        }
+      );
 
-      const data = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to sign up');
+      const data = result.data;
+      if (!data) {
+        throw new Error('No response data received');
       }
 
       // Store tokens using context
@@ -74,12 +96,6 @@ export const SignupForm: React.FC = () => {
       
       // Set userId from response
       setUserId(data.userId);
-      
-      // Check if user has volunteered data and navigate accordingly
-      // This will automatically navigate to data-input if no data exists
-      setTimeout(() => {
-        checkUserDataAndNavigate();
-      }, 100); // Small delay to ensure tokens are properly set
     } catch (error) {
       setErrors({
         submit: error instanceof Error ? error.message : 'Failed to sign up'
@@ -129,12 +145,12 @@ export const SignupForm: React.FC = () => {
           {errors.password && <div className="error-message">{errors.password}</div>}
         </div>
         
-        {errors.submit && (
-          <div className="error-message submit-error">{errors.submit}</div>
+        {(errors.submit || submitError) && (
+          <div className="error-message submit-error">{errors.submit || submitError}</div>
         )}
         
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+        <button type="submit" disabled={isSubmitting || submitLoading}>
+          {isSubmitting || submitLoading ? 'Creating Account...' : 'Create Account'}
         </button>
         
         <div className="login-link">

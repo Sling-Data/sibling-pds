@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/DataInput.css';
 import { useUser } from '../context/UserContext';
+import { useFetch } from '../hooks/useFetch';
 
 interface FormData {
   interests: string[];
@@ -41,6 +42,13 @@ const DataInput: React.FC = () => {
     learningStyle: [],
     age: ''
   });
+
+  const { loading: submitLoading, error: submitError, update: submitForm } = useFetch<{ message: string }>(
+    null,
+    {
+      method: 'POST'
+    }
+  );
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,24 +142,23 @@ const DataInput: React.FC = () => {
 
     try {
       console.log('Submitting data with userId:', userId);
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/volunteered-data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          type: 'onboarding',
-          value: formData
-        }),
-      });
+      const result = await submitForm(
+        `${process.env.REACT_APP_API_URL}/volunteered-data`,
+        {
+          method: 'POST',
+          body: {
+            userId,
+            type: 'onboarding',
+            value: formData
+          }
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      const data = await response.json();
-      console.log('Submission response:', data);
+      console.log('Submission response:', result.data);
       
       setSubmitStatus({
         success: true,
@@ -212,13 +219,8 @@ const DataInput: React.FC = () => {
 
   return (
     <div className="data-input-container">
-      <h2>Personal Information</h2>
-      {submitStatus.message && (
-        <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
-          {submitStatus.message}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} >
+      <h2>Tell Us About Yourself</h2>
+      <form onSubmit={handleSubmit}>
         {/* Interests - Checkboxes */}
         <div className="form-group">
           <label>Interests</label>
@@ -372,9 +374,21 @@ const DataInput: React.FC = () => {
           {errors.age && <div className="error-message">{errors.age}</div>}
         </div>
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Submit'}
-        </button>
+        <div className="form-actions">
+          <button 
+            type="submit" 
+            disabled={isSubmitting || submitLoading}
+            className="submit-button"
+          >
+            {isSubmitting || submitLoading ? 'Submitting...' : 'Submit'}
+          </button>
+        </div>
+
+        {(submitStatus.message || submitError) && (
+          <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
+            {submitStatus.message || submitError}
+          </div>
+        )}
       </form>
     </div>
   );

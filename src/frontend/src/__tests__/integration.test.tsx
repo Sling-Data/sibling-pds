@@ -84,7 +84,7 @@ describe('UserContext and useFetch Integration', () => {
 
     // Verify fetch was called with correct URL
     expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`, {"headers": {}, "method": "GET"});
   });
 
   it('should retry on 500 error and eventually succeed', async () => {
@@ -121,7 +121,7 @@ describe('UserContext and useFetch Integration', () => {
 
     // Verify fetch was called multiple times due to retries
     expect(mockFetch).toHaveBeenCalledTimes(3);
-    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`, {"headers": {}, "method": "GET"});
   });
 
   it('should use cached data and then refetch after update', async () => {
@@ -169,7 +169,7 @@ describe('UserContext and useFetch Integration', () => {
 
     // Verify fetch was called twice
     expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`, {"headers": {}, "method": "GET"});
   });
 
   it('should handle network errors with retry', async () => {
@@ -213,7 +213,7 @@ describe('UserContext and useFetch Integration', () => {
 
     // Verify fetch was called multiple times due to retries
     expect(mockFetch).toHaveBeenCalledTimes(3);
-    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`);
+    expect(mockFetch).toHaveBeenCalledWith(`${process.env.REACT_APP_API_URL}/users/user123`, {"headers": {}, "method": "GET"});
   });
 
   it('should render error state on fetch failure', async () => {
