@@ -6,6 +6,7 @@ module.exports = {
   projects: [
     {
       displayName: 'backend',
+      modulePathIgnorePatterns: ["<rootDir>/dist/"],
       testEnvironment: 'node',
       setupFiles: ['<rootDir>/tests/unit/setup.ts'],
       testMatch: ['<rootDir>/tests/unit/backend/**/*.test.ts'],
