@@ -58,7 +58,7 @@ export const disconnectDb = async () => {
   isConnected = false;
 };
 
-// Mount unprotected auth routes (login and signup) before JWT middleware
+// Mount unprotected auth routes (login, signup, and callback) before JWT middleware
 app.use("/auth", unprotectedAuthRouter);
 
 // Apply JWT authentication middleware to all other routes
