@@ -4,13 +4,24 @@ import VolunteeredData from "../models/VolunteeredDataModel";
 import UserModel from "../models/UserModel";
 import { AppError } from "../middleware/errorHandler";
 import { BaseRouteHandler } from "../utils/BaseRouteHandler";
+import { ResponseHandler } from "../utils/ResponseHandler";
 
 const router = express.Router();
 
+interface CreateVolunteeredDataRequest {
+  userId: string;
+  type: string;
+  value: any;
+}
+
 class VolunteeredDataRouteHandler extends BaseRouteHandler {
-  async createVolunteeredData(req: Request, res: Response) {
+  async createVolunteeredData(
+    req: Request<{}, {}, CreateVolunteeredDataRequest>,
+    res: Response
+  ) {
     const { userId, type, value } = req.body;
-    if (!userId || !type || value === undefined) {
+
+    if (!userId || !type || !value) {
       throw new AppError("userId, type, and value are required", 400);
     }
 
@@ -26,12 +37,16 @@ class VolunteeredDataRouteHandler extends BaseRouteHandler {
       $push: { volunteeredData: savedData._id },
     });
 
-    res.status(201).json({
-      _id: savedData._id,
-      type: savedData.type,
-      userId: savedData.userId,
-      value: encryptedValue,
-    });
+    ResponseHandler.success(
+      res,
+      {
+        _id: savedData._id,
+        type: savedData.type,
+        userId: savedData.userId,
+        value: encryptedValue,
+      },
+      201
+    );
   }
 }
 

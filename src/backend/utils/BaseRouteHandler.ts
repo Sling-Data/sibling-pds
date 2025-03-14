@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AppError } from "../middleware/errorHandler";
+import { ResponseHandler } from "./ResponseHandler";
 
 export abstract class BaseRouteHandler {
   protected async handleRequest(
@@ -11,10 +11,7 @@ export abstract class BaseRouteHandler {
       await handler(req, res);
     } catch (error) {
       console.error("Route error:", error);
-      const status = error instanceof AppError ? error.statusCode : 500;
-      const message =
-        error instanceof AppError ? error.message : "Internal server error";
-      res.status(status).json({ status: "error", message });
+      ResponseHandler.error(res, error as Error);
     }
   }
 

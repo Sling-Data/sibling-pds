@@ -9,12 +9,13 @@ import { refreshAccessToken } from "../middleware/auth";
 import config from "../config/config";
 import { validate, schemas } from "../middleware/validation";
 import { BaseRouteHandler } from "../utils/BaseRouteHandler";
+import { ResponseHandler } from "../utils/ResponseHandler";
 
 const router = express.Router();
 
 class AuthRouteHandler extends BaseRouteHandler {
   protectedRoute(req: Request, res: Response) {
-    res.json({
+    ResponseHandler.success(res, {
       message: "This is a protected route",
       userId: req.userId,
     });
@@ -88,7 +89,9 @@ class AuthRouteHandler extends BaseRouteHandler {
     }
 
     // Redirect to profile page with success status
-    res.redirect(`${config.FRONTEND_URL}/profile?status=success`);
+    ResponseHandler.redirect(res, `${config.FRONTEND_URL}/profile`, {
+      status: "success",
+    });
   }
 
   async plaidAuth(req: Request, res: Response) {
@@ -101,14 +104,21 @@ class AuthRouteHandler extends BaseRouteHandler {
 
     // If we got an access token, user is already authenticated
     if (response.type === "access_token") {
-      return res.redirect(
-        `${config.FRONTEND_URL}/connect-plaid?status=already_connected`
+      return ResponseHandler.redirect(
+        res,
+        `${config.FRONTEND_URL}/connect-plaid`,
+        { status: "already_connected" }
       );
     }
 
     // Otherwise, redirect with the link token
-    return res.redirect(
-      `${config.FRONTEND_URL}/connect-plaid?linkToken=${response.linkToken}`
+    if (!response.linkToken) {
+      throw new AppError("Failed to get link token", 500);
+    }
+    return ResponseHandler.redirect(
+      res,
+      `${config.FRONTEND_URL}/connect-plaid`,
+      { linkToken: response.linkToken }
     );
   }
 
@@ -128,16 +138,18 @@ class AuthRouteHandler extends BaseRouteHandler {
       await plaidClient.exchangePublicToken(public_token, userId);
 
       // Redirect to profile page with success status
-      res.redirect(`${config.FRONTEND_URL}/profile?status=success`);
+      ResponseHandler.redirect(res, `${config.FRONTEND_URL}/profile`, {
+        status: "success",
+      });
     } catch (error) {
       console.error("Plaid callback error:", error);
       const message =
         error instanceof AppError
           ? error.message
           : "Failed to connect Plaid account";
-      res.redirect(
-        `${config.FRONTEND_URL}/profile?error=${encodeURIComponent(message)}`
-      );
+      ResponseHandler.redirect(res, `${config.FRONTEND_URL}/profile`, {
+        error: message,
+      });
     }
   }
 
@@ -146,11 +158,10 @@ class AuthRouteHandler extends BaseRouteHandler {
 
     const tokens = refreshAccessToken(refreshToken);
     if (!tokens) {
-      res.status(401).json({ message: "Invalid refresh token" });
-      return;
+      throw new AppError("Invalid refresh token", 401);
     }
 
-    res.json({
+    ResponseHandler.success(res, {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       message: "Token refreshed successfully",

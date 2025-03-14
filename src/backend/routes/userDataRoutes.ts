@@ -5,6 +5,7 @@ import { AppError } from "../middleware/errorHandler";
 import { Document, Types } from "mongoose";
 import { EncryptedData } from "../utils/encryption";
 import { BaseRouteHandler } from "../utils/BaseRouteHandler";
+import { ResponseHandler } from "../utils/ResponseHandler";
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ class UserDataRouteHandler extends BaseRouteHandler {
       }))
     );
 
-    res.json({
+    ResponseHandler.success(res, {
       user: { _id: user._id, name: decryptedName, email: decryptedEmail },
       volunteeredData,
       behavioralData,

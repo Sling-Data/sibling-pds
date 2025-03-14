@@ -1,37 +1,48 @@
 import express, { Request, Response } from "express";
-import { encrypt } from "../utils/encryption";
-import BehavioralData from "../models/BehavioralDataModel";
+import BehavioralDataModel from "../models/BehavioralDataModel";
 import UserModel from "../models/UserModel";
 import { AppError } from "../middleware/errorHandler";
 import { BaseRouteHandler } from "../utils/BaseRouteHandler";
+import { ResponseHandler } from "../utils/ResponseHandler";
+import { encrypt } from "../utils/encryption";
+import { Types } from "mongoose";
 
 const router = express.Router();
 
+interface CreateBehavioralDataRequest {
+  userId: string;
+  action: string;
+  context: any;
+}
+
 class BehavioralDataRouteHandler extends BaseRouteHandler {
-  async createBehavioralData(req: Request, res: Response) {
+  async createBehavioralData(
+    req: Request<{}, {}, CreateBehavioralDataRequest>,
+    res: Response
+  ) {
     const { userId, action, context } = req.body;
-    if (!userId || !action || context === undefined) {
+
+    if (!userId || !action || !context) {
       throw new AppError("userId, action, and context are required", 400);
     }
 
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
     const encryptedContext = encrypt(JSON.stringify(context));
-    const behavioralData = new BehavioralData({
+
+    const behavioralData = await BehavioralDataModel.create({
       userId,
       action,
       context: encryptedContext,
     });
 
-    const savedData = await behavioralData.save();
-    await UserModel.findByIdAndUpdate(userId, {
-      $push: { behavioralData: savedData._id },
-    });
+    user.behavioralData.push(behavioralData._id as Types.ObjectId);
+    await user.save();
 
-    res.status(201).json({
-      _id: savedData._id,
-      action: savedData.action,
-      userId: savedData.userId,
-      context: encryptedContext,
-    });
+    ResponseHandler.success(res, behavioralData, 201);
   }
 }
 

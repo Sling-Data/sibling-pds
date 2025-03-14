@@ -4,6 +4,7 @@ import UserDataSourcesModel, {
 } from "../models/UserDataSourcesModel";
 import { AppError } from "../middleware/errorHandler";
 import { BaseRouteHandler } from "../utils/BaseRouteHandler";
+import { ResponseHandler } from "../utils/ResponseHandler";
 
 const router = express.Router();
 
@@ -44,12 +45,16 @@ class UserDataSourcesRouteHandler extends BaseRouteHandler {
       credentials
     );
 
-    res.status(201).json({
-      _id: dataSource._id,
-      userId: dataSource.userId,
-      dataSourceType: dataSource.dataSourceType,
-      lastIngestedAt: dataSource.lastIngestedAt,
-    });
+    ResponseHandler.success(
+      res,
+      {
+        _id: dataSource._id,
+        userId: dataSource.userId,
+        dataSourceType: dataSource.dataSourceType,
+        lastIngestedAt: dataSource.lastIngestedAt,
+      },
+      201
+    );
   }
 
   async getCredentials(
@@ -81,9 +86,7 @@ class UserDataSourcesRouteHandler extends BaseRouteHandler {
       );
     }
 
-    res.json({
-      credentials,
-    });
+    ResponseHandler.success(res, { credentials });
   }
 }
 
