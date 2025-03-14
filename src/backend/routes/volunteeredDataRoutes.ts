@@ -3,8 +3,9 @@ import { encrypt } from "../utils/encryption";
 import VolunteeredData from "../models/VolunteeredDataModel";
 import UserModel from "../models/UserModel";
 import { AppError } from "../middleware/errorHandler";
-import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 import { ResponseHandler } from "../utils/ResponseHandler";
+import { RouteFactory } from "../utils/RouteFactory";
+import { schemas } from "../middleware/validation";
 
 const router = express.Router();
 
@@ -14,49 +15,46 @@ interface CreateVolunteeredDataRequest {
   value: any;
 }
 
-class VolunteeredDataRouteHandler extends BaseRouteHandler {
-  async createVolunteeredData(
-    req: Request<{}, {}, CreateVolunteeredDataRequest>,
-    res: Response
-  ) {
-    const { userId, type, value } = req.body;
+async function createVolunteeredData(
+  req: Request<{}, {}, CreateVolunteeredDataRequest>,
+  res: Response
+) {
+  const { userId, type, value } = req.body;
 
-    if (!userId || !type || !value) {
-      throw new AppError("userId, type, and value are required", 400);
-    }
-
-    const encryptedValue = encrypt(value.toString());
-    const volunteeredData = new VolunteeredData({
-      userId,
-      type,
-      value: encryptedValue,
-    });
-
-    const savedData = await volunteeredData.save();
-    await UserModel.findByIdAndUpdate(userId, {
-      $push: { volunteeredData: savedData._id },
-    });
-
-    ResponseHandler.success(
-      res,
-      {
-        _id: savedData._id,
-        type: savedData.type,
-        userId: savedData.userId,
-        value: encryptedValue,
-      },
-      201
-    );
+  if (!userId || !type || !value) {
+    throw new AppError("userId, type, and value are required", 400);
   }
+
+  const encryptedValue = encrypt(value.toString());
+  const volunteeredData = new VolunteeredData({
+    userId,
+    type,
+    value: encryptedValue,
+  });
+
+  const savedData = await volunteeredData.save();
+  await UserModel.findByIdAndUpdate(userId, {
+    $push: { volunteeredData: savedData._id },
+  });
+
+  ResponseHandler.success(
+    res,
+    {
+      _id: savedData._id,
+      type: savedData.type,
+      userId: savedData.userId,
+      value: encryptedValue,
+    },
+    201
+  );
 }
 
-const volunteeredDataHandler = new VolunteeredDataRouteHandler();
-
-router.post(
+// Create routes using RouteFactory
+RouteFactory.createPostRoute(
+  router,
   "/",
-  volunteeredDataHandler.createAsyncHandler(
-    volunteeredDataHandler.createVolunteeredData.bind(volunteeredDataHandler)
-  )
+  createVolunteeredData,
+  schemas.volunteeredData
 );
 
 export default router;

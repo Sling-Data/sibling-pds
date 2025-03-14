@@ -104,7 +104,8 @@ describe("User API", () => {
       .expect(400);
     expect(response.body).toEqual({
       status: "error",
-      message: "Name and email are required",
+      message: "Validation error",
+      details: "name cannot be empty, email is required",
     });
   });
 
@@ -138,7 +139,8 @@ describe("User API", () => {
       .expect(400);
     expect(response.body).toEqual({
       status: "error",
-      message: "userId, type, and value are required",
+      message: "Validation error",
+      details: "type cannot be empty, value is required",
     });
   });
 
@@ -172,7 +174,8 @@ describe("User API", () => {
       .expect(400);
     expect(response.body).toEqual({
       status: "error",
-      message: "userId, action, and context are required",
+      message: "Validation error",
+      details: "action cannot be empty, context is required",
     });
   });
 
@@ -206,7 +209,8 @@ describe("User API", () => {
       .expect(400);
     expect(response.body).toEqual({
       status: "error",
-      message: "userId, source, and data are required",
+      message: "Validation error",
+      details: "source cannot be empty, data is required",
     });
   });
 
@@ -332,12 +336,12 @@ describe("User API", () => {
     const response = await request(server)
       .put(`/users/${createResponse.body._id}`)
       .set("Authorization", `Bearer ${testToken}`)
-      .send({ name: "" }) // Empty name
+      .send({ name: "" }) // Missing email
       .expect(400);
-    // Update the test to match the actual response format
     expect(response.body).toEqual({
       status: "error",
-      message: "Name and email are required",
+      message: "Validation error",
+      details: "name cannot be empty, email is required",
     });
   });
 });

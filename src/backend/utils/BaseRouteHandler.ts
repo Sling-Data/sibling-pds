@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 import { ResponseHandler } from "./ResponseHandler";
 
 export abstract class BaseRouteHandler {
-  protected async handleRequest(
-    req: Request,
+  protected async handleRequest<
+    P extends ParamsDictionary = ParamsDictionary,
+    B = any
+  >(
+    req: Request<P, any, B>,
     res: Response,
-    handler: (req: Request, res: Response) => Promise<void>
+    handler: (req: Request<P, any, B>, res: Response) => Promise<void>
   ) {
     try {
       await handler(req, res);
@@ -15,10 +19,11 @@ export abstract class BaseRouteHandler {
     }
   }
 
-  public createAsyncHandler(
-    handler: (req: Request, res: Response) => Promise<void>
-  ) {
-    return (req: Request, res: Response) => {
+  public createAsyncHandler<
+    P extends ParamsDictionary = ParamsDictionary,
+    B = any
+  >(handler: (req: Request<P, any, B>, res: Response) => Promise<void>) {
+    return (req: Request<P, any, B>, res: Response) => {
       this.handleRequest(req, res, handler);
     };
   }

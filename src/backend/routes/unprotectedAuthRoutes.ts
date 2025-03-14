@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { AppError } from "../middleware/errorHandler";
 import { generateToken, generateRefreshToken } from "../middleware/auth";
-import { validate, schemas } from "../middleware/validation";
+import { schemas } from "../middleware/validation";
 import UserModel from "../models/UserModel";
 import bcrypt from "bcrypt";
 import { decrypt } from "../utils/encryption";
@@ -12,7 +12,7 @@ import gmailClient from "../services/apiClients/gmailClient";
 import UserDataSourcesModel, {
   DataSourceType,
 } from "../models/UserDataSourcesModel";
-import { BaseRouteHandler } from "../utils/BaseRouteHandler";
+import { RouteFactory } from "../utils/RouteFactory";
 
 const router = express.Router();
 
@@ -35,98 +35,79 @@ interface SignupRequest {
   password: string;
 }
 
-class UnprotectedAuthRouteHandler extends BaseRouteHandler {
-  async login(req: Request<{}, {}, LoginRequest>, res: Response) {
-    const { userId, password } = req.body;
+async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
+  const { userId, password } = req.body;
 
-    try {
-      const user = await UserModel.findById(userId);
-      if (!user) {
-        throw new AppError("Invalid credentials", 401);
-      }
-
-      // Decrypt the stored password
-      const decryptedPassword = decrypt(user.password);
-
-      // Compare the provided password with the decrypted password using bcrypt
-      const isValid = await bcrypt.compare(password, decryptedPassword);
-
-      if (!isValid) {
-        throw new AppError("Invalid credentials", 401);
-      }
-
-      // Generate JWT token and refresh token
-      const token = generateToken(userId);
-      const refreshToken = generateRefreshToken(userId);
-
-      res.json({
-        token,
-        refreshToken,
-        expiresIn: 3600, // 1 hour in seconds
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      throw new AppError(
-        error instanceof AppError ? error.message : "Login failed",
-        error instanceof AppError ? error.statusCode : 500
-      );
+  try {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new AppError("Invalid credentials", 401);
     }
-  }
 
-  async signup(req: Request<{}, {}, SignupRequest>, res: Response) {
-    const { name, email, password } = req.body;
+    // Decrypt the stored password
+    const decryptedPassword = decrypt(user.password);
 
-    try {
-      // Check if email already exists
-      const existingUsers = await UserModel.find({}).exec();
-      for (const user of existingUsers) {
-        const decryptedEmail = decrypt(user.email);
-        if (decryptedEmail.toLowerCase() === email.toLowerCase()) {
-          throw new AppError("Email already in use", 400);
-        }
-      }
+    // Compare the provided password with the decrypted password using bcrypt
+    const isValid = await bcrypt.compare(password, decryptedPassword);
 
-      // Save the user with proper encryption and hashing
-      const savedUser = (await saveUser(name, email, password)) as UserDocument;
-      const userId = savedUser._id;
-
-      // Generate JWT token and refresh token
-      const token = generateToken(userId);
-      const refreshToken = generateRefreshToken(userId);
-
-      res.status(201).json({
-        token,
-        refreshToken,
-        expiresIn: 3600, // 1 hour in seconds
-      });
-    } catch (error) {
-      console.error("Signup error:", error);
-      throw new AppError(
-        error instanceof AppError ? error.message : "Signup failed",
-        error instanceof AppError ? error.statusCode : 500
-      );
+    if (!isValid) {
+      throw new AppError("Invalid credentials", 401);
     }
+
+    // Generate JWT token and refresh token
+    const token = generateToken(userId);
+    const refreshToken = generateRefreshToken(userId);
+
+    res.json({
+      token,
+      refreshToken,
+      expiresIn: 3600, // 1 hour in seconds
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    throw new AppError(
+      error instanceof AppError ? error.message : "Login failed",
+      error instanceof AppError ? error.statusCode : 500
+    );
   }
 }
 
-const authHandler = new UnprotectedAuthRouteHandler();
+async function signup(req: Request<{}, {}, SignupRequest>, res: Response) {
+  const { name, email, password } = req.body;
 
-// Login route
-router.post(
-  "/login",
-  validate(schemas.login),
-  authHandler.createAsyncHandler(authHandler.login.bind(authHandler))
-);
+  try {
+    // Check if email already exists
+    const existingUsers = await UserModel.find({}).exec();
+    for (const user of existingUsers) {
+      const decryptedEmail = decrypt(user.email);
+      if (decryptedEmail.toLowerCase() === email.toLowerCase()) {
+        throw new AppError("Email already in use", 400);
+      }
+    }
 
-// Signup route
-router.post(
-  "/signup",
-  validate(schemas.signup),
-  authHandler.createAsyncHandler(authHandler.signup.bind(authHandler))
-);
+    // Save the user with proper encryption and hashing
+    const savedUser = (await saveUser(name, email, password)) as UserDocument;
+    const userId = savedUser._id;
 
-// Gmail OAuth callback route
-router.get("/callback", async (req, res) => {
+    // Generate JWT token and refresh token
+    const token = generateToken(userId);
+    const refreshToken = generateRefreshToken(userId);
+
+    res.status(201).json({
+      token,
+      refreshToken,
+      expiresIn: 3600, // 1 hour in seconds
+    });
+  } catch (error) {
+    console.error("Signup error:", error);
+    throw new AppError(
+      error instanceof AppError ? error.message : "Signup failed",
+      error instanceof AppError ? error.statusCode : 500
+    );
+  }
+}
+
+async function gmailCallback(req: Request, res: Response) {
   try {
     const { code, state } = req.query;
 
@@ -188,6 +169,11 @@ router.get("/callback", async (req, res) => {
       )}`
     );
   }
-});
+}
+
+// Create routes using RouteFactory
+RouteFactory.createPostRoute(router, "/login", login, schemas.login);
+RouteFactory.createPostRoute(router, "/signup", signup, schemas.signup);
+RouteFactory.createProtectedRoute(router, "/callback", gmailCallback);
 
 export default router;
