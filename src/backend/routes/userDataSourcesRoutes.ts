@@ -96,10 +96,6 @@ RouteFactory.createPostRoute(
   storeCredentials,
   schemas.userDataSources
 );
-RouteFactory.createProtectedRoute(
-  router,
-  "/:userId/:dataSourceType",
-  getCredentials
-);
+RouteFactory.createGetRoute(router, "/:userId/:dataSourceType", getCredentials);
 
 export default router;

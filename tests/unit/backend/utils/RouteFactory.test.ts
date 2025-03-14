@@ -44,7 +44,7 @@ describe("RouteFactory", () => {
 
   describe("createProtectedRoute", () => {
     it("should create a GET route with handler", () => {
-      RouteFactory.createProtectedRoute(router, "/test", mockHandler);
+      RouteFactory.createGetRoute(router, "/test", mockHandler);
 
       const routes = router.stack
         .filter((r) => r.route)
@@ -56,7 +56,7 @@ describe("RouteFactory", () => {
 
     it("should apply validation middleware when schema is provided", () => {
       const schema = { body: {} };
-      RouteFactory.createProtectedRoute(router, "/test", mockHandler, schema);
+      RouteFactory.createGetRoute(router, "/test", mockHandler, schema);
 
       const routes = router.stack.filter((r) => r.route) as RouteLayer[];
       expect(routes[0]?.route?.stack).toHaveLength(2); // validation + handler

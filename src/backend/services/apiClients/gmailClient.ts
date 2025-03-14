@@ -43,7 +43,7 @@ export class GmailClient {
   ];
   private readonly REDIRECT_URI =
     process.env.GOOGLE_OAUTH_REDIRECT_URI ||
-    "http://localhost:3000/auth/callback";
+    "http://localhost:3000/api/gmail/callback";
   private readonly MAX_MESSAGES = 100;
   private readonly RATE_LIMIT_RETRY_CONFIG: RetryConfig = {
     maxRetries: 2,

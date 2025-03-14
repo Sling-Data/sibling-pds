@@ -1,22 +1,32 @@
 import request from "supertest";
 import express, { Express, NextFunction, Request, Response } from "express";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose, { Document } from "mongoose";
-import api from "@backend/routes/apiRoutes";
+import mongoose, { Document, Types } from "mongoose";
+import behavioralDataRouter from "@backend/routes/behavioralDataRoutes";
+import UserModel from "@backend/models/UserModel";
+import BehavioralDataModel from "@backend/models/BehavioralDataModel";
+import * as encryption from "@backend/utils/encryption";
+import { generateToken } from "@backend/middleware/auth";
 import { errorHandler } from "@backend/middleware/errorHandler";
 import { hashPassword } from "@backend/utils/userUtils";
-import * as encryption from "@backend/utils/encryption";
-import UserModel from "@backend/models/UserModel";
 
-// Define interface for User Document
+// Define interfaces for document types
 interface UserDocument extends Document {
-  _id: mongoose.Types.ObjectId;
+  _id: Types.ObjectId;
   name: any;
   email: any;
   password: any;
+  behavioralData: Types.ObjectId[];
 }
 
-describe("API Routes", () => {
+interface BehavioralDataDocument extends Document {
+  _id: Types.ObjectId;
+  userId: Types.ObjectId;
+  action: string;
+  context: any;
+}
+
+describe("Behavioral Data Routes", () => {
   let app: Express;
   let mongoServer: MongoMemoryServer;
   let testUserId: string;
@@ -61,8 +71,7 @@ describe("API Routes", () => {
     // Apply mock authentication middleware
     app.use(mockAuth);
 
-    app.use("/api", api.protectedRouter);
-    app.use("/api", api.publicRouter);
+    app.use("/behavioral-data", behavioralDataRouter);
     app.use(errorHandler);
   });
 
@@ -75,6 +84,7 @@ describe("API Routes", () => {
 
   beforeEach(async () => {
     // Clear database collections
+    await BehavioralDataModel.deleteMany({});
     await UserModel.deleteMany({});
 
     // Create a test user
@@ -89,12 +99,12 @@ describe("API Routes", () => {
       name: encryptedName,
       email: encryptedEmail,
       password: encryptedPassword,
+      behavioralData: [],
     })) as UserDocument;
-
     testUserId = user._id.toString();
 
     // Create test tokens
-    validToken = "valid.token.string";
+    validToken = generateToken(testUserId);
     invalidToken = "invalid.token.string";
   });
 
@@ -102,22 +112,31 @@ describe("API Routes", () => {
   describe("Route Authentication", () => {
     it("should require authentication for protected routes", async () => {
       // Test without token
-      const noTokenResponse = await request(app).get(`/api/gmail/auth`);
+      const noTokenResponse = await request(app).get(
+        `/behavioral-data/user/${testUserId}`
+      );
 
       expect(noTokenResponse.status).toBe(401);
     });
 
     it("should reject requests with invalid tokens", async () => {
       const response = await request(app)
-        .get(`/api/gmail/auth`)
+        .get(`/behavioral-data/user/${testUserId}`)
         .set("Authorization", `Bearer ${invalidToken}`);
 
       expect(response.status).toBe(401);
     });
 
     it("should accept requests with valid tokens", async () => {
+      // Create test data
+      const behavioralData = (await BehavioralDataModel.create({
+        userId: testUserId,
+        action: "test",
+        context: encryption.encrypt(JSON.stringify({ test: true })),
+      })) as BehavioralDataDocument;
+
       const response = await request(app)
-        .get(`/api/gmail/auth`)
+        .get(`/behavioral-data/${behavioralData._id}`)
         .set("Authorization", `Bearer ${validToken}`);
 
       expect(response.status).not.toBe(401);
@@ -126,40 +145,38 @@ describe("API Routes", () => {
 
   // Test basic route functionality (smoke test)
   describe("Route Registration", () => {
-    it("should have Gmail endpoints registered", async () => {
-      // Test Gmail auth endpoint
-      const gmailAuthResponse = await request(app)
-        .get("/api/gmail")
-        .set("Authorization", `Bearer ${validToken}`);
+    it("should have all required endpoints registered", async () => {
+      // Create test data
+      const behavioralData = (await BehavioralDataModel.create({
+        userId: testUserId,
+        action: "test",
+        context: encryption.encrypt(JSON.stringify({ test: true })),
+      })) as BehavioralDataDocument;
 
-      // Verify endpoint is registered (not 404)
-      expect(gmailAuthResponse.status).not.toBe(404);
-    });
-
-    it("should have Plaid endpoints registered", async () => {
-      // Test Plaid auth endpoint
-      const plaidAuthResponse = await request(app)
-        .get("/api/plaid")
-        .set("Authorization", `Bearer ${validToken}`);
-
-      // Test Plaid create link token endpoint
-      const createLinkTokenResponse = await request(app)
-        .get("/api/plaid/create-link-token?userId=test-user-id")
-        .set("Authorization", `Bearer ${validToken}`);
-
-      // Test Plaid exchange public token endpoint
-      const exchangeTokenResponse = await request(app)
-        .post("/api/plaid/exchange-public-token")
+      // Test POST endpoint
+      const postResponse = await request(app)
+        .post("/behavioral-data")
         .set("Authorization", `Bearer ${validToken}`)
         .send({
-          public_token: "test-public-token",
-          userId: "test-user-id",
+          userId: testUserId,
+          action: "test",
+          context: { test: true },
         });
 
-      // Verify endpoints are registered (not 404)
-      expect(plaidAuthResponse.status).not.toBe(404);
-      expect(createLinkTokenResponse.status).not.toBe(404);
-      expect(exchangeTokenResponse.status).not.toBe(404);
+      // Test GET by ID endpoint
+      const getByIdResponse = await request(app)
+        .get(`/behavioral-data/${behavioralData._id}`)
+        .set("Authorization", `Bearer ${validToken}`);
+
+      // Test GET by user ID endpoint
+      const getByUserIdResponse = await request(app)
+        .get(`/behavioral-data/user/${testUserId}`)
+        .set("Authorization", `Bearer ${validToken}`);
+
+      // Verify all endpoints are registered (not 404)
+      expect(postResponse.status).not.toBe(404);
+      expect(getByIdResponse.status).not.toBe(404);
+      expect(getByUserIdResponse.status).not.toBe(404);
     });
   });
 });

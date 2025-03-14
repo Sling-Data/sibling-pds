@@ -1,9 +1,12 @@
-import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { PlaidApi, Configuration, PlaidEnvironments } from "plaid";
 import UserDataSourcesModel from "@backend/models/UserDataSourcesModel";
 import { PlaidClient } from "@backend/services/apiClients/plaidClient";
 import { AppError } from "@backend/middleware/errorHandler";
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
+  createMockPlaidClient,
+} from "../../../helpers/testSetup";
 
 // Mock UserDataSourcesModel
 jest.mock("@backend/models/UserDataSourcesModel", () => ({
@@ -21,45 +24,25 @@ jest.mock("@backend/models/UserDataSourcesModel", () => ({
 }));
 
 describe("Plaid Client", () => {
-  let mongoServer: MongoMemoryServer;
+  let testEnv: any;
   let plaidClient: PlaidClient;
   let mockPlaidApi: jest.Mocked<Partial<PlaidApi>>;
 
   beforeAll(async () => {
-    // Set up MongoDB Memory Server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
-
-    // Set up environment variables
-    process.env.PLAID_CLIENT_ID = "test-client-id";
-    process.env.PLAID_SECRET = "test-secret";
-    process.env.PLAID_ENV = "sandbox";
+    testEnv = await setupTestEnvironment();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-    delete process.env.PLAID_CLIENT_ID;
-    delete process.env.PLAID_SECRET;
-    delete process.env.PLAID_ENV;
+    await teardownTestEnvironment(testEnv);
   });
 
   beforeEach(async () => {
     await UserDataSourcesModel.deleteMany({});
     jest.clearAllMocks();
+    console.error = jest.fn();
 
-    // Create mock Plaid API instance
-    mockPlaidApi = {
-      linkTokenCreate: jest.fn(),
-      itemPublicTokenExchange: jest.fn(),
-      accountsGet: jest.fn(),
-      transactionsGet: jest.fn(),
-      paymentInitiationPaymentGet: jest.fn(),
-    };
-
+    mockPlaidApi = createMockPlaidClient();
     plaidClient = new PlaidClient(mockPlaidApi as PlaidApi);
-    console.error = jest.fn(); // Mock console.error
   });
 
   describe("getAccessToken", () => {

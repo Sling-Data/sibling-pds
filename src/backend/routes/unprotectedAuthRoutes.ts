@@ -1,18 +1,13 @@
+import bcrypt from "bcrypt";
 import express, { Request, Response } from "express";
+import { Document } from "mongoose";
+import { generateRefreshToken, generateToken } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
-import { generateToken, generateRefreshToken } from "../middleware/auth";
 import { schemas } from "../middleware/validation";
 import UserModel from "../models/UserModel";
-import bcrypt from "bcrypt";
 import { decrypt } from "../utils/encryption";
-import { saveUser } from "../utils/userUtils";
-import config from "../config/config";
-import { Document } from "mongoose";
-import gmailClient from "../services/apiClients/gmailClient";
-import UserDataSourcesModel, {
-  DataSourceType,
-} from "../models/UserDataSourcesModel";
 import { RouteFactory } from "../utils/RouteFactory";
+import { saveUser } from "../utils/userUtils";
 
 const router = express.Router();
 
@@ -107,73 +102,8 @@ async function signup(req: Request<{}, {}, SignupRequest>, res: Response) {
   }
 }
 
-async function gmailCallback(req: Request, res: Response) {
-  try {
-    const { code, state } = req.query;
-
-    if (!code || typeof code !== "string") {
-      throw new AppError("Authorization code is required", 400);
-    }
-
-    if (!state || typeof state !== "string") {
-      throw new AppError("State parameter is required", 400);
-    }
-
-    // Decode and verify state
-    let decodedState;
-    try {
-      const stateJson = Buffer.from(state, "base64").toString();
-      decodedState = JSON.parse(stateJson);
-    } catch (error) {
-      throw new AppError("Invalid state parameter", 400);
-    }
-
-    if (!decodedState.userId || !decodedState.nonce) {
-      throw new AppError("Invalid state parameter format", 400);
-    }
-
-    let tokens;
-    // Exchange code for tokens
-    try {
-      tokens = await gmailClient.exchangeCodeForTokens(code);
-    } catch (error) {
-      console.error("Failed to exchange code for tokens:", error);
-      throw new AppError("Failed to exchange code for tokens", 500);
-    }
-
-    // Store credentials in UserDataSources
-    try {
-      await UserDataSourcesModel.storeCredentials(
-        decodedState.userId,
-        DataSourceType.GMAIL,
-        {
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token!,
-          expiry: new Date(tokens.expiry_date!).toISOString(),
-        }
-      );
-    } catch (error) {
-      console.error("Failed to store credentials:", error);
-      throw new AppError("Failed to store credentials", 500);
-    }
-
-    // Redirect to profile page with success status
-    res.redirect(`${config.FRONTEND_URL}/profile?status=success`);
-  } catch (error) {
-    console.error("OAuth callback error:", error);
-    const message =
-      error instanceof AppError ? error.message : "Authorization failed";
-    res.redirect(
-      `${config.FRONTEND_URL}/profile?status=error&message=${encodeURIComponent(
-        message
-      )}`
-    );
-  }
-}
-
 // Create routes using RouteFactory
 RouteFactory.createPostRoute(router, "/login", login, schemas.login);
 RouteFactory.createPostRoute(router, "/signup", signup, schemas.signup);
-RouteFactory.createProtectedRoute(router, "/callback", gmailCallback);
 
 export default router;

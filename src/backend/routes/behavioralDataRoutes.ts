@@ -1,56 +1,44 @@
-import express, { Request, Response } from "express";
-import BehavioralDataModel from "../models/BehavioralDataModel";
-import UserModel from "../models/UserModel";
-import { AppError } from "../middleware/errorHandler";
-import { ResponseHandler } from "../utils/ResponseHandler";
-import { encrypt } from "../utils/encryption";
-import { Types } from "mongoose";
+import express, { Request } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 import { RouteFactory } from "../utils/RouteFactory";
 import { schemas } from "../middleware/validation";
+import {
+  createBehavioralData,
+  getBehavioralData,
+  getUserBehavioralData,
+} from "../controllers/behavioralDataController";
 
 const router = express.Router();
 
-interface CreateBehavioralDataRequest {
+// Define param interfaces for type safety
+interface IdParams extends ParamsDictionary {
+  id: string;
+}
+
+interface UserIdParams extends ParamsDictionary {
   userId: string;
-  action: string;
-  context: any;
 }
 
-async function createBehavioralData(
-  req: Request<{}, {}, CreateBehavioralDataRequest>,
-  res: Response
-) {
-  const { userId, action, context } = req.body;
-
-  if (!userId || !action || !context) {
-    throw new AppError("userId, action, and context are required", 400);
-  }
-
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new AppError("User not found", 404);
-  }
-
-  const encryptedContext = encrypt(JSON.stringify(context));
-
-  const behavioralData = await BehavioralDataModel.create({
-    userId,
-    action,
-    context: encryptedContext,
-  });
-
-  user.behavioralData.push(behavioralData._id as Types.ObjectId);
-  await user.save();
-
-  ResponseHandler.success(res, behavioralData, 201);
-}
-
-// Create routes using RouteFactory
+// Create behavioral data
 RouteFactory.createPostRoute(
   router,
   "/",
   createBehavioralData,
   schemas.behavioralData
+);
+
+// Get behavioral data by ID
+RouteFactory.createGetRoute<IdParams>(
+  router,
+  "/:id",
+  (req: Request<IdParams>, res) => getBehavioralData(req, res)
+);
+
+// Get all behavioral data for a user
+RouteFactory.createGetRoute<UserIdParams>(
+  router,
+  "/user/:userId",
+  (req: Request<UserIdParams>, res) => getUserBehavioralData(req, res)
 );
 
 export default router;

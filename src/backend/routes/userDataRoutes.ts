@@ -64,7 +64,7 @@ async function getUserData(req: Request<{ id: string }>, res: Response) {
 }
 
 // Create routes using RouteFactory
-RouteFactory.createProtectedRoute(
+RouteFactory.createGetRoute(
   router,
   "/:id",
   getUserData,

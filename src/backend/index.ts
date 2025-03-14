@@ -19,7 +19,7 @@ import userDataRouter from "./routes/userDataRoutes";
 import userDataSourcesRouter from "./routes/userDataSourcesRoutes";
 import authRouter from "./routes/authRoutes";
 import unprotectedAuthRouter from "./routes/unprotectedAuthRoutes";
-import apiRouter from "./routes/apiRoutes";
+import api from "./routes/apiRoutes";
 import testRouter from "./routes/testRoutes";
 
 // Import middleware
@@ -60,6 +60,7 @@ export const disconnectDb = async () => {
 
 // Mount unprotected auth routes (login, signup, and callback) before JWT middleware
 app.use("/auth", unprotectedAuthRouter);
+app.use("/api", api.publicRouter);
 
 // Apply JWT authentication middleware to all other routes
 app.use(authenticateJWT);
@@ -72,7 +73,7 @@ app.use("/external-data", externalDataRouter);
 app.use("/user-data", userDataRouter);
 app.use("/user-data-sources", userDataSourcesRouter);
 app.use("/auth", authRouter); // All other auth routes will be protected
-app.use("/api", apiRouter);
+app.use("/api", api.protectedRouter);
 app.use("/test", testRouter);
 
 // Only start server if run directly

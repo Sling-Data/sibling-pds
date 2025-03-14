@@ -104,7 +104,7 @@ async function getUser(req: Request<{ id: string }>, res: Response) {
 // Create routes using RouteFactory
 RouteFactory.createPostRoute(router, "/", createUser, schemas.createUser);
 RouteFactory.createPutRoute(router, "/:id", updateUser, schemas.updateUser);
-RouteFactory.createProtectedRoute(router, "/:id", getUser);
+RouteFactory.createGetRoute(router, "/:id", getUser);
 
 // Error handling middleware
 router.use(errorHandler);

@@ -1,21 +1,18 @@
-import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import UserDataSourcesModel from "@backend/models/UserDataSourcesModel";
 import { GmailClient } from "@backend/services/apiClients/gmailClient";
 import { OAuth2Client, Credentials } from "google-auth-library";
 import nock from "nock";
 import { AppError } from "@backend/middleware/errorHandler";
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
+  createMockOAuth2Client,
+  mockGmailApi,
+  mockGmailResponse,
+  mockMessageResponse,
+} from "../../../helpers/testSetup";
 
 // Mock Gmail API
-const mockGmailApi = {
-  users: {
-    messages: {
-      list: jest.fn(),
-      get: jest.fn(),
-    },
-  },
-};
-
 jest.mock("googleapis", () => ({
   google: {
     gmail: jest.fn().mockImplementation(({ version, auth }) => {
@@ -42,30 +39,16 @@ jest.mock("@backend/models/UserDataSourcesModel", () => ({
 }));
 
 describe("Gmail Client", () => {
-  let mongoServer: MongoMemoryServer;
+  let testEnv: any;
   let gmailClient: GmailClient;
   let mockOAuth2Client: jest.Mocked<Partial<OAuth2Client>>;
-  let mockGmailResponse: any;
-  let mockMessageResponse: any;
 
   beforeAll(async () => {
-    // Set up MongoDB Memory Server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-    await mongoose.connect(mongoUri);
-
-    // Set up environment variables
-    process.env.GOOGLE_CLIENT_ID = "test-client-id";
-    process.env.GOOGLE_CLIENT_SECRET = "test-client-secret";
-    process.env.ENCRYPTION_KEY = "68656c6c6f31323334353637383930616263646566";
+    testEnv = await setupTestEnvironment();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-    delete process.env.GOOGLE_CLIENT_ID;
-    delete process.env.GOOGLE_CLIENT_SECRET;
-    delete process.env.ENCRYPTION_KEY;
+    await teardownTestEnvironment(testEnv);
   });
 
   beforeEach(async () => {
@@ -80,40 +63,7 @@ describe("Gmail Client", () => {
       expiry: new Date(Date.now() + 3600000).toISOString(),
     });
 
-    mockOAuth2Client = {
-      setCredentials: jest.fn(),
-      getToken: jest.fn(),
-      refreshAccessToken: jest.fn(),
-      generateAuthUrl: jest.fn(),
-      request: jest.fn(),
-    } as jest.Mocked<Partial<OAuth2Client>>;
-
-    mockGmailResponse = {
-      data: {
-        messages: [{ id: "msg1" }, { id: "msg2" }],
-      },
-    };
-
-    mockMessageResponse = {
-      data: {
-        id: "msg1",
-        payload: {
-          headers: [
-            { name: "Subject", value: "Test Subject" },
-            { name: "From", value: "sender@example.com" },
-            { name: "To", value: "recipient@example.com" },
-            { name: "Date", value: "2024-03-12T12:00:00Z" },
-          ],
-          parts: [
-            {
-              mimeType: "text/plain",
-              body: { data: Buffer.from("Test body").toString("base64") },
-            },
-          ],
-        },
-      },
-    };
-
+    mockOAuth2Client = createMockOAuth2Client();
     gmailClient = new GmailClient(mockOAuth2Client as OAuth2Client);
     console.error = jest.fn(); // Mock console.error
   });

@@ -121,7 +121,7 @@ function Profile() {
           // The simplest approach: directly navigate to the endpoint
           // The browser will automatically include the Authorization header
           // from the current session, and the backend will handle the redirect
-          window.location.href = `${process.env.REACT_APP_API_URL}/auth/gmail?userId=${userId}&token=${encodeURIComponent(accessToken)}`;
+          window.location.href = `${process.env.REACT_APP_API_URL}/api/gmail?userId=${userId}&token=${encodeURIComponent(accessToken)}`;
           
         } catch (error) {
           console.error('Error connecting to Gmail:', error);

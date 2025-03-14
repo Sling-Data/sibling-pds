@@ -103,16 +103,12 @@ async function runDataIngestion(_req: Request, res: Response) {
 }
 
 // Create routes using RouteFactory
-RouteFactory.createProtectedRoute(router, "/test-gmail-token", testGmailToken);
-RouteFactory.createProtectedRoute(router, "/gmail-auth-url", getGmailAuthUrl);
-RouteFactory.createProtectedRoute(router, "/test-gmail-fetch", testGmailFetch);
-RouteFactory.createProtectedRoute(router, "/test-plaid-token", testPlaidToken);
-RouteFactory.createProtectedRoute(router, "/plaid-auth-url", getPlaidAuthUrl);
-RouteFactory.createProtectedRoute(router, "/test-plaid-fetch", testPlaidFetch);
-RouteFactory.createProtectedRoute(
-  router,
-  "/run-data-ingestion",
-  runDataIngestion
-);
+RouteFactory.createGetRoute(router, "/test-gmail-token", testGmailToken);
+RouteFactory.createGetRoute(router, "/gmail-auth-url", getGmailAuthUrl);
+RouteFactory.createGetRoute(router, "/test-gmail-fetch", testGmailFetch);
+RouteFactory.createGetRoute(router, "/test-plaid-token", testPlaidToken);
+RouteFactory.createGetRoute(router, "/plaid-auth-url", getPlaidAuthUrl);
+RouteFactory.createGetRoute(router, "/test-plaid-fetch", testPlaidFetch);
+RouteFactory.createGetRoute(router, "/run-data-ingestion", runDataIngestion);
 
 export default router;

@@ -2,6 +2,11 @@ import { OAuthHandler } from "@backend/services/OAuthHandler";
 import { AppError } from "@backend/middleware/errorHandler";
 import { Response, Request } from "express";
 import { ResponseHandler } from "@backend/utils/ResponseHandler";
+import { OAuth2Client } from "google-auth-library";
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
+} from "../../helpers/testSetup";
 
 // Mock ResponseHandler
 jest.mock("@backend/utils/ResponseHandler", () => ({
@@ -18,7 +23,136 @@ jest.mock("@backend/config/config", () => ({
   },
 }));
 
+// Mock google-auth-library
+jest.mock("google-auth-library", () => {
+  const mockGenerateAuthUrl = jest.fn().mockImplementation((options) => {
+    const params = new URLSearchParams({
+      access_type: options.access_type,
+      scope: Array.isArray(options.scope)
+        ? options.scope.join(" ")
+        : options.scope,
+      prompt: options.prompt,
+      state: options.state || "",
+    });
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  });
+
+  return {
+    OAuth2Client: jest.fn().mockImplementation(() => ({
+      generateAuthUrl: mockGenerateAuthUrl,
+      getToken: jest.fn(),
+      refreshAccessToken: jest.fn(),
+      setCredentials: jest.fn(),
+    })),
+  };
+});
+
 describe("OAuthHandler", () => {
+  let testEnv: any;
+
+  beforeAll(async () => {
+    testEnv = await setupTestEnvironment();
+  });
+
+  afterAll(async () => {
+    await teardownTestEnvironment(testEnv);
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("getOAuth2Client", () => {
+    it("should create and cache OAuth2Client instances", () => {
+      const config = {
+        provider: "gmail" as const,
+        clientId: "test-client-id",
+        clientSecret: "test-client-secret",
+        redirectUri: "http://localhost:3000/callback",
+        scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+      };
+
+      const client1 = OAuthHandler.getOAuth2Client(config);
+      const client2 = OAuthHandler.getOAuth2Client(config);
+
+      expect(client1).toBe(client2); // Should return the same instance
+      expect(OAuth2Client).toHaveBeenCalledTimes(1);
+    });
+
+    it("should create separate clients for different providers", () => {
+      const gmailConfig = {
+        provider: "gmail" as const,
+        clientId: "test-gmail-client-id",
+        clientSecret: "test-client-secret",
+        redirectUri: "http://localhost:3000/callback",
+        scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+      };
+
+      const plaidConfig = {
+        provider: "plaid" as const,
+        clientId: "test-plaid-client-id",
+        clientSecret: "test-client-secret",
+        redirectUri: "http://localhost:3000/callback",
+      };
+
+      const gmailClient = OAuthHandler.getOAuth2Client(gmailConfig);
+      const plaidClient = OAuthHandler.getOAuth2Client(plaidConfig);
+
+      expect(gmailClient).not.toBe(plaidClient);
+      expect(OAuth2Client).toHaveBeenCalledTimes(2);
+    });
+
+    it("should throw error for missing credentials", () => {
+      const config = {
+        provider: "gmail" as const,
+        clientId: "",
+        clientSecret: "",
+        redirectUri: "http://localhost:3000/callback",
+        scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+      };
+
+      expect(() => OAuthHandler.getOAuth2Client(config)).toThrow(
+        "Client ID and Client Secret must be set in environment variables"
+      );
+    });
+  });
+
+  describe("generateAuthUrl", () => {
+    it("should generate Gmail auth URL with correct parameters", () => {
+      const config = {
+        provider: "gmail" as const,
+        clientId: "test-client-id",
+        clientSecret: "test-client-secret",
+        redirectUri: "http://localhost:3000/callback",
+        scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
+      };
+
+      const state = "test-state";
+      const url = OAuthHandler.generateAuthUrl(config, state);
+
+      expect(url).toContain("https://accounts.google.com/o/oauth2/v2/auth");
+      expect(url).toContain("access_type=offline");
+      expect(url).toContain("prompt=consent");
+      expect(url).toContain(`state=${encodeURIComponent(state)}`);
+      expect(url).toContain(
+        encodeURIComponent("https://www.googleapis.com/auth/gmail.readonly")
+      );
+    });
+
+    it("should throw error for unsupported provider", () => {
+      const config = {
+        provider: "unsupported" as any,
+        clientId: "test-client-id",
+        clientSecret: "test-client-secret",
+        redirectUri: "http://localhost:3000/callback",
+      };
+
+      expect(() => OAuthHandler.generateAuthUrl(config)).toThrow(
+        "Unsupported OAuth provider: unsupported"
+      );
+    });
+  });
+
   describe("generateState", () => {
     it("should generate a valid state string", () => {
       const userId = "test-user-id";

@@ -4,10 +4,7 @@ import { BaseRouteHandler } from "./BaseRouteHandler";
 import { validate } from "../middleware/validation";
 
 export class RouteFactory {
-  static createProtectedRoute<
-    P extends ParamsDictionary = ParamsDictionary,
-    B = any
-  >(
+  static createGetRoute<P extends ParamsDictionary = ParamsDictionary, B = any>(
     router: Router,
     path: string,
     handler: (req: Request<P, any, B>, res: Response) => Promise<void>,

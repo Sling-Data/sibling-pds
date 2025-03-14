@@ -1,56 +1,37 @@
-import express, { Request, Response } from "express";
-import { AppError } from "../middleware/errorHandler";
-import plaidClient from "../services/apiClients/plaidClient";
+import express from "express";
 import { schemas } from "../middleware/validation";
 import { RouteFactory } from "../utils/RouteFactory";
+import {
+  gmailAuth,
+  plaidAuth,
+  plaidCallback,
+  createLinkToken,
+  exchangePublicToken,
+  gmailCallback,
+} from "../controllers/apiClientController";
 
-const router = express.Router();
+const protectedRouter = express.Router();
+const publicRouter = express.Router();
 
-async function createLinkToken(req: Request, res: Response) {
-  const { userId } = req.query;
+// Gmail routes
+RouteFactory.createGetRoute(protectedRouter, "/gmail", gmailAuth);
+RouteFactory.createGetRoute(publicRouter, "/gmail/callback", gmailCallback);
 
-  try {
-    const linkToken = await plaidClient.createLinkToken(userId as string);
-    res.json({ link_token: linkToken });
-  } catch (error) {
-    console.error("Error creating link token:", error);
-    throw new AppError(
-      error instanceof Error ? error.message : "Failed to create link token",
-      500
-    );
-  }
-}
-
-async function exchangePublicToken(req: Request, res: Response) {
-  const { public_token, userId } = req.body;
-
-  try {
-    await plaidClient.exchangePublicToken(public_token, userId);
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error exchanging public token:", error);
-    throw new AppError(
-      error instanceof Error
-        ? error.message
-        : "Failed to exchange public token",
-      500
-    );
-  }
-}
-
-// Create routes using RouteFactory
-RouteFactory.createProtectedRoute(
-  router,
+// Plaid routes
+RouteFactory.createGetRoute(protectedRouter, "/plaid", plaidAuth);
+RouteFactory.createGetRoute(protectedRouter, "/plaid/callback", plaidCallback);
+RouteFactory.createGetRoute(
+  protectedRouter,
   "/plaid/create-link-token",
   createLinkToken,
-  schemas.userIdQuery,
+  schemas.userId,
   "query"
 );
 RouteFactory.createPostRoute(
-  router,
+  protectedRouter,
   "/plaid/exchange-public-token",
   exchangePublicToken,
   schemas.plaidTokenExchange
 );
 
-export default router;
+export default { protectedRouter, publicRouter };

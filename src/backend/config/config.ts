@@ -27,10 +27,10 @@ const config = {
   // External APIs
   GMAIL_REDIRECT_URI:
     process.env.GMAIL_REDIRECT_URI ||
-    "http://localhost:3000/auth/gmail/callback",
+    "http://localhost:3000/api/gmail/callback",
   PLAID_REDIRECT_URI:
     process.env.PLAID_REDIRECT_URI ||
-    "http://localhost:3000/auth/plaid/callback",
+    "http://localhost:3000/api/plaid/callback",
 
   // Encryption
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY || "",
