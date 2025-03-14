@@ -5,7 +5,7 @@ interface EncryptedData {
   content: string;
 }
 
-interface User extends Document {
+export interface User extends Document {
   name: EncryptedData;
   email: EncryptedData;
   password: EncryptedData;

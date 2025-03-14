@@ -9,14 +9,11 @@ import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 
 const router = express.Router();
 
-interface UserRequest {
-  name: string;
-  email: string;
-  password?: string;
-}
-
 class UsersRouteHandler extends BaseRouteHandler {
-  async createUser(req: Request<{}, {}, UserRequest>, res: Response) {
+  async createUser(
+    req: Request<{}, {}, { name: string; email: string; password?: string }>,
+    res: Response
+  ) {
     return createUser(req, res);
   }
 
@@ -25,7 +22,11 @@ class UsersRouteHandler extends BaseRouteHandler {
   }
 
   async updateUser(
-    req: Request<{ id: string }, {}, UserRequest>,
+    req: Request<
+      { id: string },
+      {},
+      { name: string; email: string; password?: string }
+    >,
     res: Response
   ) {
     return updateUser(req, res);

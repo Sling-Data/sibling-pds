@@ -11,12 +11,12 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 import config from "./config/config";
 
 // Import routes
-import usersRouter from "./routes/users";
-import volunteeredDataRouter from "./routes/volunteeredData";
-import behavioralDataRouter from "./routes/behavioralData";
-import externalDataRouter from "./routes/externalData";
-import userDataRouter from "./routes/userData";
-import userDataSourcesRouter from "./routes/userDataSources";
+import usersRouter from "./routes/usersRoutes";
+import volunteeredDataRouter from "./routes/volunteeredDataRoutes";
+import behavioralDataRouter from "./routes/behavioralDataRoutes";
+import externalDataRouter from "./routes/externalDataRoutes";
+import userDataRouter from "./routes/userDataRoutes";
+import userDataSourcesRouter from "./routes/userDataSourcesRoutes";
 import authRouter from "./routes/authRoutes";
 import unprotectedAuthRouter from "./routes/unprotectedAuthRoutes";
 import apiRouter from "./routes/apiRoutes";

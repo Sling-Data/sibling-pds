@@ -3,27 +3,12 @@ import { AppError } from "../middleware/errorHandler";
 import plaidClient from "../services/apiClients/plaidClient";
 import { validate, schemas } from "../middleware/validation";
 import Joi from "joi";
+import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 
 const router = express.Router();
 
-// Wrap async route handlers
-const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
-  return (req: Request, res: Response) => {
-    Promise.resolve(fn(req, res)).catch((error) => {
-      console.error("API route error:", error);
-      const status = error instanceof AppError ? error.statusCode : 500;
-      const message =
-        error instanceof AppError ? error.message : "Internal server error";
-      res.status(status).json({ error: message });
-    });
-  };
-};
-
-// Create a Plaid link token
-router.get(
-  "/plaid/create-link-token",
-  validate(schemas.userId, "query") as RequestHandler,
-  asyncHandler(async (req: Request, res: Response) => {
+class ApiRouteHandler extends BaseRouteHandler {
+  async createLinkToken(req: Request, res: Response) {
     const { userId } = req.query;
 
     try {
@@ -36,7 +21,33 @@ router.get(
         500
       );
     }
-  })
+  }
+
+  async exchangePublicToken(req: Request, res: Response) {
+    const { public_token, userId } = req.body;
+
+    try {
+      await plaidClient.exchangePublicToken(public_token, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error exchanging public token:", error);
+      throw new AppError(
+        error instanceof Error
+          ? error.message
+          : "Failed to exchange public token",
+        500
+      );
+    }
+  }
+}
+
+const apiHandler = new ApiRouteHandler();
+
+// Create a Plaid link token
+router.get(
+  "/plaid/create-link-token",
+  validate(schemas.userId, "query") as RequestHandler,
+  apiHandler.createAsyncHandler(apiHandler.createLinkToken.bind(apiHandler))
 );
 
 // Exchange a public token for an access token
@@ -54,22 +65,7 @@ router.post(
       }),
     })
   ) as RequestHandler,
-  asyncHandler(async (req: Request, res: Response) => {
-    const { public_token, userId } = req.body;
-
-    try {
-      await plaidClient.exchangePublicToken(public_token, userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error exchanging public token:", error);
-      throw new AppError(
-        error instanceof Error
-          ? error.message
-          : "Failed to exchange public token",
-        500
-      );
-    }
-  })
+  apiHandler.createAsyncHandler(apiHandler.exchangePublicToken.bind(apiHandler))
 );
 
 export default router;

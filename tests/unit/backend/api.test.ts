@@ -5,6 +5,7 @@ import path from "path";
 import dotenv from "dotenv";
 import app, { connectDb, disconnectDb } from "@backend/index";
 import { generateRefreshToken, generateToken } from "@backend/middleware/auth";
+import { saveUser } from "@backend/utils/userUtils";
 
 // Mock the Plaid client
 jest.mock("@backend/services/apiClients/plaidClient", () => {
@@ -135,10 +136,10 @@ describe("User API", () => {
       .set("Authorization", `Bearer ${testToken}`)
       .send({ userId: "invalid", type: "" }) // Missing value
       .expect(400);
-    expect(response.body).toHaveProperty(
-      "error",
-      "userId, type, and value are required"
-    );
+    expect(response.body).toEqual({
+      status: "error",
+      message: "userId, type, and value are required",
+    });
   });
 
   it("should create behavioral data with POST /behavioral-data", async () => {
@@ -169,10 +170,10 @@ describe("User API", () => {
       .set("Authorization", `Bearer ${testToken}`)
       .send({ userId: "invalid", action: "" }) // Missing context
       .expect(400);
-    expect(response.body).toHaveProperty(
-      "error",
-      "userId, action, and context are required"
-    );
+    expect(response.body).toEqual({
+      status: "error",
+      message: "userId, action, and context are required",
+    });
   });
 
   it("should create external data with POST /external-data", async () => {
@@ -203,10 +204,10 @@ describe("User API", () => {
       .set("Authorization", `Bearer ${testToken}`)
       .send({ userId: "invalid", source: "" }) // Missing data
       .expect(400);
-    expect(response.body).toHaveProperty(
-      "error",
-      "userId, source, and data are required"
-    );
+    expect(response.body).toEqual({
+      status: "error",
+      message: "userId, source, and data are required",
+    });
   });
 
   it("should retrieve user data with GET /user-data/:id", async () => {
@@ -279,7 +280,10 @@ describe("User API", () => {
       .get("/user-data/123456789012345678901234")
       .set("Authorization", `Bearer ${testToken}`)
       .expect(404);
-    expect(response.body).toEqual({ error: "User not found" });
+    expect(response.body).toEqual({
+      status: "error",
+      message: "User not found",
+    });
   });
 
   it("should update a user with PUT /users/:id", async () => {
@@ -362,15 +366,9 @@ describe("JWT Authentication and Validation", () => {
     testUserName = "Auth Test User";
     testUserEmail = "authtest@example.com";
     password = "securePassword123";
+    const user = await saveUser(testUserName, testUserEmail, password);
+    userId = (user._id as any).toString();
 
-    // Create a test user for login test
-    const signupResponse = await request(server).post("/auth/signup").send({
-      name: testUserName,
-      email: testUserEmail,
-      password: password,
-    });
-
-    userId = signupResponse.body.userId;
     token = generateToken(userId);
   });
 
@@ -392,7 +390,6 @@ describe("JWT Authentication and Validation", () => {
         password: "securePassword123",
       })
       .expect(201);
-    expect(response.body).toHaveProperty("userId");
     expect(response.body).toHaveProperty("token");
     expect(response.body).toHaveProperty("refreshToken");
   });

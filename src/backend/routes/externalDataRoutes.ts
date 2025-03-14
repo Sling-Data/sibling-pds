@@ -1,28 +1,14 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import { encrypt } from "../utils/encryption";
 import ExternalData from "../models/ExternalDataModel";
 import UserModel from "../models/UserModel";
 import { AppError } from "../middleware/errorHandler";
+import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 
 const router = express.Router();
 
-// Wrap async route handlers
-const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res)).catch((error) => {
-      // Format error response to match existing tests
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({ error: error.message });
-      } else {
-        next(error);
-      }
-    });
-  };
-};
-
-router.post(
-  "/",
-  asyncHandler(async (req: Request, res: Response) => {
+class ExternalDataRouteHandler extends BaseRouteHandler {
+  async createExternalData(req: Request, res: Response) {
     const { userId, source, data } = req.body;
     if (!userId || !source || data === undefined) {
       throw new AppError("userId, source, and data are required", 400);
@@ -46,7 +32,16 @@ router.post(
       userId: savedData.userId,
       data: encryptedData,
     });
-  })
+  }
+}
+
+const externalDataHandler = new ExternalDataRouteHandler();
+
+router.post(
+  "/",
+  externalDataHandler.createAsyncHandler(
+    externalDataHandler.createExternalData.bind(externalDataHandler)
+  )
 );
 
 export default router;

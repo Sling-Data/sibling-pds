@@ -1,9 +1,10 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import { decrypt } from "../utils/encryption";
 import UserModel from "../models/UserModel";
 import { AppError } from "../middleware/errorHandler";
 import { Document, Types } from "mongoose";
 import { EncryptedData } from "../utils/encryption";
+import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 
 const router = express.Router();
 
@@ -15,23 +16,8 @@ interface UserDocument extends Document {
   externalData: Types.ObjectId[];
 }
 
-// Wrap async route handlers
-const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res)).catch((error) => {
-      // Format error response to match existing tests
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({ error: error.message });
-      } else {
-        next(error);
-      }
-    });
-  };
-};
-
-router.get(
-  "/:id",
-  asyncHandler(async (req: Request, res: Response) => {
+class UserDataRouteHandler extends BaseRouteHandler {
+  async getUserData(req: Request<{ id: string }>, res: Response) {
     const user = await UserModel.findById<UserDocument>(req.params.id)
       .populate("volunteeredData")
       .populate("behavioralData")
@@ -74,7 +60,16 @@ router.get(
       behavioralData,
       externalData,
     });
-  })
+  }
+}
+
+const userDataHandler = new UserDataRouteHandler();
+
+router.get(
+  "/:id",
+  userDataHandler.createAsyncHandler(
+    userDataHandler.getUserData.bind(userDataHandler)
+  )
 );
 
 export default router;

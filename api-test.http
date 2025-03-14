@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67c9dcd230beec3d0e0c19c6
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE3OTE0MjYsImV4cCI6MTc0MTc5NTAyNn0.Fxe3VoGg6v83dplv0q6__Us1b4nIsVUOFWQe3FfKKws
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE5NTMwMDEsImV4cCI6MTc0MTk1NjYwMX0.l3V6EmZphZeylaSBP6fr309ZbVlxlsTqYCQY0RIrwiM
 @refreshToken = 0228a4fdb5245c790fef509b1fbf1f19f62a3597af3ad8c24185671b1917440524f00a10b40b7c96
 
 ### ==========================================
@@ -66,7 +66,7 @@ Content-Type: {{contentType}}
 
 {
     "name": "New Test User",
-    "email": "newuser01@example.com",
+    "email": "newuser02@example.com",
     "password": "securePassword123"
 }
 

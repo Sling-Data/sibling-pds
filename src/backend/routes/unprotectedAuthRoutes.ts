@@ -1,4 +1,4 @@
-import express, { Request, Response, RequestHandler } from "express";
+import express, { Request, Response } from "express";
 import { AppError } from "../middleware/errorHandler";
 import { generateToken, generateRefreshToken } from "../middleware/auth";
 import { validate, schemas } from "../middleware/validation";
@@ -9,7 +9,10 @@ import { saveUser } from "../utils/userUtils";
 import config from "../config/config";
 import { Document } from "mongoose";
 import gmailClient from "../services/apiClients/gmailClient";
-import UserDataSourcesModel, { DataSourceType } from "../models/UserDataSourcesModel";
+import UserDataSourcesModel, {
+  DataSourceType,
+} from "../models/UserDataSourcesModel";
+import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 
 const router = express.Router();
 
@@ -21,25 +24,56 @@ interface UserDocument extends Document {
   password: any;
 }
 
-// Wrap async route handlers
-const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
-  return (req: Request, res: Response) => {
-    Promise.resolve(fn(req, res)).catch((error) => {
-      console.error("Route error:", error);
-      const message =
-        error instanceof AppError ? error.message : "Internal server error";
-      res.redirect(
-        `${config.FRONTEND_URL}/profile?error=${encodeURIComponent(message)}`
-      );
-    });
-  };
-};
+interface LoginRequest {
+  userId: string;
+  password: string;
+}
 
-// Signup endpoint to create a new user
-router.post(
-  "/signup",
-  validate(schemas.signup) as RequestHandler,
-  asyncHandler(async (req: Request, res: Response) => {
+interface SignupRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
+class UnprotectedAuthRouteHandler extends BaseRouteHandler {
+  async login(req: Request<{}, {}, LoginRequest>, res: Response) {
+    const { userId, password } = req.body;
+
+    try {
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new AppError("Invalid credentials", 401);
+      }
+
+      // Decrypt the stored password
+      const decryptedPassword = decrypt(user.password);
+
+      // Compare the provided password with the decrypted password using bcrypt
+      const isValid = await bcrypt.compare(password, decryptedPassword);
+
+      if (!isValid) {
+        throw new AppError("Invalid credentials", 401);
+      }
+
+      // Generate JWT token and refresh token
+      const token = generateToken(userId);
+      const refreshToken = generateRefreshToken(userId);
+
+      res.json({
+        token,
+        refreshToken,
+        expiresIn: 3600, // 1 hour in seconds
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      throw new AppError(
+        error instanceof AppError ? error.message : "Login failed",
+        error instanceof AppError ? error.statusCode : 500
+      );
+    }
+  }
+
+  async signup(req: Request<{}, {}, SignupRequest>, res: Response) {
     const { name, email, password } = req.body;
 
     try {
@@ -48,84 +82,47 @@ router.post(
       for (const user of existingUsers) {
         const decryptedEmail = decrypt(user.email);
         if (decryptedEmail.toLowerCase() === email.toLowerCase()) {
-          res.status(400).json({ message: "Email already in use" });
-          return;
+          throw new AppError("Email already in use", 400);
         }
       }
 
-      // Use saveUser utility to create the user with proper password hashing and encryption
-      const savedUser = await saveUser(name, email, password) as UserDocument;
-      
-      // Verify that the decrypted password is a bcrypt hash
-      const decryptedPassword = decrypt(savedUser.password);
-      if (!decryptedPassword.startsWith('$2b$') && !decryptedPassword.startsWith('$2a$')) {
-        console.error("Password not properly hashed before encryption");
-        res.status(500).json({ message: "Error creating user: password not properly secured" });
-        return;
-      }
-      
-      const userId = savedUser._id.toString();
-      
+      // Save the user with proper encryption and hashing
+      const savedUser = (await saveUser(name, email, password)) as UserDocument;
+      const userId = savedUser._id;
+
       // Generate JWT token and refresh token
       const token = generateToken(userId);
       const refreshToken = generateRefreshToken(userId);
-      
-      // Return user ID and tokens
+
       res.status(201).json({
-        userId,
         token,
         refreshToken,
         expiresIn: 3600, // 1 hour in seconds
       });
     } catch (error) {
       console.error("Signup error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      throw new AppError(
+        error instanceof AppError ? error.message : "Signup failed",
+        error instanceof AppError ? error.statusCode : 500
+      );
     }
-  })
-);
+  }
+}
 
-// Login endpoint to authenticate user and generate JWT token
+const authHandler = new UnprotectedAuthRouteHandler();
+
+// Login route
 router.post(
   "/login",
-  validate(schemas.login) as RequestHandler,
-  asyncHandler(async (req: Request, res: Response) => {
-    const { userId, password } = req.body;
+  validate(schemas.login),
+  authHandler.createAsyncHandler(authHandler.login.bind(authHandler))
+);
 
-    try {
-      // Find user by ID
-      const user = await UserModel.findById(userId);
-      
-      if (!user) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
-      }
-
-      // Decrypt the stored password
-      const decryptedPassword = decrypt(user.password);
-      
-      // Compare the provided password with the decrypted password using bcrypt
-      const isValid = await bcrypt.compare(password, decryptedPassword);
-
-      if (!isValid) {
-        res.status(401).json({ message: "Invalid credentials" });
-        return;
-      }
-
-      // Generate JWT token and refresh token
-      const token = generateToken(userId);
-      const refreshToken = generateRefreshToken(userId);
-
-      // Return tokens
-      res.json({
-        token,
-        refreshToken,
-        expiresIn: 3600, // 1 hour in seconds
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  })
+// Signup route
+router.post(
+  "/signup",
+  validate(schemas.signup),
+  authHandler.createAsyncHandler(authHandler.signup.bind(authHandler))
 );
 
 // Gmail OAuth callback route

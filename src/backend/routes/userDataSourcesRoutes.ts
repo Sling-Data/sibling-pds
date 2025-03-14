@@ -1,28 +1,23 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { Request, Response } from "express";
 import UserDataSourcesModel, {
   DataSourceType,
 } from "../models/UserDataSourcesModel";
 import { AppError } from "../middleware/errorHandler";
+import { BaseRouteHandler } from "../utils/BaseRouteHandler";
 
 const router = express.Router();
 
-// Wrap async route handlers
-const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res)).catch((error) => {
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({ error: error.message });
-      } else {
-        next(error);
-      }
-    });
-  };
-};
+interface StoreCredentialsRequest {
+  userId: string;
+  dataSourceType: string;
+  credentials: any;
+}
 
-// Store credentials for a data source
-router.post(
-  "/",
-  asyncHandler(async (req: Request, res: Response) => {
+class UserDataSourcesRouteHandler extends BaseRouteHandler {
+  async storeCredentials(
+    req: Request<{}, {}, StoreCredentialsRequest>,
+    res: Response
+  ) {
     const { userId, dataSourceType, credentials } = req.body;
 
     if (!userId || !dataSourceType || !credentials) {
@@ -55,13 +50,12 @@ router.post(
       dataSourceType: dataSource.dataSourceType,
       lastIngestedAt: dataSource.lastIngestedAt,
     });
-  })
-);
+  }
 
-// Get credentials for a data source
-router.get(
-  "/:userId/:dataSourceType",
-  asyncHandler(async (req: Request, res: Response) => {
+  async getCredentials(
+    req: Request<{ userId: string; dataSourceType: string }>,
+    res: Response
+  ) {
     const { userId, dataSourceType } = req.params;
 
     if (
@@ -90,7 +84,25 @@ router.get(
     res.json({
       credentials,
     });
-  })
+  }
+}
+
+const userDataSourcesHandler = new UserDataSourcesRouteHandler();
+
+// Store credentials for a data source
+router.post(
+  "/",
+  userDataSourcesHandler.createAsyncHandler(
+    userDataSourcesHandler.storeCredentials.bind(userDataSourcesHandler)
+  )
+);
+
+// Get credentials for a data source
+router.get(
+  "/:userId/:dataSourceType",
+  userDataSourcesHandler.createAsyncHandler(
+    userDataSourcesHandler.getCredentials.bind(userDataSourcesHandler)
+  )
 );
 
 export default router;
