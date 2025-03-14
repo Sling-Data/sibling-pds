@@ -6,10 +6,10 @@ import UserDataSourcesModel, {
   DataSourceType,
 } from "../models/UserDataSourcesModel";
 import { refreshAccessToken } from "../middleware/auth";
-import config from "../config/config";
 import { schemas } from "../middleware/validation";
 import { ResponseHandler } from "../utils/ResponseHandler";
 import { RouteFactory } from "../utils/RouteFactory";
+import { OAuthHandler } from "../services/OAuthHandler";
 
 const router = express.Router();
 
@@ -26,71 +26,67 @@ async function gmailAuth(req: Request, res: Response) {
     throw new AppError("Authentication required", 401);
   }
 
-  // Generate state parameter with userId and random string for CSRF protection
-  const stateBuffer = Buffer.from(
-    JSON.stringify({
-      userId,
-      nonce: Math.random().toString(36).substring(2),
-    })
-  ).toString("base64");
-
-  const authUrl = gmailClient.generateAuthUrl(stateBuffer);
+  // Generate state parameter using OAuthHandler
+  const state = OAuthHandler.generateState(userId, "gmail");
+  const authUrl = gmailClient.generateAuthUrl(state);
   res.redirect(authUrl);
 }
 
 async function gmailCallback(req: Request, res: Response) {
-  const { code, state } = req.query;
-
-  if (!code || typeof code !== "string") {
-    throw new AppError("Authorization code is required", 400);
-  }
-
-  if (!state || typeof state !== "string") {
-    throw new AppError("State parameter is required", 400);
-  }
-
-  // Decode and verify state
-  let decodedState;
   try {
-    const stateJson = Buffer.from(state, "base64").toString();
-    decodedState = JSON.parse(stateJson);
+    // Validate required callback parameters
+    OAuthHandler.validateCallbackParams(req, ["code", "state"]);
+
+    const { code, state } = req.query;
+    if (typeof code !== "string" || typeof state !== "string") {
+      throw new AppError("Invalid parameter types", 400);
+    }
+
+    // Validate and decode state
+    const decodedState = OAuthHandler.validateState(state);
+
+    // Exchange code for tokens
+    let tokens;
+    try {
+      tokens = await gmailClient.exchangeCodeForTokens(code);
+    } catch (error) {
+      console.error("Failed to exchange code for tokens:", error);
+      OAuthHandler.handleCallback(
+        res,
+        false,
+        "Failed to exchange code for tokens",
+        "Token exchange failed"
+      );
+      return;
+    }
+
+    // Store credentials in UserDataSources
+    try {
+      await UserDataSourcesModel.storeCredentials(
+        decodedState.userId,
+        DataSourceType.GMAIL,
+        {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token!,
+          expiry: new Date(tokens.expiry_date!).toISOString(),
+        }
+      );
+      OAuthHandler.handleCallback(res, true, "Gmail connected successfully");
+    } catch (error) {
+      console.error("Failed to store credentials:", error);
+      OAuthHandler.handleCallback(
+        res,
+        false,
+        "Failed to store credentials",
+        "Database error"
+      );
+    }
   } catch (error) {
-    throw new AppError("Invalid state parameter", 400);
+    console.error("OAuth callback error:", error);
+    const message =
+      error instanceof AppError ? error.message : "Authorization failed";
+    OAuthHandler.handleCallback(res, false, "Authorization failed", message);
   }
-
-  if (!decodedState.userId || !decodedState.nonce) {
-    throw new AppError("Invalid state parameter format", 400);
-  }
-
-  let tokens;
-  // Exchange code for tokens
-  try {
-    tokens = await gmailClient.exchangeCodeForTokens(code);
-  } catch (error) {
-    console.error("Failed to exchange code for tokens:", error);
-    throw new AppError("Failed to exchange code for tokens", 500);
-  }
-
-  // Store credentials in UserDataSources
-  try {
-    await UserDataSourcesModel.storeCredentials(
-      decodedState.userId,
-      DataSourceType.GMAIL,
-      {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token!,
-        expiry: new Date(tokens.expiry_date!).toISOString(),
-      }
-    );
-  } catch (error) {
-    console.error("Failed to store credentials:", error);
-    throw new AppError("Failed to store credentials", 500);
-  }
-
-  // Redirect to profile page with success status
-  ResponseHandler.redirect(res, `${config.FRONTEND_URL}/profile`, {
-    status: "success",
-  });
 }
 
 async function plaidAuth(req: Request, res: Response) {
@@ -103,50 +99,47 @@ async function plaidAuth(req: Request, res: Response) {
 
   // If we got an access token, user is already authenticated
   if (response.type === "access_token") {
-    return ResponseHandler.redirect(
+    OAuthHandler.handleCallback(
       res,
-      `${config.FRONTEND_URL}/connect-plaid`,
-      { status: "already_connected" }
+      true,
+      "Plaid already connected",
+      undefined,
+      {
+        status: "already_connected",
+      }
     );
+    return;
   }
 
   // Otherwise, redirect with the link token
   if (!response.linkToken) {
     throw new AppError("Failed to get link token", 500);
   }
-  return ResponseHandler.redirect(res, `${config.FRONTEND_URL}/connect-plaid`, {
+  OAuthHandler.handleCallback(res, true, undefined, undefined, {
     linkToken: response.linkToken,
   });
 }
 
 async function plaidCallback(req: Request, res: Response) {
-  const { public_token, userId } = req.query;
-
-  if (!public_token || typeof public_token !== "string") {
-    throw new AppError("public_token is required as a query parameter", 400);
-  }
-
-  if (!userId || typeof userId !== "string") {
-    throw new AppError("userId is required as a query parameter", 400);
-  }
-
   try {
+    // Validate required callback parameters
+    OAuthHandler.validateCallbackParams(req, ["public_token", "userId"]);
+
+    const { public_token, userId } = req.query;
+    if (typeof public_token !== "string" || typeof userId !== "string") {
+      throw new AppError("Invalid parameter types", 400);
+    }
+
     // Exchange public token for access token and store credentials
     await plaidClient.exchangePublicToken(public_token, userId);
-
-    // Redirect to profile page with success status
-    ResponseHandler.redirect(res, `${config.FRONTEND_URL}/profile`, {
-      status: "success",
-    });
+    OAuthHandler.handleCallback(res, true, "Plaid connected successfully");
   } catch (error) {
     console.error("Plaid callback error:", error);
     const message =
       error instanceof AppError
         ? error.message
         : "Failed to connect Plaid account";
-    ResponseHandler.redirect(res, `${config.FRONTEND_URL}/profile`, {
-      error: message,
-    });
+    OAuthHandler.handleCallback(res, false, "Failed to connect Plaid", message);
   }
 }
 

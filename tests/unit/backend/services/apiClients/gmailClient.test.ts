@@ -4,7 +4,7 @@ import UserDataSourcesModel from "@backend/models/UserDataSourcesModel";
 import { GmailClient } from "@backend/services/apiClients/gmailClient";
 import { OAuth2Client, Credentials } from "google-auth-library";
 import nock from "nock";
-import { AppError } from "../../../src/backend/middleware/errorHandler";
+import { AppError } from "@backend/middleware/errorHandler";
 
 // Mock Gmail API
 const mockGmailApi = {
@@ -27,7 +27,7 @@ jest.mock("googleapis", () => ({
 }));
 
 // Mock UserDataSourcesModel
-jest.mock("../../../src/backend/models/UserDataSourcesModel", () => ({
+jest.mock("@backend/models/UserDataSourcesModel", () => ({
   __esModule: true,
   default: {
     getCredentials: jest.fn(),

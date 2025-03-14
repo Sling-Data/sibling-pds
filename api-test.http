@@ -2,8 +2,8 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67c9dcd230beec3d0e0c19c6
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE5NTMwMDEsImV4cCI6MTc0MTk1NjYwMX0.l3V6EmZphZeylaSBP6fr309ZbVlxlsTqYCQY0RIrwiM
-@refreshToken = 0228a4fdb5245c790fef509b1fbf1f19f62a3597af3ad8c24185671b1917440524f00a10b40b7c96
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE5NjIzNzMsImV4cCI6MTc0MTk2NTk3M30.fnl_Qy5MFY_Cgx_vCwQX6SOYlF4xavuqGoNC5n8yuzk
+@refreshToken = fda8b33dce40f3d9ca314af675d7e3cb861a9777bd1ec0ab6b02e95c9fe3ee73b2221b8cbec3ce7b
 
 ### ==========================================
 ### BASIC API TESTS
@@ -66,7 +66,7 @@ Content-Type: {{contentType}}
 
 {
     "name": "New Test User",
-    "email": "newuser02@example.com",
+    "email": "newuser04@example.com",
     "password": "securePassword123"
 }
 
@@ -291,12 +291,3 @@ Authorization: Bearer {{jwtToken}}
 GET {{baseUrl}}/auth/gmail
 Content-Type: {{contentType}}
 
-### 4. Test login without token (should work)
-# @name testLoginWithoutToken
-POST {{baseUrl}}/auth/login
-Content-Type: {{contentType}}
-
-{
-    "userId": "{{userId}}",
-    "password": "securePassword123"
-}

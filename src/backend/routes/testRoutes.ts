@@ -4,8 +4,8 @@ import gmailClient from "../services/apiClients/gmailClient";
 import plaidClient from "../services/apiClients/plaidClient";
 import scheduler from "../services/scheduler";
 import { authenticateJWT } from "../middleware/auth";
-import config from "../config/config";
 import { RouteFactory } from "../utils/RouteFactory";
+import { OAuthHandler } from "../services/OAuthHandler";
 
 const router = express.Router();
 
@@ -13,9 +13,7 @@ const router = express.Router();
 router.use(authenticateJWT as express.RequestHandler);
 
 async function testGmailToken(req: Request, res: Response) {
-  // Use userId from JWT token
   const userId = req.userId;
-
   if (!userId) {
     throw new AppError("Authentication required", 401);
   }
@@ -25,21 +23,14 @@ async function testGmailToken(req: Request, res: Response) {
 }
 
 async function getGmailAuthUrl(req: Request, res: Response) {
-  // Use userId from JWT token
   const userId = req.userId;
   if (!userId) {
     throw new AppError("Authentication required", 401);
   }
 
-  // Generate state parameter with userId and random string for CSRF protection
-  const stateBuffer = Buffer.from(
-    JSON.stringify({
-      userId,
-      nonce: Math.random().toString(36).substring(2),
-    })
-  ).toString("base64");
-
-  const authUrl = gmailClient.generateAuthUrl(stateBuffer);
+  // Generate state parameter using OAuthHandler
+  const state = OAuthHandler.generateState(userId, "gmail");
+  const authUrl = gmailClient.generateAuthUrl(state);
   res.json({ authUrl });
 }
 
@@ -67,7 +58,6 @@ async function testPlaidToken(req: Request, res: Response) {
 }
 
 async function getPlaidAuthUrl(req: Request, res: Response) {
-  // Use userId from JWT token
   const userId = req.userId;
   if (!userId) {
     throw new AppError("Authentication required", 401);
@@ -77,13 +67,21 @@ async function getPlaidAuthUrl(req: Request, res: Response) {
 
   // Return the URL that would be redirected to
   if (response.type === "access_token") {
-    res.json({
-      redirectUrl: `${config.FRONTEND_URL}/connect-plaid?status=already_connected`,
+    OAuthHandler.handleCallback(
+      res,
+      true,
+      "Plaid already connected",
+      undefined,
+      {
+        status: "already_connected",
+      }
+    );
+  } else if (response.linkToken) {
+    OAuthHandler.handleCallback(res, true, undefined, undefined, {
+      linkToken: response.linkToken,
     });
   } else {
-    res.json({
-      redirectUrl: `${config.FRONTEND_URL}/connect-plaid?linkToken=${response.linkToken}`,
-    });
+    throw new AppError("Failed to get link token", 500);
   }
 }
 

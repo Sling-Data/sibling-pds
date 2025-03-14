@@ -5,6 +5,7 @@ import UserDataSourcesModel, {
   DataSourceType,
 } from "../../models/UserDataSourcesModel";
 import { AppError } from "../../middleware/errorHandler";
+import { OAuthHandler } from "../OAuthHandler";
 
 interface GmailCredentials {
   accessToken: string;
@@ -37,7 +38,6 @@ interface GmailApiError extends Error {
 }
 
 export class GmailClient {
-  private oauth2Client: OAuth2Client | null = null;
   private readonly GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
   ];
@@ -61,24 +61,22 @@ export class GmailClient {
       return this.customOAuth2Client;
     }
 
-    if (!this.oauth2Client) {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
-      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
-      if (!clientId || !clientSecret) {
-        throw new Error(
-          "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in environment variables"
-        );
-      }
-
-      this.oauth2Client = new OAuth2Client({
-        clientId,
-        clientSecret,
-        redirectUri: this.REDIRECT_URI,
-      });
+    if (!clientId || !clientSecret) {
+      throw new Error(
+        "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in environment variables"
+      );
     }
 
-    return this.oauth2Client;
+    return OAuthHandler.getOAuth2Client({
+      provider: "gmail",
+      clientId,
+      clientSecret,
+      redirectUri: this.REDIRECT_URI,
+      scopes: this.GMAIL_SCOPES,
+    });
   }
 
   private getGmailClient(accessToken: string): gmail_v1.Gmail {
@@ -332,13 +330,16 @@ export class GmailClient {
   }
 
   generateAuthUrl(state?: string): string {
-    const oauth2Client = this.getOAuth2Client();
-    return oauth2Client.generateAuthUrl({
-      access_type: "offline",
-      scope: this.GMAIL_SCOPES,
-      prompt: "consent", // Force consent screen to ensure we get refresh token
-      state: state, // Pass through the state parameter if provided
-    });
+    return OAuthHandler.generateAuthUrl(
+      {
+        provider: "gmail",
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        redirectUri: this.REDIRECT_URI,
+        scopes: this.GMAIL_SCOPES,
+      },
+      state
+    );
   }
 
   async exchangeCodeForTokens(code: string): Promise<Credentials> {
