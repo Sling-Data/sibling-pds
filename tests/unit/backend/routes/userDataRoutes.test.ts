@@ -2,7 +2,7 @@ import request from "supertest";
 import express, { Express, NextFunction, Request, Response } from "express";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Document } from "mongoose";
-import api from "@backend/routes/apiClientRoutes";
+import userDataRouter from "@backend/routes/userDataRoutes";
 import { errorHandler } from "@backend/middleware/errorHandler";
 import { hashPassword } from "@backend/utils/userUtils";
 import * as encryption from "@backend/utils/encryption";
@@ -16,7 +16,7 @@ interface UserDocument extends Document {
   password: any;
 }
 
-describe("API Routes", () => {
+describe("User Data Routes", () => {
   let app: Express;
   let mongoServer: MongoMemoryServer;
   let testUserId: string;
@@ -61,8 +61,7 @@ describe("API Routes", () => {
     // Apply mock authentication middleware
     app.use(mockAuth);
 
-    app.use("/api", api.protectedRouter);
-    app.use("/api", api.publicRouter);
+    app.use("/user-data", userDataRouter);
     app.use(errorHandler);
   });
 
@@ -102,14 +101,16 @@ describe("API Routes", () => {
   describe("Route Authentication", () => {
     it("should require authentication for protected routes", async () => {
       // Test without token
-      const noTokenResponse = await request(app).get(`/api/gmail/auth`);
+      const noTokenResponse = await request(app).get(
+        `/user-data/${testUserId}`
+      );
 
       expect(noTokenResponse.status).toBe(401);
     });
 
     it("should reject requests with invalid tokens", async () => {
       const response = await request(app)
-        .get(`/api/gmail/auth`)
+        .get(`/user-data/${testUserId}`)
         .set("Authorization", `Bearer ${invalidToken}`);
 
       expect(response.status).toBe(401);
@@ -117,7 +118,7 @@ describe("API Routes", () => {
 
     it("should accept requests with valid tokens", async () => {
       const response = await request(app)
-        .get(`/api/gmail/auth`)
+        .get(`/user-data/${testUserId}`)
         .set("Authorization", `Bearer ${validToken}`);
 
       expect(response.status).not.toBe(401);
@@ -126,40 +127,14 @@ describe("API Routes", () => {
 
   // Test basic route functionality (smoke test)
   describe("Route Registration", () => {
-    it("should have Gmail endpoints registered", async () => {
-      // Test Gmail auth endpoint
-      const gmailAuthResponse = await request(app)
-        .get("/api/gmail")
+    it("should have user data endpoint registered", async () => {
+      // Test GET user data endpoint
+      const response = await request(app)
+        .get(`/user-data/${testUserId}`)
         .set("Authorization", `Bearer ${validToken}`);
 
       // Verify endpoint is registered (not 404)
-      expect(gmailAuthResponse.status).not.toBe(404);
-    });
-
-    it("should have Plaid endpoints registered", async () => {
-      // Test Plaid auth endpoint
-      const plaidAuthResponse = await request(app)
-        .get("/api/plaid")
-        .set("Authorization", `Bearer ${validToken}`);
-
-      // Test Plaid create link token endpoint
-      const createLinkTokenResponse = await request(app)
-        .get("/api/plaid/create-link-token?userId=test-user-id")
-        .set("Authorization", `Bearer ${validToken}`);
-
-      // Test Plaid exchange public token endpoint
-      const exchangeTokenResponse = await request(app)
-        .post("/api/plaid/exchange-public-token")
-        .set("Authorization", `Bearer ${validToken}`)
-        .send({
-          public_token: "test-public-token",
-          userId: "test-user-id",
-        });
-
-      // Verify endpoints are registered (not 404)
-      expect(plaidAuthResponse.status).not.toBe(404);
-      expect(createLinkTokenResponse.status).not.toBe(404);
-      expect(exchangeTokenResponse.status).not.toBe(404);
+      expect(response.status).not.toBe(404);
     });
   });
 });

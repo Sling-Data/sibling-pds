@@ -1,8 +1,8 @@
-import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
 import mongoose from "mongoose";
 import path from "path";
-import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, ".env") });
@@ -11,16 +11,15 @@ dotenv.config({ path: path.join(__dirname, ".env") });
 import config from "./config/config";
 
 // Import routes
-import usersRouter from "./routes/usersRoutes";
-import volunteeredDataRouter from "./routes/volunteeredDataRoutes";
+import api from "./routes/apiClientRoutes";
+import auth from "./routes/authRoutes";
 import behavioralDataRouter from "./routes/behavioralDataRoutes";
 import externalDataRouter from "./routes/externalDataRoutes";
+import testRouter from "./routes/testRoutes";
 import userDataRouter from "./routes/userDataRoutes";
 import userDataSourcesRouter from "./routes/userDataSourcesRoutes";
-import authRouter from "./routes/authRoutes";
-import unprotectedAuthRouter from "./routes/unprotectedAuthRoutes";
-import api from "./routes/apiRoutes";
-import testRouter from "./routes/testRoutes";
+import usersRouter from "./routes/usersRoutes";
+import volunteeredDataRouter from "./routes/volunteeredDataRoutes";
 
 // Import middleware
 import { authenticateJWT } from "./middleware/auth";
@@ -59,7 +58,7 @@ export const disconnectDb = async () => {
 };
 
 // Mount unprotected auth routes (login, signup, and callback) before JWT middleware
-app.use("/auth", unprotectedAuthRouter);
+app.use("/auth", auth.publicRouter);
 app.use("/api", api.publicRouter);
 
 // Apply JWT authentication middleware to all other routes
@@ -72,7 +71,7 @@ app.use("/behavioral-data", behavioralDataRouter);
 app.use("/external-data", externalDataRouter);
 app.use("/user-data", userDataRouter);
 app.use("/user-data-sources", userDataSourcesRouter);
-app.use("/auth", authRouter); // All other auth routes will be protected
+app.use("/auth", auth.protectedRouter); // All other auth routes will be protected
 app.use("/api", api.protectedRouter);
 app.use("/test", testRouter);
 

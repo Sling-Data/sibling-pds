@@ -1,23 +1,16 @@
 import bcrypt from "bcrypt";
-import express, { Request, Response } from "express";
+import { Request, Response } from "express";
 import { Document } from "mongoose";
-import { generateRefreshToken, generateToken } from "../middleware/auth";
+import {
+  generateRefreshToken,
+  generateToken,
+  refreshAccessToken,
+} from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
-import { schemas } from "../middleware/validation";
 import UserModel from "../models/UserModel";
 import { decrypt } from "../utils/encryption";
-import { RouteFactory } from "../utils/RouteFactory";
+import { ResponseHandler } from "../utils/ResponseHandler";
 import { saveUser } from "../utils/userUtils";
-
-const router = express.Router();
-
-// Interface for User Document
-interface UserDocument extends Document {
-  _id: any;
-  name: any;
-  email: any;
-  password: any;
-}
 
 interface LoginRequest {
   userId: string;
@@ -30,7 +23,18 @@ interface SignupRequest {
   password: string;
 }
 
-async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
+// Interface for User Document
+interface UserDocument extends Document {
+  _id: any;
+  name: any;
+  email: any;
+  password: any;
+}
+
+/**
+ * Login a user with userId and password
+ */
+export async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
   const { userId, password } = req.body;
 
   try {
@@ -67,7 +71,13 @@ async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
   }
 }
 
-async function signup(req: Request<{}, {}, SignupRequest>, res: Response) {
+/**
+ * Register a new user
+ */
+export async function signup(
+  req: Request<{}, {}, SignupRequest>,
+  res: Response
+) {
   const { name, email, password } = req.body;
 
   try {
@@ -102,8 +112,23 @@ async function signup(req: Request<{}, {}, SignupRequest>, res: Response) {
   }
 }
 
-// Create routes using RouteFactory
-RouteFactory.createPostRoute(router, "/login", login, schemas.login);
-RouteFactory.createPostRoute(router, "/signup", signup, schemas.signup);
+/**
+ * Refresh an access token using a refresh token
+ */
+export async function refreshToken(req: Request, res: Response) {
+  const { refreshToken } = req.body;
 
-export default router;
+  const tokens = refreshAccessToken(refreshToken);
+  if (!tokens) {
+    throw new AppError("Invalid refresh token", 401);
+  }
+
+  // Create a new response object with explicit types
+  const responseData = {
+    accessToken: String(tokens.accessToken),
+    refreshToken: String(tokens.refreshToken),
+    message: "Token refreshed successfully",
+  };
+
+  ResponseHandler.success(res, responseData);
+}

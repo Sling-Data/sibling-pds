@@ -2,8 +2,8 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67c9dcd230beec3d0e0c19c6
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDE5NjIzNzMsImV4cCI6MTc0MTk2NTk3M30.fnl_Qy5MFY_Cgx_vCwQX6SOYlF4xavuqGoNC5n8yuzk
-@refreshToken = fda8b33dce40f3d9ca314af675d7e3cb861a9777bd1ec0ab6b02e95c9fe3ee73b2221b8cbec3ce7b
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDIwMzcyNjUsImV4cCI6MTc0MjA0MDg2NX0.bpiCBvj5l-m4kYwSQpuqi9d1HkrQ1xw46m1u34sueuU
+@refreshToken = 8cd890e348485a400d7168db60b640864d9c160cb26c606536c42caa2762e9b1c92bdb9568e2e3d2
 
 ### ==========================================
 ### BASIC API TESTS
@@ -13,23 +13,44 @@
 # @name root
 GET {{baseUrl}}/
 Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
+
+### ==========================================
+### AUTHENTICATION
+### ==========================================
+
+### Sign up a new user
+# @name signup
+POST {{baseUrl}}/auth/signup
+Content-Type: {{contentType}}
+
+{
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "password": "securePassword123"
+}
+
+### Login to get JWT token
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "userId": "{{userId}}",
+    "password": "securePassword123"
+}
+
+### Refresh access token using refresh token
+# @name refreshJWTToken
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: {{contentType}}
+
+{
+    "refreshToken": "{{refreshToken}}"
+}
 
 ### ==========================================
 ### USER MANAGEMENT
 ### ==========================================
-
-### Create a new user
-# @name createUser
-POST {{baseUrl}}/users
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-{
-    "name": "Tomé",
-    "email": "tome.m.dj@gmail.com",
-    "password": "securePassword123"
-}
 
 ### Get user by ID
 # @name getUser
@@ -44,9 +65,8 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
 {
-    "name": "Tomé",
-    "email": "tome.m.dj@gmail.com",
-    "password": "securePassword123"
+    "name": "Updated Name",
+    "email": "updated@example.com"
 }
 
 ### Test invalid user ID (should return 404)
@@ -54,52 +74,6 @@ Authorization: Bearer {{jwtToken}}
 GET {{baseUrl}}/users/123456789012345678901234
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
-
-### ==========================================
-### AUTHENTICATION
-### ==========================================
-
-### Sign up a new user (unprotected route - no token needed)
-# @name signup
-POST {{baseUrl}}/auth/signup
-Content-Type: {{contentType}}
-
-{
-    "name": "New Test User",
-    "email": "newuser04@example.com",
-    "password": "securePassword123"
-}
-
-### Login to get JWT token (unprotected route - no token needed)
-# @name login
-POST {{baseUrl}}/auth/login
-Content-Type: {{contentType}}
-
-{
-    "userId": "{{userId}}",
-    "password": "securePassword123"
-}
-
-### Refresh access token using refresh token
-# @name refreshJWTToken
-POST {{baseUrl}}/auth/refresh-token
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-{
-    "refreshToken": "{{refreshToken}}"
-}
-
-### Access protected route with JWT
-# @name protectedRoute
-GET {{baseUrl}}/auth/protected
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-### Test protected route without token (should return 401)
-# @name protectedRouteUnauthorized
-GET {{baseUrl}}/auth/protected
-Content-Type: {{contentType}}
 
 ### ==========================================
 ### USER DATA MANAGEMENT
@@ -162,8 +136,8 @@ Authorization: Bearer {{jwtToken}}
 ### DATA SOURCE INTEGRATION
 ### ==========================================
 
-### Store Gmail credentials
-# @name storeGmailCredentials
+### Store data source credentials
+# @name storeCredentials
 POST {{baseUrl}}/user-data-sources
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
@@ -172,73 +146,25 @@ Authorization: Bearer {{jwtToken}}
     "userId": "{{userId}}",
     "dataSourceType": "gmail",
     "credentials": {
-        "accessToken": "ya29.a0AeXRPp5Ee53nSXTO1mPq547yx23b-aBaQA_MGkDfNW61BL3yMGPlydH_Ragt3G0Im0YMLkXp0VnftU-vTEkAOKxMo3WrFu0sc2gPE5TS3t3QdSTEAipb5zTezrM-VSeywnHoat1wV-WrTSWT9kurcyBuurwhHifDoGhAgiMrzQaCgYKARcSARASFQHGX2Mi-cLABfhkCYvFxhC8RSgXkQ0177",
-        "refreshToken": "1//03QcFvnaB15vDCgYIARAAGAMSNwF-L9IrN7ZPZfBoswFLVOq0GWbgnolY2QScJ-Zx2Wux42J9wWvDGmo_7xwQeIJUIH5RyxSkyNQ",
+        "accessToken": "ya29.example-access-token",
+        "refreshToken": "1//example-refresh-token",
         "expiry": "2024-03-21T12:00:00.000Z"
     }
 }
 
-### Store Plaid credentials
-# @name storePlaidCredentials
-POST {{baseUrl}}/user-data-sources
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-{
-    "userId": "{{userId}}",
-    "dataSourceType": "plaid",
-    "credentials": {
-        "accessToken": "access-sandbox-e0d1c838-d760-46ce-808d-08d75ea61bdd",
-        "itemId": "KzAJNdml86IraWMqR61BuWAqkVeA9kiVvG9AL",
-        "expiry": "2024-03-21T12:00:00.000Z"
-    }
-}
-
-### Get Gmail credentials
-# @name getGmailCredentials
+### Get data source credentials
+# @name getCredentials
 GET {{baseUrl}}/user-data-sources/{{userId}}/gmail
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
-### Get Plaid credentials
-# @name getPlaidCredentials
-GET {{baseUrl}}/user-data-sources/{{userId}}/plaid
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
 ### ==========================================
-### GMAIL INTEGRATION TESTS
-### ==========================================
-
-### Get Gmail authorization URL
-# @name getGmailAuthUrl
-GET {{baseUrl}}/test/gmail-auth-url?userId={{userId}}
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-### ==========================================
-### PLAID INTEGRATION TESTS
-### ==========================================
-
-### Get Plaid link token
-# @name getPlaidLinkToken
-GET {{baseUrl}}/test/plaid-link-token?userId={{userId}}
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-### ==========================================
-### API ROUTES
+### EXTERNAL API INTEGRATION
 ### ==========================================
 
 ### Get Gmail messages
 # @name getGmailMessages
 GET {{baseUrl}}/api/gmail/messages?userId={{userId}}&maxResults=10
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
-### Get Gmail message by ID
-# @name getGmailMessageById
-GET {{baseUrl}}/api/gmail/message/18e2c1e7c0d9e1a0?userId={{userId}}
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
@@ -248,17 +174,15 @@ GET {{baseUrl}}/api/plaid/accounts?userId={{userId}}
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
-### Get Plaid transactions
-# @name getPlaidTransactions
-GET {{baseUrl}}/api/plaid/transactions?userId={{userId}}&startDate=2024-01-01&endDate=2024-03-01
-Content-Type: {{contentType}}
-Authorization: Bearer {{jwtToken}}
-
 ### Create Plaid link token
 # @name createPlaidLinkToken
 GET {{baseUrl}}/api/plaid/create-link-token?userId={{userId}}
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
+
+### ==========================================
+### ERROR HANDLING TESTS
+### ==========================================
 
 ### Test API validation with empty userId (should return 400)
 # @name apiValidationError
@@ -266,28 +190,16 @@ GET {{baseUrl}}/api/plaid/create-link-token?userId=
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
-### ==========================================
-### AUTH ROUTES FOR MANUAL TESTING
-### ==========================================
-
-### 1. Test login to get token
-# @name testLogin
-POST {{baseUrl}}/auth/login
-Content-Type: {{contentType}}
-
-{
-    "userId": "{{userId}}",
-    "password": "securePassword123"
-}
-
-### 2. Test accessing Gmail auth with token
-# @name testGmailWithToken
-GET {{baseUrl}}/auth/gmail
+### Test missing required field (should return 400)
+# @name missingRequiredField
+POST {{baseUrl}}/volunteered-data
 Content-Type: {{contentType}}
 Authorization: Bearer {{jwtToken}}
 
-### 3. Test accessing Gmail auth without token (should return 401)
-# @name testGmailWithoutToken
-GET {{baseUrl}}/auth/gmail
-Content-Type: {{contentType}}
+{
+    "userId": "{{userId}}",
+    "value": {
+        "age": 30
+    }
+}
 

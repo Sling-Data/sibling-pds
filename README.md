@@ -7,6 +7,12 @@
     - [Mission](#mission)
     - [Vision](#vision)
     - [Project Structure](#project-structure)
+  - [Architecture](#architecture)
+    - [Route-Controller Pattern](#route-controller-pattern)
+    - [Base Route Handler](#base-route-handler)
+    - [Response Handler](#response-handler)
+    - [Route Factory](#route-factory)
+    - [OAuth Handler](#oauth-handler)
   - [Build, Run, Test, Deploy Instructions](#build-run-test-deploy-instructions)
     - [Prerequisites](#prerequisites)
     - [Environment Variables](#environment-variables)
@@ -45,7 +51,14 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 │   │   ├── /config     # Configuration files
 │   │   │   └── config.ts    # Environment and app configuration
 │   │   ├── /controllers # Controller logic
-│   │   │   └── usersController.ts  # User-related business logic
+│   │   │   ├── authController.ts       # Authentication logic
+│   │   │   ├── apiClientController.ts  # External API integration
+│   │   │   ├── behavioralDataController.ts # Behavioral data management
+│   │   │   ├── externalDataController.ts   # External data management
+│   │   │   ├── userDataController.ts       # User data aggregation
+│   │   │   ├── userDataSourcesController.ts # Data source management
+│   │   │   ├── usersController.ts          # User management
+│   │   │   └── volunteeredDataController.ts # Volunteered data management
 │   │   ├── /middleware  # Express middleware
 │   │   │   ├── auth.ts          # JWT authentication and token management
 │   │   │   ├── validation.ts    # Request validation schemas
@@ -57,23 +70,26 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 │   │   │   ├── VolunteeredDataModel.ts
 │   │   │   └── UserDataSourcesModel.ts
 │   │   ├── /routes     # Express routes
-│   │   │   ├── unprotectedAuthRoutes.ts  # Public routes (login, signup, OAuth callbacks)
-│   │   │   ├── authRoutes.ts     # Protected authentication routes
-│   │   │   ├── users.ts          # User management
-│   │   │   ├── volunteeredData.ts # User-provided data
-│   │   │   ├── behavioralData.ts # User behavior tracking
-│   │   │   ├── externalData.ts   # Third-party data
-│   │   │   ├── userData.ts       # Aggregated user data
-│   │   │   ├── userDataSources.ts # External service connections
-│   │   │   ├── apiRoutes.ts      # API endpoints
-│   │   │   └── testRoutes.ts     # Testing endpoints
+│   │   │   ├── apiRoutes.ts      # API endpoints (protected and public)
+│   │   │   ├── authRoutes.ts     # Authentication routes (protected and public)
+│   │   │   ├── behavioralDataRoutes.ts # Behavioral data endpoints
+│   │   │   ├── externalDataRoutes.ts   # External data endpoints
+│   │   │   ├── testRoutes.ts     # Testing endpoints
+│   │   │   ├── userDataRoutes.ts       # User data endpoints
+│   │   │   ├── userDataSourcesRoutes.ts # Data source endpoints
+│   │   │   ├── usersRoutes.ts          # User management endpoints
+│   │   │   └── volunteeredDataRoutes.ts # Volunteered data endpoints
 │   │   ├── /services   # Service implementations
 │   │   │   ├── scheduler.ts      # Background task scheduling
+│   │   │   ├── OAuthHandler.ts   # OAuth authentication management
 │   │   │   └── /apiClients      # Third-party API clients
 │   │   │       ├── gmailClient.ts  # Gmail API integration
 │   │   │       └── plaidClient.ts  # Plaid API integration
 │   │   ├── /utils      # Utility functions
+│   │   │   ├── BaseRouteHandler.ts # Base class for route handlers
 │   │   │   ├── encryption.ts     # Data encryption/decryption
+│   │   │   ├── ResponseHandler.ts # Standardized API responses
+│   │   │   ├── RouteFactory.ts   # Factory for creating routes
 │   │   │   └── userUtils.ts      # User-related helpers
 │   │   ├── index.ts    # Main server entry point
 │   │   └── /.env       # Backend environment variables
@@ -116,15 +132,76 @@ Make AI a trusted, personalized partner via a user-controlled data foundation.
 ├── /tests         # Test files
 │   └── /unit
 │       ├── /backend              # Backend unit tests
-│       │   ├── api.test.ts
-│       │   ├── errorHandler.test.ts
-│       │   └── usersController.test.ts
+│       │   ├── /controllers      # Controller tests
+│       │   ├── /middleware       # Middleware tests
+│       │   ├── /routes           # Route tests
+│       │   ├── /services         # Service tests
+│       │   └── /utils            # Utility tests
 │       └── setup.ts             # Backend test setup and mocks
 ├── babel.config.js              # Root Babel configuration
 ├── jest.config.js              # Jest configuration for both frontend and backend
 ├── package.json
 └── tsconfig.json
 ```
+
+## Architecture
+The Sibling PDS application follows a modular, maintainable architecture with clear separation of concerns. The backend is built using a route-controller pattern with several architectural components that enhance code reusability, testability, and maintainability.
+
+### Route-Controller Pattern
+The application implements a route-controller pattern that separates routing logic from business logic:
+
+- **Routes**: Handle HTTP request routing, parameter extraction, and response delegation
+- **Controllers**: Contain business logic, data processing, and model interactions
+- **Models**: Define data schemas and database interactions
+
+This separation allows for:
+- Better testability of business logic in isolation
+- Cleaner, more focused code with single responsibilities
+- Easier maintenance and extension of functionality
+- Consistent error handling and response formatting
+
+### Base Route Handler
+The `BaseRouteHandler` provides a foundation for standardized route handling:
+
+- Common error handling and response formatting
+- Consistent logging and monitoring
+- Reusable validation and authentication checks
+- Standardized request processing pipeline
+
+This reduces code duplication and ensures consistent behavior across all routes.
+
+### Response Handler
+The `ResponseHandler` utility provides standardized API responses:
+
+- Consistent response structure for all API endpoints
+- Standardized error formatting
+- HTTP status code management
+- Support for pagination and metadata
+- Proper handling of different data types
+
+This ensures a consistent API experience and simplifies client-side integration.
+
+### Route Factory
+The `RouteFactory` implements the factory pattern for route creation:
+
+- Declarative route definition with minimal boilerplate
+- Automatic validation schema application
+- Standardized middleware application
+- Consistent error handling
+- Support for different HTTP methods (GET, POST, PUT, DELETE)
+
+This approach reduces repetitive code and ensures consistent route behavior throughout the application.
+
+### OAuth Handler
+The `OAuthHandler` service manages OAuth authentication flows:
+
+- Standardized OAuth 2.0 implementation
+- Support for multiple providers (Gmail, Plaid)
+- Token management and refresh
+- Secure credential storage
+- Consistent error handling
+
+This centralizes authentication logic and simplifies integration with external services.
 
 ## Build, Run, Test, Deploy Instructions
 ### Prerequisites
@@ -202,6 +279,9 @@ REACT_APP_API_URL=http://localhost:3000
      - External service integration
      - Error handling
      - Database operations
+     - Controller logic
+     - Route handling
+     - Utility functions
 
 3. Test Configuration:
    - Jest configuration in `jest.config.js`

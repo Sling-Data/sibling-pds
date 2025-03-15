@@ -1,16 +1,52 @@
-import mongoose from "mongoose";
+import request from "supertest";
+import express, { Express, NextFunction, Request, Response } from "express";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import UserDataSourcesModel, {
-  DataSourceType,
-} from "@backend/models/UserDataSourcesModel";
+import mongoose, { Document } from "mongoose";
+import userDataSourcesRouter from "@backend/routes/userDataSourcesRoutes";
+import { errorHandler } from "@backend/middleware/errorHandler";
+import { hashPassword } from "@backend/utils/userUtils";
 import * as encryption from "@backend/utils/encryption";
+import UserModel from "@backend/models/UserModel";
+import { DataSourceType } from "@backend/models/UserDataSourcesModel";
+import UserDataSourcesModel from "@backend/models/UserDataSourcesModel";
 
-describe("UserDataSources Model", () => {
+// Mock UserDataSourcesModel
+jest.mock("@backend/models/UserDataSourcesModel");
+
+// Define interface for User Document
+interface UserDocument extends Document {
+  _id: mongoose.Types.ObjectId;
+  name: any;
+  email: any;
+  password: any;
+}
+
+describe("User Data Sources Routes", () => {
+  let app: Express;
   let mongoServer: MongoMemoryServer;
-  const userId = new mongoose.Types.ObjectId().toString();
-  const testCredentials = {
-    accessToken: "test-token",
-    refreshToken: "test-refresh-token",
+  let testUserId: string;
+  let validToken: string;
+  let invalidToken: string;
+
+  // Mock authentication middleware
+  const mockAuth = (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({ message: "Access denied. No token provided." });
+      return;
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (token === "invalid.token.string") {
+      res.status(401).json({ message: "Invalid token." });
+      return;
+    }
+
+    // Set userId for valid tokens
+    req.userId = "test-auth-user-id";
+    next();
   };
 
   beforeAll(async () => {
@@ -19,173 +55,143 @@ describe("UserDataSources Model", () => {
     const mongoUri = mongoServer.getUri();
     await mongoose.connect(mongoUri);
 
-    // Set up encryption key
-    process.env.ENCRYPTION_KEY = "68656c6c6f31323334353637383930616263646566";
+    // Set up encryption key for tests
+    process.env.ENCRYPTION_KEY = "68656c6c6f31323334353637383930616263646566"; // 32-byte hex key
+    process.env.JWT_SECRET = "test-jwt-secret";
+
+    // Set up Express app with routes
+    app = express();
+    app.use(express.json());
+
+    // Apply mock authentication middleware
+    app.use(mockAuth);
+
+    app.use("/user-data-sources", userDataSourcesRouter);
+    app.use(errorHandler);
   });
 
   afterAll(async () => {
     await mongoose.disconnect();
     await mongoServer.stop();
     delete process.env.ENCRYPTION_KEY;
+    delete process.env.JWT_SECRET;
   });
 
   beforeEach(async () => {
-    await UserDataSourcesModel.deleteMany({});
-  });
+    // Clear database collections
+    await UserModel.deleteMany({});
 
-  describe("Storing credentials", () => {
-    it("should store encrypted credentials", async () => {
-      const dataSource = await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        testCredentials
-      );
+    // Create a test user
+    const encryptedName = encryption.encrypt("Test User");
+    const encryptedEmail = encryption.encrypt("test@example.com");
 
-      // Verify the stored data
-      expect(dataSource.userId.toString()).toBe(userId);
-      expect(dataSource.dataSourceType).toBe(DataSourceType.GMAIL);
-      expect(dataSource.credentials).toHaveProperty("iv");
-      expect(dataSource.credentials).toHaveProperty("content");
-      expect(dataSource.credentials.content).not.toBe(
-        JSON.stringify(testCredentials)
-      );
-    });
+    // Create a hashed and encrypted password
+    const hashedPassword = await hashPassword("testPassword123");
+    const encryptedPassword = encryption.encrypt(hashedPassword);
 
-    it("should update existing credentials", async () => {
-      // Store initial credentials
-      await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        testCredentials
-      );
+    const user = (await UserModel.create({
+      name: encryptedName,
+      email: encryptedEmail,
+      password: encryptedPassword,
+    })) as UserDocument;
 
-      // Update with new credentials
-      const newCredentials = {
-        accessToken: "new-token",
-        refreshToken: "new-refresh-token",
-      };
+    testUserId = user._id.toString();
 
-      const updatedDataSource = await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        newCredentials
-      );
+    // Create test tokens
+    validToken = "valid.token.string";
+    invalidToken = "invalid.token.string";
 
-      // Verify the update
-      const decryptedCredentials = encryption.decrypt(
-        updatedDataSource.credentials
-      );
-      expect(JSON.parse(decryptedCredentials)).toEqual(newCredentials);
-      expect(JSON.parse(decryptedCredentials)).not.toEqual(testCredentials);
-    });
-
-    it("should enforce unique userId and dataSourceType combination", async () => {
-      // Store initial credentials
-      await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        testCredentials
-      );
-
-      // Try to create another record with the same userId and dataSourceType
-      const duplicateCredentials = {
-        accessToken: "duplicate-token",
-        refreshToken: "duplicate-refresh-token",
-      };
-
-      // Should update instead of creating new
-      const result = await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        duplicateCredentials
-      );
-
-      const count = await UserDataSourcesModel.countDocuments({
-        userId,
-        dataSourceType: DataSourceType.GMAIL,
-      });
-      expect(count).toBe(1);
-
-      // Verify it's the updated credentials
-      const decryptedCredentials = encryption.decrypt(result.credentials);
-      expect(JSON.parse(decryptedCredentials)).toEqual(duplicateCredentials);
+    // Mock UserDataSourcesModel.getCredentials to return a valid response
+    (UserDataSourcesModel.getCredentials as jest.Mock).mockResolvedValue({
+      accessToken: "test-access-token",
+      refreshToken: "test-refresh-token",
+      expiry: new Date().toISOString(),
     });
   });
 
-  describe("Retrieving credentials", () => {
-    it("should retrieve and decrypt credentials", async () => {
-      // Store credentials
-      await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        testCredentials
-      );
+  // Test route authentication
+  describe("Route Authentication", () => {
+    it("should require authentication for protected routes", async () => {
+      // Test without token
+      const noTokenResponse = await request(app)
+        .post("/user-data-sources")
+        .send({
+          userId: testUserId,
+          dataSourceType: DataSourceType.GMAIL,
+          credentials: {
+            accessToken: "test-access-token",
+            refreshToken: "test-refresh-token",
+            expiry: new Date().toISOString(),
+          },
+        });
 
-      // Retrieve credentials
-      const retrievedCredentials = await UserDataSourcesModel.getCredentials(
-        userId,
-        DataSourceType.GMAIL
-      );
-
-      expect(retrievedCredentials).toEqual(testCredentials);
+      expect(noTokenResponse.status).toBe(401);
     });
 
-    it("should return null for non-existent credentials", async () => {
-      const nonExistentCredentials = await UserDataSourcesModel.getCredentials(
-        new mongoose.Types.ObjectId().toString(),
-        DataSourceType.GMAIL
-      );
+    it("should reject requests with invalid tokens", async () => {
+      const response = await request(app)
+        .post("/user-data-sources")
+        .set("Authorization", `Bearer ${invalidToken}`)
+        .send({
+          userId: testUserId,
+          dataSourceType: DataSourceType.GMAIL,
+          credentials: {
+            accessToken: "test-access-token",
+            refreshToken: "test-refresh-token",
+            expiry: new Date().toISOString(),
+          },
+        });
 
-      expect(nonExistentCredentials).toBeNull();
+      expect(response.status).toBe(401);
+    });
+
+    it("should accept requests with valid tokens", async () => {
+      const response = await request(app)
+        .post("/user-data-sources")
+        .set("Authorization", `Bearer ${validToken}`)
+        .send({
+          userId: testUserId,
+          dataSourceType: DataSourceType.GMAIL,
+          credentials: {
+            accessToken: "test-access-token",
+            refreshToken: "test-refresh-token",
+            expiry: new Date().toISOString(),
+          },
+        });
+
+      expect(response.status).not.toBe(401);
     });
   });
 
-  describe("Data source types", () => {
-    it("should validate data source types", async () => {
-      await expect(
-        UserDataSourcesModel.storeCredentials(
-          userId,
-          "invalid-source" as DataSourceType,
-          testCredentials
-        )
-      ).rejects.toThrow();
+  // Test basic route functionality (smoke test)
+  describe("Route Registration", () => {
+    it("should have POST endpoint registered", async () => {
+      // Test POST endpoint
+      const response = await request(app)
+        .post("/user-data-sources")
+        .set("Authorization", `Bearer ${validToken}`)
+        .send({
+          userId: testUserId,
+          dataSourceType: DataSourceType.GMAIL,
+          credentials: {
+            accessToken: "test-access-token",
+            refreshToken: "test-refresh-token",
+            expiry: new Date().toISOString(),
+          },
+        });
+
+      // Verify endpoint is registered (not 404)
+      expect(response.status).not.toBe(404);
     });
 
-    it("should store credentials for different data sources", async () => {
-      // Store Gmail credentials
-      await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.GMAIL,
-        testCredentials
-      );
+    it("should have GET endpoint registered", async () => {
+      // Test GET endpoint with correct path format
+      const response = await request(app)
+        .get(`/user-data-sources/${testUserId}/${DataSourceType.GMAIL}`)
+        .set("Authorization", `Bearer ${validToken}`);
 
-      // Store Plaid credentials
-      const plaidCredentials = {
-        accessToken: "plaid-token",
-        itemId: "plaid-item-id",
-      };
-      await UserDataSourcesModel.storeCredentials(
-        userId,
-        DataSourceType.PLAID,
-        plaidCredentials
-      );
-
-      // Verify both exist
-      const count = await UserDataSourcesModel.countDocuments({ userId });
-      expect(count).toBe(2);
-
-      // Verify both are retrievable
-      const gmailCreds = await UserDataSourcesModel.getCredentials(
-        userId,
-        DataSourceType.GMAIL
-      );
-      const plaidCreds = await UserDataSourcesModel.getCredentials(
-        userId,
-        DataSourceType.PLAID
-      );
-
-      expect(gmailCreds).toEqual(testCredentials);
-      expect(plaidCreds).toEqual(plaidCredentials);
+      // Verify endpoint is registered (not 404)
+      expect(response.status).not.toBe(404);
     });
   });
 });
