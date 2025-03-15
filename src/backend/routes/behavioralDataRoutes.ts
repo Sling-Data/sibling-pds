@@ -10,6 +10,20 @@ import {
 
 const router = express.Router();
 
+/**
+ * TODO: Implement Missing Behavioral Data Endpoints
+ *
+ * Create additional endpoints to provide more convenient access to behavioral data.
+ *
+ * Required endpoints:
+ * - GET /behavioral-data - Get all behavioral data for the current user (use req.userId)
+ *
+ * Implementation notes:
+ * - This endpoint should reuse the existing getUserBehavioralData controller function
+ * - Follow the existing patterns for route creation using RouteFactory
+ * - Ensure proper error handling and response formatting
+ */
+
 // Define param interfaces for type safety
 interface IdParams extends ParamsDictionary {
   id: string;

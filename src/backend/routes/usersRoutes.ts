@@ -9,6 +9,22 @@ import { schemas } from "../middleware/validation";
 
 const router = express.Router();
 
+/**
+ * TODO: Implement User "Me" Endpoints
+ *
+ * Create new endpoints to simplify access to the current user's data without requiring
+ * the frontend to extract the user ID from the JWT token.
+ *
+ * Required endpoints:
+ * - GET /users/me - Get current user profile (use req.userId from JWT token)
+ * - PUT /users/me - Update current user profile (use req.userId from JWT token)
+ * - GET /users/me/onboarding - Check if user has completed onboarding
+ *
+ * Implementation notes:
+ * - These endpoints should reuse existing controller logic where possible
+ * - Consider adding an onboarding status field to the user model if it doesn't exist
+ */
+
 interface CreateUserRequest {
   name: string;
   email: string;
