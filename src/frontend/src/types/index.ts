@@ -88,12 +88,114 @@ export interface FormFieldProps {
 }
 
 export interface ButtonProps {
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
   onClick?: () => void;
   disabled?: boolean;
   isLoading?: boolean;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "danger" | "success";
+  size?: "small" | "medium" | "large";
   fullWidth?: boolean;
   children: React.ReactNode;
-} 
+}
+
+// New component types
+export interface TextInputProps {
+  id: string;
+  name: string;
+  type?: "text" | "email" | "password" | "number";
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  error?: string;
+  label?: string;
+  className?: string;
+}
+
+export interface CheckboxProps {
+  id: string;
+  name: string;
+  label: string;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  error?: string;
+  className?: string;
+}
+
+export interface RadioOption {
+  value: string;
+  label: string;
+}
+
+export interface RadioGroupProps {
+  name: string;
+  label?: string;
+  options: RadioOption[];
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  error?: string;
+  required?: boolean;
+  className?: string;
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface SelectProps {
+  id: string;
+  name: string;
+  label?: string;
+  options: SelectOption[];
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  error?: string;
+  required?: boolean;
+  className?: string;
+}
+
+export interface CheckboxOption {
+  value: string;
+  label: string;
+}
+
+export interface CheckboxGroupProps {
+  name: string;
+  label?: string;
+  options: CheckboxOption[];
+  selectedValues: string[];
+  onChange: (selectedValues: string[]) => void;
+  disabled?: boolean;
+  error?: string;
+  required?: boolean;
+  className?: string;
+}
+
+export interface StatusMessageProps {
+  message: string;
+  type: "success" | "error" | "info" | "warning";
+  onDismiss?: () => void;
+  className?: string;
+}
+
+export interface FormSectionProps {
+  title?: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export interface ConnectServiceButtonProps {
+  serviceName: string;
+  serviceIcon?: React.ReactNode;
+  onClick: () => void;
+  isConnected?: boolean;
+  isLoading?: boolean;
+  className?: string;
+}

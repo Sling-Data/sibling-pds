@@ -1,20 +1,8 @@
-import {
-  getAccessToken,
-  shouldRefresh,
-  getRefreshToken,
-  storeTokens,
-} from "../utils/TokenManager";
-import { ApiResponse } from "../types";
 import { useFetch } from "../hooks/useFetch";
+import { ApiResponse } from "../types";
+import { getRefreshToken, storeTokens } from "../utils/TokenManager";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
-
-interface RequestConfig {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: any;
-  skipAuth?: boolean;
-}
 
 /**
  * Base API service for handling API requests
