@@ -25,6 +25,11 @@ jest.mock('../hooks/useFetch', () => ({
   })
 }));
 
+// Mock TokenManager
+jest.mock('../utils/TokenManager', () => ({
+  getUserId: () => 'test-user'
+}));
+
 describe('LoginForm Component', () => {
   it('renders without crashing', () => {
     render(<MemoryRouter><LoginForm /></MemoryRouter>);
@@ -39,7 +44,7 @@ describe('LoginForm Component', () => {
       error: null
     }));
 
-    fireEvent.change(screen.getByLabelText(/user id/i), { target: { value: 'test-user' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
@@ -48,7 +53,7 @@ describe('LoginForm Component', () => {
         `${process.env.REACT_APP_API_URL}/auth/login`,
         expect.objectContaining({
           method: 'POST',
-          body: { userId: 'test-user', password: 'password123' }
+          body: { email: 'test@example.com', password: 'password123' }
         })
       );
     });
@@ -65,7 +70,7 @@ describe('LoginForm Component', () => {
 
     render(<MemoryRouter initialEntries={['/login']}><LoginForm /></MemoryRouter>);
 
-    fireEvent.change(screen.getByLabelText(/user id/i), { target: { value: 'wrong-user' } });
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'wrong@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong-password' } });
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 

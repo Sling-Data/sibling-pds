@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import '../styles/AuthForm.css'; 
 import { useUser } from '../context/UserContext';
 import { useFetch } from '../hooks/useFetch';
+import { getUserId } from '../utils/TokenManager';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -14,7 +15,7 @@ interface LoginResponse {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
-  const [userId, setUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +42,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         `${process.env.REACT_APP_API_URL}/auth/login`,
         {
           method: 'POST',
-          body: { userId, password }
+          body: { email, password }
         }
       );
 
@@ -55,7 +56,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       }
 
       login(data.token, data.refreshToken);
-      setContextUserId(userId); 
+      
+      // Get userId from the token after login
+      const userId = getUserId();
+      if (userId) {
+        setContextUserId(userId);
+      }
       
       if (onSuccess) {
         onSuccess();
@@ -74,13 +80,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       <h2>Log In to Your Account</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="userId">User ID</label>
+          <label htmlFor="email">Email</label>
           <input
-            id="userId"
-            type="text"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="Enter your user ID"
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
             required
           />
         </div>
