@@ -87,7 +87,8 @@ describe("User Data Controller", () => {
     (encryption.decrypt as jest.Mock).mockImplementation((data) => {
       if (data === mockUser.name) return "Test User";
       if (data === mockUser.email) return "test@example.com";
-      if (data === mockVolunteeredData[0].value) return "test-value";
+      if (data === mockVolunteeredData[0].value)
+        return JSON.stringify({ primaryGoal: "fitness" });
       if (data === mockBehavioralData[0].context)
         return JSON.stringify({ device: "desktop" });
       if (data === mockExternalData[0].data)
@@ -127,7 +128,7 @@ describe("User Data Controller", () => {
           {
             _id: "vol-data-1",
             type: "personal",
-            value: "test-value",
+            value: { primaryGoal: "fitness" },
           },
         ],
         behavioralData: [

@@ -34,7 +34,7 @@ export async function getUserData(req: Request<{ id: string }>, res: Response) {
     user.volunteeredData.map(async (data: any) => ({
       _id: data._id,
       type: data.type,
-      value: decrypt(data.value),
+      value: JSON.parse(decrypt(data.value)),
     }))
   );
 

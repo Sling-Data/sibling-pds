@@ -24,12 +24,14 @@ export async function createVolunteeredData(
     throw new AppError("userId, type, and value are required", 400);
   }
 
-  const encryptedValue = encrypt(value.toString());
+  const encryptedValue = encrypt(JSON.stringify(value));
   const volunteeredData = new VolunteeredData({
     userId,
     type,
     value: encryptedValue,
   });
+
+  console.log({ value });
 
   const savedData = await volunteeredData.save();
   await UserModel.findByIdAndUpdate(userId, {

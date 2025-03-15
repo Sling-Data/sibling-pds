@@ -83,7 +83,9 @@ describe("Volunteered Data Controller", () => {
         mockResponse as Response
       );
 
-      expect(encryption.encrypt).toHaveBeenCalledWith("test-value");
+      expect(encryption.encrypt).toHaveBeenCalledWith(
+        JSON.stringify("test-value")
+      );
       expect(VolunteeredData).toHaveBeenCalledWith({
         userId: "test-user-id",
         type: "personal",
