@@ -1,0 +1,158 @@
+/* 
+ * This file contains CSS custom properties that act as mixins.
+ * They can be used with the var() function in other CSS files.
+ */
+
+:root {
+  /* Card styles */
+  --card-base: {
+    background-color: var(--color-white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-6);
+  }
+
+  --card-hover: {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Button styles */
+  --button-base: {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--border-radius-md);
+    font-weight: var(--font-weight-medium);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-normal) var(--transition-ease);
+    border: none;
+    outline: none;
+  }
+
+  --button-primary: {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+  }
+
+  --button-primary-hover: {
+    background-color: var(--color-primary-dark);
+  }
+
+  --button-secondary: {
+    background-color: var(--color-secondary);
+    color: var(--color-white);
+  }
+
+  --button-secondary-hover: {
+    background-color: var(--color-secondary-dark);
+  }
+
+  --button-success: {
+    background-color: var(--color-success);
+    color: var(--color-white);
+  }
+
+  --button-success-hover: {
+    background-color: var(--color-success-dark);
+  }
+
+  --button-danger: {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+  }
+
+  --button-danger-hover: {
+    background-color: var(--color-danger-dark);
+  }
+
+  --button-disabled: {
+    background-color: var(--color-gray-300);
+    color: var(--color-gray-600);
+    cursor: not-allowed;
+  }
+
+  /* Form control styles */
+  --form-control-base: {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-normal);
+    color: var(--color-gray-900);
+    background-color: var(--color-white);
+    background-clip: padding-box;
+    border: var(--border-width-thin) solid var(--color-gray-400);
+    border-radius: var(--border-radius-md);
+    transition: border-color var(--transition-normal) var(--transition-ease),
+      box-shadow var(--transition-normal) var(--transition-ease);
+  }
+
+  --form-control-focus: {
+    border-color: var(--color-primary-light);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+
+  --form-control-error: {
+    border-color: var(--color-danger);
+  }
+
+  /* Layout utilities */
+  --flex-center: {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  --flex-between: {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  --flex-column: {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Typography utilities */
+  --heading-1: {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-6);
+  }
+
+  --heading-2: {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-5);
+  }
+
+  --heading-3: {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-4);
+  }
+
+  --heading-4: {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    margin-bottom: var(--spacing-3);
+  }
+
+  /* Container styles */
+  --container: {
+    width: 100%;
+    padding-right: var(--spacing-4);
+    padding-left: var(--spacing-4);
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
