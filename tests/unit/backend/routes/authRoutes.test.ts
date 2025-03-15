@@ -21,6 +21,7 @@ describe("Auth Routes", () => {
   let app: Express;
   let mongoServer: MongoMemoryServer;
   let testUserId: string;
+  let email: string;
 
   beforeAll(async () => {
     // Set up MongoDB Memory Server
@@ -64,19 +65,20 @@ describe("Auth Routes", () => {
     // Create a test user
     const encryptedName = "encrypted-name";
     const encryptedEmail = "encrypted-email";
+    email = "test@example.com";
     const hashedPassword = "hashed-password";
     const encryptedPassword = "encrypted-password";
 
     (encryption.encrypt as jest.Mock).mockImplementation((value) => {
       if (value === "Test User") return encryptedName;
-      if (value === "test@example.com") return encryptedEmail;
+      if (value === email) return encryptedEmail;
       if (value === hashedPassword) return encryptedPassword;
       return `encrypted-${value}`;
     });
 
     (encryption.decrypt as jest.Mock).mockImplementation((value) => {
       if (value === encryptedName) return "Test User";
-      if (value === encryptedEmail) return "test@example.com";
+      if (value === encryptedEmail) return email;
       if (value === encryptedPassword) return hashedPassword;
       return value;
     });
@@ -132,7 +134,7 @@ describe("Auth Routes", () => {
   describe("POST /auth/login", () => {
     it("should login a user with valid credentials", async () => {
       const response = await request(app).post("/auth/login").send({
-        userId: testUserId,
+        email,
         password: "correctPassword",
       });
 
@@ -155,7 +157,7 @@ describe("Auth Routes", () => {
       });
 
       const response = await request(app).post("/auth/login").send({
-        userId: "nonexistent-id",
+        email: "nonexistent@email.com",
         password: "password",
       });
 

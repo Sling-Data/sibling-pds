@@ -73,9 +73,10 @@ export const schemas = {
 
   // Login validation schema
   login: Joi.object({
-    userId: Joi.string().required().messages({
-      "string.empty": "userId cannot be empty",
-      "any.required": "userId is required",
+    email: Joi.string().email().required().messages({
+      "string.empty": "email cannot be empty",
+      "string.email": "email must be a valid email address",
+      "any.required": "email is required",
     }),
     password: Joi.string().required().messages({
       "string.empty": "password cannot be empty",

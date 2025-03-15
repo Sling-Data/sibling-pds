@@ -1,8 +1,8 @@
 ### Variables
 @baseUrl = http://localhost:3000
 @contentType = application/json
-@userId = 67c9dcd230beec3d0e0c19c6
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2M5ZGNkMjMwYmVlYzNkMGUwYzE5YzYiLCJpYXQiOjE3NDIwMzcyNjUsImV4cCI6MTc0MjA0MDg2NX0.bpiCBvj5l-m4kYwSQpuqi9d1HkrQ1xw46m1u34sueuU
+@userId = 67d57a523fa3b977604aac0e
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2Q1N2E1MjNmYTNiOTc3NjA0YWFjMGUiLCJpYXQiOjE3NDIwNDkwODIsImV4cCI6MTc0MjA1MjY4Mn0.gh82wW4QGPamCnvMoD-wo-HPTCPgbXvB4fmyqA4LBlw
 @refreshToken = 8cd890e348485a400d7168db60b640864d9c160cb26c606536c42caa2762e9b1c92bdb9568e2e3d2
 
 ### ==========================================
@@ -35,7 +35,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: {{contentType}}
 
 {
-    "userId": "{{userId}}",
+    "email": "testuser@example.com",
     "password": "securePassword123"
 }
 

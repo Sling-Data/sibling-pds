@@ -44,9 +44,9 @@ describe("Auth Controller", () => {
     // Create mock user
     mockUser = {
       _id: new mongoose.Types.ObjectId().toString(),
-      name: encryption.encrypt("Test User"),
-      email: encryption.encrypt("test@example.com"),
-      password: encryption.encrypt("hashedPassword123"),
+      name: "Encrypted Name",
+      email: "Encrypted Password",
+      password: "encryptedHashedPassword123",
     };
 
     // Mock encryption.decrypt to return decrypted values
@@ -86,15 +86,21 @@ describe("Auth Controller", () => {
     it("should login a user with valid credentials", async () => {
       // Arrange
       mockRequest.body = {
-        userId: mockUser._id,
+        email: "test@example.com",
         password: "correctPassword",
       };
+
+      // Mock UserModel.find to return the mock user
+      (UserModel.find as jest.Mock).mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue([mockUser]),
+      });
 
       // Act
       await login(mockRequest as Request, mockResponse as Response);
 
       // Assert
-      expect(UserModel.findById).toHaveBeenCalledWith(mockUser._id);
+      expect(UserModel.find).toHaveBeenCalled();
+      expect(encryption.decrypt).toHaveBeenCalledWith(mockUser.email);
       expect(encryption.decrypt).toHaveBeenCalledWith(mockUser.password);
       expect(bcrypt.compare).toHaveBeenCalledWith(
         "correctPassword",
@@ -112,10 +118,14 @@ describe("Auth Controller", () => {
     it("should throw an error if user is not found", async () => {
       // Arrange
       mockRequest.body = {
-        userId: "nonexistent-id",
+        email: "nonexistent@example.com",
         password: "password",
       };
-      (UserModel.findById as jest.Mock).mockResolvedValue(null);
+
+      // Mock UserModel.find to return empty array
+      (UserModel.find as jest.Mock).mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue([]),
+      });
 
       // Act & Assert
       await expect(
@@ -126,9 +136,15 @@ describe("Auth Controller", () => {
     it("should throw an error if password is invalid", async () => {
       // Arrange
       mockRequest.body = {
-        userId: mockUser._id,
+        email: "test@example.com",
         password: "wrongPassword",
       };
+
+      // Mock UserModel.find to return the mock user
+      (UserModel.find as jest.Mock).mockReturnValueOnce({
+        exec: jest.fn().mockResolvedValue([mockUser]),
+      });
+
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // Act & Assert

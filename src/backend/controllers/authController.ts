@@ -7,13 +7,13 @@ import {
   refreshAccessToken,
 } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
-import UserModel from "../models/UserModel";
+import UserModel, { User } from "../models/UserModel";
 import { decrypt } from "../utils/encryption";
 import { ResponseHandler } from "../utils/ResponseHandler";
 import { saveUser } from "../utils/userUtils";
 
 interface LoginRequest {
-  userId: string;
+  email: string;
   password: string;
 }
 
@@ -32,13 +32,25 @@ interface UserDocument extends Document {
 }
 
 /**
- * Login a user with userId and password
+ * Login a user with email and password
  */
 export async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
-  const { userId, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    const user = await UserModel.findById(userId);
+    // Find all users and check for matching email
+    const users = await UserModel.find({}).exec();
+    let user: User | null = null;
+
+    // Find user with matching email
+    for (const u of users) {
+      const decryptedEmail = decrypt(u.email);
+      if (decryptedEmail.toLowerCase() === email.toLowerCase()) {
+        user = u;
+        break;
+      }
+    }
+
     if (!user) {
       throw new AppError("Invalid credentials", 401);
     }
@@ -54,6 +66,7 @@ export async function login(req: Request<{}, {}, LoginRequest>, res: Response) {
     }
 
     // Generate JWT token and refresh token
+    const userId = user._id as string;
     const token = generateToken(userId);
     const refreshToken = generateRefreshToken(userId);
 
@@ -95,8 +108,8 @@ export async function signup(
     const userId = savedUser._id;
 
     // Generate JWT token and refresh token
-    const token = generateToken(userId);
-    const refreshToken = generateRefreshToken(userId);
+    const token = generateToken(userId.toString());
+    const refreshToken = generateRefreshToken(userId.toString());
 
     res.status(201).json({
       token,
