@@ -1,4 +1,4 @@
-import { useUser } from '../context/UserContext';
+import { useUser } from "../context/UserContext";
 
 /**
  * Utility function to make authenticated API calls with automatic token refresh
@@ -9,16 +9,16 @@ export const withTokenRefresh = async <T>(
   fetchCallback: () => Promise<T>
 ): Promise<T> => {
   const { refreshTokenIfExpired } = useUser();
-  
+
   // First, try to refresh the token if needed
   const refreshSuccessful = await refreshTokenIfExpired();
-  
+
   // If refresh was successful or not needed, proceed with the fetch
   if (refreshSuccessful) {
     return fetchCallback();
   } else {
     // If token refresh failed, throw an error
-    throw new Error('Authentication failed. Please log in again.');
+    throw new Error("Authentication failed. Please log in again.");
   }
 };
 
@@ -28,11 +28,14 @@ export const withTokenRefresh = async <T>(
  * @param options - Fetch options
  * @returns The fetch response
  */
-export const fetch = (url: string, options?: RequestInit): Promise<Response> => {
+export const fetch = (
+  url: string,
+  options?: RequestInit
+): Promise<Response> => {
   return window.fetch(url, options);
 };
 
 export default {
   withTokenRefresh,
-  fetch
+  fetch,
 };

@@ -5,7 +5,9 @@ import { SignupForm } from './SignupForm';
 import Profile from './Profile';
 import DataInput from './DataInput';
 import ConnectPlaid from './ConnectPlaid';
-import { UserProvider, useUser } from '../context/UserContext';
+import { UserProvider, useUser, NotificationProvider } from '../context';
+import { NotificationContainer } from './organisms/NotificationContainer';
+import { NotificationExample, FormExample, ApiRequestExample } from './examples';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useUser();
@@ -49,6 +51,18 @@ const AppRoutes: React.FC = () => {
           </PrivateRoute>
         }
       />
+      <Route
+        path="/notification-example"
+        element={<NotificationExample />}
+      />
+      <Route
+        path="/form-example"
+        element={<FormExample />}
+      />
+      <Route
+        path="/api-example"
+        element={<ApiRequestExample />}
+      />
       <Route path="/" element={<Navigate to="/login" />} />
     </Routes>
   );
@@ -57,9 +71,12 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <UserProvider>
-        <AppRoutes />
-      </UserProvider>
+      <NotificationProvider>
+        <UserProvider>
+          <AppRoutes />
+          <NotificationContainer />
+        </UserProvider>
+      </NotificationProvider>
     </Router>
   );
 };
