@@ -17,33 +17,29 @@ describe('StatusMessage Component', () => {
   test('renders success message with correct styles', () => {
     render(<StatusMessage message="Success message" type="success" />);
     const messageElement = screen.getByText('Success message');
-    const containerElement = messageElement.closest('.p-4');
-    expect(containerElement).toHaveClass('bg-green-50');
-    expect(containerElement).toHaveClass('text-green-800');
+    const containerElement = messageElement.closest('.status-message');
+    expect(containerElement).toHaveClass('status-message-success');
   });
 
   test('renders error message with correct styles', () => {
     render(<StatusMessage message="Error message" type="error" />);
     const messageElement = screen.getByText('Error message');
-    const containerElement = messageElement.closest('.p-4');
-    expect(containerElement).toHaveClass('bg-red-50');
-    expect(containerElement).toHaveClass('text-red-800');
+    const containerElement = messageElement.closest('.status-message');
+    expect(containerElement).toHaveClass('status-message-error');
   });
 
   test('renders warning message with correct styles', () => {
     render(<StatusMessage message="Warning message" type="warning" />);
     const messageElement = screen.getByText('Warning message');
-    const containerElement = messageElement.closest('.p-4');
-    expect(containerElement).toHaveClass('bg-yellow-50');
-    expect(containerElement).toHaveClass('text-yellow-800');
+    const containerElement = messageElement.closest('.status-message');
+    expect(containerElement).toHaveClass('status-message-warning');
   });
 
   test('renders info message with correct styles', () => {
     render(<StatusMessage message="Info message" type="info" />);
     const messageElement = screen.getByText('Info message');
-    const containerElement = messageElement.closest('.p-4');
-    expect(containerElement).toHaveClass('bg-blue-50');
-    expect(containerElement).toHaveClass('text-blue-800');
+    const containerElement = messageElement.closest('.status-message');
+    expect(containerElement).toHaveClass('status-message-info');
   });
 
   test('renders dismiss button when onDismiss prop is provided', () => {
@@ -73,7 +69,7 @@ describe('StatusMessage Component', () => {
   test('applies custom className when provided', () => {
     render(<StatusMessage {...defaultProps} className="custom-class" />);
     const messageElement = screen.getByText('Test message');
-    const containerElement = messageElement.closest('.p-4');
+    const containerElement = messageElement.closest('.status-message');
     expect(containerElement).toHaveClass('custom-class');
   });
 }); 

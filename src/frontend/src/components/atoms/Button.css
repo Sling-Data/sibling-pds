@@ -1,0 +1,103 @@
+.button {
+  border-radius: 0.25rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Variant styles */
+.button-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.button-secondary {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.button-secondary:hover {
+  background-color: #d1d5db;
+}
+
+.button-danger {
+  background-color: #dc2626;
+  color: white;
+}
+
+.button-danger:hover {
+  background-color: #b91c1c;
+}
+
+.button-success {
+  background-color: #16a34a;
+  color: white;
+}
+
+.button-success:hover {
+  background-color: #15803d;
+}
+
+/* Size styles */
+.button-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.button-medium {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
+
+.button-large {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+/* Width styles */
+.button-full-width {
+  width: 100%;
+}
+
+/* Disabled styles */
+.button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading styles */
+.button-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-loading-spinner {
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+  height: 1rem;
+  width: 1rem;
+  color: currentColor;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.button-loading-spinner-circle {
+  opacity: 0.25;
+}
+
+.button-loading-spinner-path {
+  opacity: 0.75;
+}

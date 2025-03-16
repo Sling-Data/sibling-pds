@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import '../styles/AuthForm.css'; 
+import '../styles/AuthForm.css';
 import { useUser } from '../context/UserContext';
 import { useFetch } from '../hooks/useFetch';
 import { getUserId } from '../utils/TokenManager';
+import { TextInput } from './atoms/TextInput';
+import { Button } from './atoms/Button';
+import { StatusMessage } from './atoms/StatusMessage';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -78,41 +81,53 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   return (
     <div className="auth-form-container">
       <h2>Log In to Your Account</h2>
+      
       <form onSubmit={handleSubmit}>
+        {(error || submitError) && (
+          <StatusMessage 
+            type="error" 
+            message={error || submitError || ''} 
+          />
+        )}
+        
         <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
+          <TextInput
             id="email"
+            name="email"
             type="email"
+            label="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             required
           />
         </div>
-
+        
         <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
+          <TextInput
             id="password"
+            name="password"
             type="password"
+            label="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
             required
           />
         </div>
-
-        {(error || submitError) && (
-          <div className="error-message">{error || submitError}</div>
-        )}
-
-        <button type="submit" disabled={isSubmitting || submitLoading}>
-          {isSubmitting || submitLoading ? 'Logging in...' : 'Log In'}
-        </button>
-
-        <div className="signup-link">
-          Don't have an account? <a href="/signup">Sign up</a>
+        
+        <Button
+          type="submit"
+          disabled={isSubmitting || submitLoading}
+          isLoading={isSubmitting || submitLoading}
+          variant="primary"
+          fullWidth
+        >
+          Log In
+        </Button>
+        
+        <div className="text-center text-sm text-gray-600 mt-4">
+          Don't have an account? <a href="/signup" className="text-blue-600 hover:text-blue-800">Sign up</a>
         </div>
       </form>
     </div>
