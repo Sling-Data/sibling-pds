@@ -8,6 +8,7 @@ import {
   createLinkToken,
   exchangePublicToken,
   gmailCallback,
+  generateGmailAuthUrl,
 } from "../controllers/apiClientController";
 
 const protectedRouter = express.Router();
@@ -16,6 +17,11 @@ const publicRouter = express.Router();
 // Gmail routes
 RouteFactory.createGetRoute(protectedRouter, "/gmail", gmailAuth);
 RouteFactory.createGetRoute(publicRouter, "/gmail/callback", gmailCallback);
+RouteFactory.createGetRoute(
+  protectedRouter,
+  "/gmail/auth-url",
+  generateGmailAuthUrl
+);
 
 // Plaid routes
 RouteFactory.createGetRoute(protectedRouter, "/plaid", plaidAuth);

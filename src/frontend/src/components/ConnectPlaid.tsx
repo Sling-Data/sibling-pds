@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { usePlaidLink } from 'react-plaid-link';
 import { useUser } from '../context/UserContext';
 import { useFetch } from '../hooks/useFetch';
-import '../styles/ConnectPlaid.css';
+import ConnectApi from './molecules/ConnectApi';
 
 // Helper to check if we're in a test environment
 const isTestEnvironment = (): boolean => {
@@ -17,7 +17,6 @@ const ConnectPlaid: React.FC = () => {
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
 
   // Setup useFetch for getting link token
   const { update: fetchLinkToken } = useFetch<{ link_token: string }>(
@@ -108,24 +107,13 @@ const ConnectPlaid: React.FC = () => {
           throw new Error(exchangeError || 'Failed to exchange token');
         }
 
-        // Set redirecting state
-        setIsRedirecting(true);
-        
         // Redirect to profile with success message
-        setTimeout(() => {
-          navigate('/profile?status=success&message=Bank account connected successfully');
-        }, 1500);
+        navigate('/profile?status=success&message=Bank account connected successfully');
       } catch (err) {
         console.error('Error exchanging public token:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to connect bank account';
         setError(errorMessage);
-        
-        // Set redirecting state
-        setIsRedirecting(true);
-        
-        setTimeout(() => {
-          navigate(`/profile?error=${encodeURIComponent(errorMessage)}`);
-        }, 1500);
+        navigate(`/profile?error=${encodeURIComponent(errorMessage)}`);
       } finally {
         setIsLoading(false);
       }
@@ -146,12 +134,7 @@ const ConnectPlaid: React.FC = () => {
         setError('Connection cancelled by user');
       }
       
-      // Set redirecting state
-      setIsRedirecting(true);
-      
-      setTimeout(() => {
-        navigate('/profile?error=Connection cancelled');
-      }, 1500);
+      navigate('/profile?error=Connection cancelled');
     },
     [navigate]
   );
@@ -174,60 +157,29 @@ const ConnectPlaid: React.FC = () => {
     }
   }, [ready, open, linkToken]);
 
-  // Handle navigation back to profile
-  const handleBackToProfile = () => {
-    setIsRedirecting(true);
-    setTimeout(() => {
-      navigate('/profile');
-    }, 500);
-  };
+  // Handle connect button click
+  const handleConnect = useCallback(() => {
+    open();
+  }, [open]);
 
-  // Render loading, error, or Plaid Link UI
+  // Handle cancel button click
+  const handleCancel = useCallback(() => {
+    // No additional logic needed here as the ConnectApi component will handle navigation
+  }, []);
+
   return (
-    <div className="connect-plaid-container">
-      <h2>Connecting to Plaid</h2>
-      {isLoading ? (
-        <div className="loading-message">
-          <div className="spinner"></div>
-          <p>Initializing connection to Plaid...</p>
-        </div>
-      ) : isRedirecting ? (
-        <div className="loading-message">
-          <div className="spinner"></div>
-          <p>Redirecting to your profile...</p>
-        </div>
-      ) : error ? (
-        <div className="error-message">
-          <p><strong>Error:</strong> {error}</p>
-          <p>Unable to complete the connection to Plaid.</p>
-          <button 
-            onClick={handleBackToProfile}
-            className="back-button"
-          >
-            Back to Profile
-          </button>
-        </div>
-      ) : (
-        <div className="loading-message">
-          <div className="spinner"></div>
-          <p>Initializing Plaid Link...</p>
-          <p>If the Plaid interface doesn't open automatically, please click the button below:</p>
-          <button 
-            onClick={() => open()} 
-            disabled={!ready || !linkToken}
-            className="connect-button"
-          >
-            Connect Your Bank Account
-          </button>
-          <button 
-            onClick={handleBackToProfile}
-            className="cancel-button"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-    </div>
+    <ConnectApi
+      title="Connect Your Bank Account"
+      serviceName="Plaid"
+      isLoading={isLoading}
+      error={error}
+      onConnect={handleConnect}
+      onCancel={handleCancel}
+      isConnectDisabled={!ready || !linkToken}
+      loadingMessage={linkToken ? "Initializing Plaid Link..." : "Initializing connection to Plaid..."}
+      connectButtonText="Connect Your Bank Account"
+      redirectPath="/profile"
+    />
   );
 };
 

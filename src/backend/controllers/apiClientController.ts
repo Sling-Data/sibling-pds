@@ -25,6 +25,20 @@ export async function gmailAuth(req: Request, res: Response) {
 }
 
 /**
+ * Generate Gmail auth url
+ */
+export async function generateGmailAuthUrl(req: Request, res: Response) {
+  const userId = req.userId;
+  if (!userId) {
+    throw new AppError("Authentication required", 401);
+  }
+
+  const state = OAuthHandler.generateState(userId, "gmail");
+  const authUrl = gmailClient.generateAuthUrl(state);
+  res.json({ authUrl });
+}
+
+/**
  * Handles Gmail OAuth callback
  */
 export async function gmailCallback(req: Request, res: Response) {
