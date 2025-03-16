@@ -1,7 +1,7 @@
 .data-input-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 15px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -9,17 +9,18 @@
 
 .data-input-container h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   color: #333;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
-.form-group label {
+.form-group label,
+.field-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   font-weight: 600;
   color: #333;
 }
@@ -28,18 +29,61 @@
 .form-group input[type="number"],
 .form-group select {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
 }
 
-.checkbox-group,
-.radio-group {
+.form-group select.error,
+.form-group input.error {
+  border-color: #d9534f;
+}
+
+/* Grid layout for checkboxes and radios */
+.checkbox-grid,
+.radio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 2px;
+  width: 100%;
+  margin-top: 2px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.checkbox-item,
+.radio-item {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-top: 5px;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.checkbox-item input,
+.radio-item input {
+  margin-right: 3px;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.checkbox-item label,
+.radio-item label {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+  display: inline;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .checkbox-group label,
@@ -58,8 +102,13 @@
 
 .error-message {
   color: #d9534f;
-  font-size: 14px;
-  margin-top: 5px;
+  font-size: 12px;
+  margin-top: 1px;
+}
+
+.text-red-500 {
+  color: #d9534f;
+  margin-left: 4px;
 }
 
 .submit-status {
@@ -108,10 +157,16 @@ button[type="submit"]:disabled {
   .data-input-container {
     padding: 15px;
   }
-  
-  .checkbox-group,
-  .radio-group {
-    flex-direction: column;
-    gap: 10px;
+
+  .checkbox-grid,
+  .radio-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .checkbox-grid,
+  .radio-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }

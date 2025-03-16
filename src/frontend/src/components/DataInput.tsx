@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/DataInput.css';
 import { useUser } from '../context/UserContext';
 import { useFetch } from '../hooks/useFetch';
+import '../styles/DataInput.css';
+import { CheckboxOption, RadioOption, SelectOption } from '../types';
+import { StatusMessage } from './atoms/StatusMessage';
+import { Form } from './molecules/Form';
 
 interface FormData {
   interests: string[];
@@ -56,6 +59,61 @@ const DataInput: React.FC = () => {
     success?: boolean;
     message?: string;
   }>({});
+
+  // Define options for select and checkbox components
+  const interestOptions: CheckboxOption[] = [
+    { value: 'Sports', label: 'Sports' },
+    { value: 'Music', label: 'Music' },
+    { value: 'Art', label: 'Art' },
+    { value: 'Technology', label: 'Technology' },
+    { value: 'Science', label: 'Science' },
+    { value: 'Literature', label: 'Literature' }
+  ];
+
+  const primaryGoalOptions: SelectOption[] = [
+    { value: '', label: 'Select an option' },
+    { value: 'fitness', label: 'Fitness' },
+    { value: 'career', label: 'Career Growth' },
+    { value: 'education', label: 'Education' },
+    { value: 'personal', label: 'Personal Development' }
+  ];
+
+  const professionOptions: SelectOption[] = [
+    { value: '', label: 'Select an option' },
+    { value: 'tech', label: 'Technology' },
+    { value: 'healthcare', label: 'Healthcare' },
+    { value: 'education', label: 'Education' },
+    { value: 'business', label: 'Business' }
+  ];
+
+  const communicationStyleOptions: RadioOption[] = [
+    { value: 'Direct', label: 'Direct' },
+    { value: 'Diplomatic', label: 'Diplomatic' },
+    { value: 'Casual', label: 'Casual' },
+    { value: 'Formal', label: 'Formal' }
+  ];
+
+  const dailyAvailabilityOptions: CheckboxOption[] = [
+    { value: 'Morning', label: 'Morning' },
+    { value: 'Afternoon', label: 'Afternoon' },
+    { value: 'Evening', label: 'Evening' },
+    { value: 'Night', label: 'Night' }
+  ];
+
+  const fitnessLevelOptions: SelectOption[] = [
+    { value: '', label: 'Select an option' },
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
+    { value: 'expert', label: 'Expert' }
+  ];
+
+  const learningStyleOptions: CheckboxOption[] = [
+    { value: 'Visual', label: 'Visual' },
+    { value: 'Auditory', label: 'Auditory' },
+    { value: 'Reading/Writing', label: 'Reading/Writing' },
+    { value: 'Kinesthetic', label: 'Kinesthetic' }
+  ];
 
   const validateAge = (age: string) => {
     const ageNum = parseInt(age);
@@ -191,49 +249,60 @@ const DataInput: React.FC = () => {
     }
   };
 
-  const handleCheckboxChange = (field: keyof FormData, value: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: checked 
-        ? [...(prev[field] as string[]), value]
-        : (prev[field] as string[]).filter(item => item !== value)
-    }));
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
     // Clear error when user makes a selection
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleCheckboxGroupChange = (field: keyof FormData, values: string[]) => {
+    setFormData(prev => ({ ...prev, [field]: values }));
     
-    // Validate age on change
-    if (field === 'age') {
-      const ageError = validateAge(value);
-      setErrors(prev => ({ ...prev, age: ageError || undefined }));
-    } else if (errors[field]) {
-      // Clear other field errors when user makes a selection
+    // Clear error when user makes a selection
+    if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
+  // Display status message if there's a submission status or error
+  const statusMessage = submitStatus.message || submitError;
+  const statusType = submitStatus.success ? 'success' : 'error';
+
   return (
     <div className="data-input-container">
-      <h2>Tell Us About Yourself</h2>
-      <form onSubmit={handleSubmit}>
+      <Form
+        onSubmit={handleSubmit}
+        title="Tell Us About Yourself"
+        submitText="Submit"
+        isSubmitting={isSubmitting || submitLoading}
+        error={null}
+      >
         {/* Interests - Checkboxes */}
         <div className="form-group">
-          <label>Interests</label>
-          <div className="checkbox-group">
-            {['Sports', 'Music', 'Art', 'Technology', 'Science', 'Literature'].map(interest => (
-              <label key={interest}>
+          <div className="field-label">Interests{formData.interests.length === 0 && <span className="text-red-500">*</span>}</div>
+          <div className="checkbox-grid">
+            {interestOptions.map(option => (
+              <div key={option.value} className="checkbox-item">
                 <input
+                  id={`interests-${option.value}`}
                   type="checkbox"
-                  checked={formData.interests.includes(interest)}
-                  onChange={(e) => handleCheckboxChange('interests', interest, e.target.checked)}
+                  name="interests"
+                  value={option.value}
+                  checked={formData.interests.includes(option.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const isChecked = e.target.checked;
+                    const newValues = isChecked
+                      ? [...formData.interests, value]
+                      : formData.interests.filter(v => v !== value);
+                    handleCheckboxGroupChange('interests', newValues);
+                  }}
                 />
-                {interest}
-              </label>
+                <label htmlFor={`interests-${option.value}`}>{option.label}</label>
+              </div>
             ))}
           </div>
           {errors.interests && <div className="error-message">{errors.interests}</div>}
@@ -244,14 +313,14 @@ const DataInput: React.FC = () => {
           <label htmlFor="primaryGoal">Primary Goal</label>
           <select
             id="primaryGoal"
+            name="primaryGoal"
             value={formData.primaryGoal}
             onChange={(e) => handleInputChange('primaryGoal', e.target.value)}
+            className={errors.primaryGoal ? 'error' : ''}
           >
-            <option value="">Select a goal</option>
-            <option value="fitness">Fitness</option>
-            <option value="career">Career Growth</option>
-            <option value="education">Education</option>
-            <option value="personal">Personal Development</option>
+            {primaryGoalOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
           {errors.primaryGoal && <div className="error-message">{errors.primaryGoal}</div>}
         </div>
@@ -261,10 +330,12 @@ const DataInput: React.FC = () => {
           <label htmlFor="location">Location</label>
           <input
             id="location"
+            name="location"
             type="text"
             value={formData.location}
             onChange={(e) => handleInputChange('location', e.target.value)}
             placeholder="Enter your location"
+            className={errors.location ? 'error' : ''}
           />
           {errors.location && <div className="error-message">{errors.location}</div>}
         </div>
@@ -274,33 +345,34 @@ const DataInput: React.FC = () => {
           <label htmlFor="profession">Profession</label>
           <select
             id="profession"
+            name="profession"
             value={formData.profession}
             onChange={(e) => handleInputChange('profession', e.target.value)}
+            className={errors.profession ? 'error' : ''}
           >
-            <option value="">Select your profession</option>
-            <option value="tech">Technology</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="education">Education</option>
-            <option value="business">Business</option>
+            {professionOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
           {errors.profession && <div className="error-message">{errors.profession}</div>}
         </div>
 
         {/* Communication Style - Radio */}
         <div className="form-group">
-          <label>Communication Style</label>
-          <div className="radio-group">
-            {['Direct', 'Diplomatic', 'Casual', 'Formal'].map(style => (
-              <label key={style}>
+          <div className="field-label">Communication Style{!formData.communicationStyle && <span className="text-red-500">*</span>}</div>
+          <div className="radio-grid">
+            {communicationStyleOptions.map(option => (
+              <div key={option.value} className="radio-item">
                 <input
+                  id={`communicationStyle-${option.value}`}
                   type="radio"
                   name="communicationStyle"
-                  value={style}
-                  checked={formData.communicationStyle === style}
+                  value={option.value}
+                  checked={formData.communicationStyle === option.value}
                   onChange={(e) => handleInputChange('communicationStyle', e.target.value)}
                 />
-                {style}
-              </label>
+                <label htmlFor={`communicationStyle-${option.value}`}>{option.label}</label>
+              </div>
             ))}
           </div>
           {errors.communicationStyle && <div className="error-message">{errors.communicationStyle}</div>}
@@ -308,17 +380,27 @@ const DataInput: React.FC = () => {
 
         {/* Daily Availability - Checkboxes */}
         <div className="form-group">
-          <label>Daily Availability</label>
-          <div className="checkbox-group">
-            {['Morning', 'Afternoon', 'Evening', 'Night'].map(time => (
-              <label key={time}>
+          <div className="field-label">Daily Availability{formData.dailyAvailability.length === 0 && <span className="text-red-500">*</span>}</div>
+          <div className="checkbox-grid">
+            {dailyAvailabilityOptions.map(option => (
+              <div key={option.value} className="checkbox-item">
                 <input
+                  id={`dailyAvailability-${option.value}`}
                   type="checkbox"
-                  checked={formData.dailyAvailability.includes(time)}
-                  onChange={(e) => handleCheckboxChange('dailyAvailability', time, e.target.checked)}
+                  name="dailyAvailability"
+                  value={option.value}
+                  checked={formData.dailyAvailability.includes(option.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const isChecked = e.target.checked;
+                    const newValues = isChecked
+                      ? [...formData.dailyAvailability, value]
+                      : formData.dailyAvailability.filter(v => v !== value);
+                    handleCheckboxGroupChange('dailyAvailability', newValues);
+                  }}
                 />
-                {time}
-              </label>
+                <label htmlFor={`dailyAvailability-${option.value}`}>{option.label}</label>
+              </div>
             ))}
           </div>
           {errors.dailyAvailability && <div className="error-message">{errors.dailyAvailability}</div>}
@@ -329,31 +411,41 @@ const DataInput: React.FC = () => {
           <label htmlFor="fitnessLevel">Fitness Level</label>
           <select
             id="fitnessLevel"
+            name="fitnessLevel"
             value={formData.fitnessLevel}
             onChange={(e) => handleInputChange('fitnessLevel', e.target.value)}
+            className={errors.fitnessLevel ? 'error' : ''}
           >
-            <option value="">Select fitness level</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-            <option value="expert">Expert</option>
+            {fitnessLevelOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
           </select>
           {errors.fitnessLevel && <div className="error-message">{errors.fitnessLevel}</div>}
         </div>
 
         {/* Learning Style - Checkboxes */}
         <div className="form-group">
-          <label>Learning Style</label>
-          <div className="checkbox-group">
-            {['Visual', 'Auditory', 'Reading/Writing', 'Kinesthetic'].map(style => (
-              <label key={style}>
+          <div className="field-label">Learning Style{formData.learningStyle.length === 0 && <span className="text-red-500">*</span>}</div>
+          <div className="checkbox-grid">
+            {learningStyleOptions.map(option => (
+              <div key={option.value} className="checkbox-item">
                 <input
+                  id={`learningStyle-${option.value}`}
                   type="checkbox"
-                  checked={formData.learningStyle.includes(style)}
-                  onChange={(e) => handleCheckboxChange('learningStyle', style, e.target.checked)}
+                  name="learningStyle"
+                  value={option.value}
+                  checked={formData.learningStyle.includes(option.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const isChecked = e.target.checked;
+                    const newValues = isChecked
+                      ? [...formData.learningStyle, value]
+                      : formData.learningStyle.filter(v => v !== value);
+                    handleCheckboxGroupChange('learningStyle', newValues);
+                  }}
                 />
-                {style}
-              </label>
+                <label htmlFor={`learningStyle-${option.value}`}>{option.label}</label>
+              </div>
             ))}
           </div>
           {errors.learningStyle && <div className="error-message">{errors.learningStyle}</div>}
@@ -364,32 +456,34 @@ const DataInput: React.FC = () => {
           <label htmlFor="age">Age</label>
           <input
             id="age"
+            name="age"
             type="number"
             min="13"
             max="100"
             value={formData.age}
-            onChange={(e) => handleInputChange('age', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleInputChange('age', value);
+              
+              // Validate age on change
+              if (value) {
+                const ageError = validateAge(value);
+                setErrors(prev => ({ ...prev, age: ageError || undefined }));
+              }
+            }}
             placeholder="Enter your age"
+            className={errors.age ? 'error' : ''}
           />
           {errors.age && <div className="error-message">{errors.age}</div>}
         </div>
 
-        <div className="form-actions">
-          <button 
-            type="submit" 
-            disabled={isSubmitting || submitLoading}
-            className="submit-button"
-          >
-            {isSubmitting || submitLoading ? 'Submitting...' : 'Submit'}
-          </button>
-        </div>
-
-        {(submitStatus.message || submitError) && (
-          <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
-            {submitStatus.message || submitError}
-          </div>
+        {statusMessage && (
+          <StatusMessage
+            message={statusMessage}
+            type={statusType}
+          />
         )}
-      </form>
+      </Form>
     </div>
   );
 };
