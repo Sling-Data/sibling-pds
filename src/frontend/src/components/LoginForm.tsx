@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import '../styles/AuthForm.css';
 import { useUser } from '../context/UserContext';
 import { useFetch } from '../hooks/useFetch';
+import '../styles/AuthForm.css';
 import { getUserId } from '../utils/TokenManager';
 import { TextInput } from './atoms/TextInput';
-import { Button } from './atoms/Button';
-import { StatusMessage } from './atoms/StatusMessage';
+import { Form } from './molecules/Form';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -34,6 +33,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       skipAuth: true
     }
   );
+
+  // Format error message to be more user-friendly
+  const getFormattedErrorMessage = (errorMsg: string) => {
+    if (errorMsg.includes('401')) {
+      return 'Invalid email or password. Please try again.';
+    }
+    if (errorMsg.includes('404')) {
+      return 'Login service is not available. Please try again later.';
+    }
+    if (errorMsg.includes('Network Error') || errorMsg.includes('Failed to fetch')) {
+      return 'Unable to connect to the server. Please check your internet connection.';
+    }
+    return errorMsg;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,24 +85,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         checkUserDataAndNavigate();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+      setError(getFormattedErrorMessage(errorMessage));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Format any submit error from useFetch
+  const formattedSubmitError = submitError ? getFormattedErrorMessage(submitError) : null;
+  const displayError = error || formattedSubmitError;
+
   return (
     <div className="auth-form-container">
-      <h2>Log In to Your Account</h2>
-      
-      <form onSubmit={handleSubmit}>
-        {(error || submitError) && (
-          <StatusMessage 
-            type="error" 
-            message={error || submitError || ''} 
-          />
-        )}
-        
+      <Form 
+        onSubmit={handleSubmit}
+        title="Log In to Your Account"
+        submitText="Log In"
+        isSubmitting={isSubmitting || submitLoading}
+        error={displayError}
+      >
         <div className="form-group">
           <TextInput
             id="email"
@@ -116,20 +131,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
           />
         </div>
         
-        <Button
-          type="submit"
-          disabled={isSubmitting || submitLoading}
-          isLoading={isSubmitting || submitLoading}
-          variant="primary"
-          fullWidth
-        >
-          Log In
-        </Button>
-        
         <div className="text-center text-sm text-gray-600 mt-4">
           Don't have an account? <a href="/signup" className="text-blue-600 hover:text-blue-800">Sign up</a>
         </div>
-      </form>
+      </Form>
     </div>
   );
 };

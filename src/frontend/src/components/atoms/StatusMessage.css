@@ -5,6 +5,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Type styles */
@@ -36,11 +38,13 @@
 .status-message-content-wrapper {
   display: flex;
   align-items: flex-start;
+  width: 100%;
 }
 
 /* Icon wrapper styles */
 .status-message-icon-wrapper {
   flex-shrink: 0;
+  margin-right: 0.5rem;
 }
 
 /* Icon styles */
@@ -69,10 +73,12 @@
 /* Content styles */
 .status-message-content {
   margin-left: 0.75rem;
+  flex-grow: 1;
 }
 
 .status-message-text {
   font-size: 0.875rem;
+  margin: 0;
 }
 
 /* Dismiss button styles */
