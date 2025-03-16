@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import '../styles/AuthForm.css';
 import { useUser } from '../context/UserContext';
 import { useFetch } from '../hooks/useFetch';
+import { TextInput } from './atoms/TextInput';
+import { Form } from './molecules/Form';
 
 interface FormErrors {
   name?: string;
@@ -54,9 +56,26 @@ export const SignupForm: React.FC = () => {
     } else if (password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
     }
-    console.log({newErrors}); 
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Format error message to be more user-friendly
+  const getFormattedErrorMessage = (errorMsg: string) => {
+    if (errorMsg.includes('400')) {
+      return 'Invalid signup data. This email may already be registered.';
+    }
+    if (errorMsg.includes('409')) {
+      return 'This email is already registered. Please use a different email or log in.';
+    }
+    if (errorMsg.includes('404')) {
+      return 'Signup service is not available. Please try again later.';
+    }
+    if (errorMsg.includes('Network Error') || errorMsg.includes('Failed to fetch')) {
+      return 'Unable to connect to the server. Please check your internet connection.';
+    }
+    return errorMsg;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,66 +116,73 @@ export const SignupForm: React.FC = () => {
       // Set userId from response
       setUserId(data.userId);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
       setErrors({
-        submit: error instanceof Error ? error.message : 'Failed to sign up'
+        submit: getFormattedErrorMessage(errorMessage)
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Get the submit error message
+  const submitErrorMessage = errors.submit || (submitError ? getFormattedErrorMessage(submitError) : null);
+
   return (
     <div className="auth-form-container">
-      <h2>Create Your Account</h2>
-      <form onSubmit={handleSubmit}>
+      <Form
+        onSubmit={handleSubmit}
+        title="Create Your Account"
+        submitText={isSubmitting || submitLoading ? 'Creating Account...' : 'Create Account'}
+        isSubmitting={isSubmitting || submitLoading}
+        error={submitErrorMessage}
+      >
         <div className="form-group">
-          <label htmlFor="name">Name</label>
-          <input
+          <TextInput
             id="name"
+            name="name"
             type="text"
+            label="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your name"
+            required={false}
           />
           {errors.name && <div className="error-message">{errors.name}</div>}
         </div>
         
         <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
+          <TextInput
             id="email"
-            type="text"
+            name="email"
+            type="email"
+            label="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
+            required={false}
           />
           {errors.email && <div className="error-message">{errors.email}</div>}
         </div>
         
         <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
+          <TextInput
             id="password"
+            name="password"
             type="password"
+            label="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
+            required={false}
           />
           {errors.password && <div className="error-message">{errors.password}</div>}
         </div>
         
-        {(errors.submit || submitError) && (
-          <div className="error-message submit-error">{errors.submit || submitError}</div>
-        )}
-        
-        <button type="submit" disabled={isSubmitting || submitLoading}>
-          {isSubmitting || submitLoading ? 'Creating Account...' : 'Create Account'}
-        </button>
-        
-        <div className="login-link">
-          Already have an account? <a href="/login">Log in</a>
+        <div className="text-center text-sm text-gray-600 mt-4">
+          Already have an account? <a href="/login" className="text-blue-600 hover:text-blue-800">Log in</a>
         </div>
-      </form>
+      </Form>
     </div>
   );
 };

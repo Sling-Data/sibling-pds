@@ -10,6 +10,7 @@ interface FormProps {
   isSubmitting?: boolean;
   error?: string | null;
   children: React.ReactNode;
+  noValidate?: boolean;
 }
 
 /**
@@ -22,39 +23,36 @@ export const Form: React.FC<FormProps> = ({
   isSubmitting = false,
   error,
   children,
+  noValidate = true
 }) => {
   return (
-    <form onSubmit={onSubmit} className="form">
-      {title && (
-        <h2 className="form-title">{title}</h2>
-      )}
+    <div className="form-wrapper">
+      {title && <h2 className="form-title">{title}</h2>}
       
-      {error && (
-        <div className="form-error">
-          <div className="form-error-content">
-            <div className="form-error-icon-wrapper">
-              <ErrorIcon className="form-error-icon" />
-            </div>
-            <div className="form-error-message">
-              <p className="form-error-text">{error}</p>
+      <form onSubmit={onSubmit} className="form" noValidate={noValidate}>
+        {children}
+        
+        {error && (
+          <div className="error-container">
+            <div className="error-message">
+              <ErrorIcon className="error-icon" />
+              {error}
             </div>
           </div>
+        )}
+        
+        <div className="form-actions">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            isLoading={isSubmitting}
+            variant="primary"
+            fullWidth
+          >
+            {submitText}
+          </Button>
         </div>
-      )}
-      
-      {children}
-      
-      <div className="form-submit">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          isLoading={isSubmitting}
-          variant="primary"
-          fullWidth
-        >
-          {submitText}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }; 
