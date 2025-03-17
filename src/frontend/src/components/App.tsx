@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginForm } from './LoginForm';
-import { SignupForm } from './SignupForm';
-import Profile from './Profile';
-import DataInput from './DataInput';
-import ConnectPlaid from './ConnectPlaid';
-import ConnectGmail from './ConnectGmail';
+import { LoginForm } from './pages/LoginForm';
+import { SignupForm } from './pages/SignupForm';
+import Profile from './pages/Profile';
+import DataInput from './pages/DataInput';
+import ConnectPlaid from './pages/ConnectPlaid';
+import ConnectGmail from './pages/ConnectGmail';
 import { UserProvider, useUser, NotificationProvider } from '../context';
 import { NotificationContainer } from './organisms/NotificationContainer';
 import { NotificationExample, FormExample, ApiRequestExample } from './examples';

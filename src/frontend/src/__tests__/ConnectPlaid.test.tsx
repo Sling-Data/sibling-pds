@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import ConnectPlaid from '../components/ConnectPlaid';
+import ConnectPlaid from '../components/pages/ConnectPlaid';
 import { UserProvider } from '../context/UserContext';
 
 // Mock react-router-dom hooks

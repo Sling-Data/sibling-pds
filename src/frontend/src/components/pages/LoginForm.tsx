@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useUser } from '../context/UserContext';
-import { useFetch } from '../hooks/useFetch';
-import '../styles/AuthForm.css';
-import { getUserId } from '../utils/TokenManager';
-import { TextInput } from './atoms/TextInput';
-import { Form } from './molecules/Form';
+import { useUser } from '../../context/UserContext';
+import { useFetch } from '../../hooks/useFetch';
+import { getUserId } from '../../utils/TokenManager';
+import '../../styles/AuthForm.css';
+import { TextInput } from '../atoms/TextInput';
+import { Form } from '../molecules/Form';
 
 interface LoginFormProps {
   onSuccess?: () => void;

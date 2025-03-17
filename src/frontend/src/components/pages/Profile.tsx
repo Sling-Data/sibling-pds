@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate  } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import { useFetch } from '../hooks/useFetch';
-import '../styles/Profile.css';
-import { Button } from './atoms/Button';
-import { Card } from './atoms/Card';
-import { Checkbox } from './atoms/Checkbox';
-import { StatusMessage } from './atoms/StatusMessage';
-import { TextInput } from './atoms/TextInput';
-import { Form } from './molecules/Form';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
+import { useFetch } from '../../hooks/useFetch';
+import '../../styles/Profile.css';
+import { Button } from '../atoms/Button';
+import { Card } from '../atoms/Card';
+import { Checkbox } from '../atoms/Checkbox';
+import { StatusMessage } from '../atoms/StatusMessage';
+import { TextInput } from '../atoms/TextInput';
+import { Form } from '../molecules/Form';
 
 // Types
 interface UserData {

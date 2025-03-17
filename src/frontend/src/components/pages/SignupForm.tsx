@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import '../styles/AuthForm.css';
-import { useUser } from '../context/UserContext';
-import { useFetch } from '../hooks/useFetch';
-import { TextInput } from './atoms/TextInput';
-import { Form } from './molecules/Form';
+import { useUser } from '../../context/UserContext';
+import { useFetch } from '../../hooks/useFetch';
+import '../../styles/AuthForm.css';
+import { TextInput } from '../atoms/TextInput';
+import { Form } from '../molecules/Form';
 
 interface FormErrors {
   name?: string;

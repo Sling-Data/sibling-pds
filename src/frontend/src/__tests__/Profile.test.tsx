@@ -1,11 +1,9 @@
-// @ts-expect-error React is used implicitly with JSX
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { act } from 'react';
 import '@testing-library/jest-dom';
-import Profile from '../components/Profile';
-import { UserProvider } from '../context/UserContext';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { act } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import Profile from '../components/pages/Profile';
+import { UserProvider } from '../context/UserContext';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';

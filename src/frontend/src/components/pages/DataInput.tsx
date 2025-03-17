@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import { useFetch } from '../hooks/useFetch';
-import '../styles/DataInput.css';
-import { CheckboxOption, RadioOption, SelectOption } from '../types';
-import { StatusMessage } from './atoms/StatusMessage';
-import { Form } from './molecules/Form';
+import { useUser } from '../../context/UserContext';
+import { useFetch } from '../../hooks/useFetch';
+import { CheckboxOption, RadioOption, SelectOption } from '../../types';
+import { StatusMessage } from '../atoms/StatusMessage';
+import { Form } from '../molecules/Form';
+import '../../styles/DataInput.css';
 
 interface FormData {
   interests: string[];

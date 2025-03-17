@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import { LoginForm } from '../components/LoginForm';
+import { LoginForm } from '../components/pages/LoginForm';
 
 // Mock the UserContext hook
 const mockCheckUserDataAndNavigate = jest.fn();

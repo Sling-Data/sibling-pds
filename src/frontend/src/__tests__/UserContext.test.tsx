@@ -4,7 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { act } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { UserProvider, useUser } from '../context/UserContext';
-import Profile from '../components/Profile';
+import Profile from '../components/pages/Profile';
 import '@testing-library/jest-dom';
 import * as tokenUtils from '../utils/TokenManager';
 

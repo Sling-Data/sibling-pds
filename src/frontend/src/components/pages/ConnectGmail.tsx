@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import { useFetch } from '../hooks/useFetch';
-import ConnectApi from './molecules/ConnectApi';
+import { useUser } from '../../context';
+import { useFetch } from '../../hooks/useFetch';
+import ConnectApi from '../molecules/ConnectApi';
+
 
 const ConnectGmail: React.FC = () => {
   const navigate = useNavigate();

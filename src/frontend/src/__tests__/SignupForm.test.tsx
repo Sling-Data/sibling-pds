@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { SignupForm } from '../components/SignupForm';
+import { SignupForm } from '../components/pages/SignupForm';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
