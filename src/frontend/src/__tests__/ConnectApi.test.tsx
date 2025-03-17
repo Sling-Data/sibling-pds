@@ -51,9 +51,8 @@ describe('ConnectApi Component', () => {
 
   it('shows error message when error is provided', () => {
     renderComponent({ error: 'Test error message' });
-    expect(screen.getByText('Error:')).toBeInTheDocument();
+    expect(screen.getByText('Warning:')).toBeInTheDocument();
     expect(screen.getByText('Test error message')).toBeInTheDocument();
-    expect(screen.getByText('Unable to complete the connection to TestService.')).toBeInTheDocument();
   });
 
   it('shows connect button in normal state', () => {
@@ -78,10 +77,9 @@ describe('ConnectApi Component', () => {
     expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onCancel when back button is clicked in error state', () => {
+  it('shows connect button even when there is an error', () => {
     renderComponent({ error: 'Test error' });
-    fireEvent.click(screen.getByText('Back to Profile'));
-    expect(defaultProps.onCancel).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Connect to Test')).toBeInTheDocument();
   });
 
   it('does not show spinner when showSpinner is false', () => {

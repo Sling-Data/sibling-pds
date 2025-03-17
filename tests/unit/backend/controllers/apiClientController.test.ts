@@ -128,8 +128,130 @@ describe("API Client Controller", () => {
       expect(mockResponse.redirect).toHaveBeenCalled();
     });
 
+    it("should handle popup request with successful callback", async () => {
+      // Mock request query with popup flag in state
+      mockRequest.query = {
+        code: "test-code",
+        state: Buffer.from(
+          JSON.stringify({
+            userId: "test-user-id",
+            nonce: "test-nonce",
+            popup: true,
+          })
+        ).toString("base64"),
+      };
+
+      // Add headers to the mock request
+      mockRequest.headers = {
+        "user-agent": "Mozilla/5.0 gmailAuthPopup",
+      };
+
+      // Mock gmailClient.exchangeCodeForTokens
+      const mockTokens = {
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expiry_date: new Date().getTime(),
+      };
+      (gmailClient.exchangeCodeForTokens as jest.Mock).mockResolvedValue(
+        mockTokens
+      );
+
+      // Mock UserDataSourcesModel.storeCredentials
+      (UserDataSourcesModel.storeCredentials as jest.Mock).mockResolvedValue(
+        true
+      );
+
+      // Mock response.send
+      mockResponse.send = jest.fn();
+
+      await gmailCallback(mockRequest as Request, mockResponse as Response);
+
+      expect(gmailClient.exchangeCodeForTokens).toHaveBeenCalledWith(
+        "test-code"
+      );
+      expect(UserDataSourcesModel.storeCredentials).toHaveBeenCalledWith(
+        "test-user-id",
+        DataSourceType.GMAIL,
+        expect.objectContaining({
+          accessToken: "test-access-token",
+          refreshToken: "test-refresh-token",
+        })
+      );
+
+      // Verify it sends HTML response instead of redirecting
+      expect(mockResponse.send).toHaveBeenCalled();
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.stringContaining("Authentication Successful")
+      );
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should handle popup request with error", async () => {
+      // Mock request query with popup flag
+      mockRequest.query = {
+        code: "test-code",
+        popup: "true",
+      };
+
+      // Mock response.send
+      mockResponse.send = jest.fn();
+
+      await gmailCallback(mockRequest as Request, mockResponse as Response);
+
+      // Verify it sends HTML response instead of redirecting
+      expect(mockResponse.send).toHaveBeenCalled();
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.stringContaining("Authentication Failed")
+      );
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
+    });
+
+    it("should handle popup request with user agent", async () => {
+      // Mock request query without popup flag
+      mockRequest.query = {
+        code: "test-code",
+        state: Buffer.from(
+          JSON.stringify({ userId: "test-user-id", nonce: "test-nonce" })
+        ).toString("base64"),
+      };
+
+      // Add headers to the mock request with gmailAuthPopup in user agent
+      mockRequest.headers = {
+        "user-agent": "Mozilla/5.0 gmailAuthPopup",
+      };
+
+      // Mock gmailClient.exchangeCodeForTokens
+      const mockTokens = {
+        access_token: "test-access-token",
+        refresh_token: "test-refresh-token",
+        expiry_date: new Date().getTime(),
+      };
+      (gmailClient.exchangeCodeForTokens as jest.Mock).mockResolvedValue(
+        mockTokens
+      );
+
+      // Mock UserDataSourcesModel.storeCredentials
+      (UserDataSourcesModel.storeCredentials as jest.Mock).mockResolvedValue(
+        true
+      );
+
+      // Mock response.send
+      mockResponse.send = jest.fn();
+
+      await gmailCallback(mockRequest as Request, mockResponse as Response);
+
+      // Verify it sends HTML response instead of redirecting
+      expect(mockResponse.send).toHaveBeenCalled();
+      expect(mockResponse.send).toHaveBeenCalledWith(
+        expect.stringContaining("Authentication Successful")
+      );
+      expect(mockResponse.redirect).not.toHaveBeenCalled();
+    });
+
     it("should handle missing code parameter", async () => {
       mockRequest.query = { state: "test-state" };
+      mockRequest.headers = {}; // Add empty headers
+      mockResponse.send = jest.fn();
 
       await gmailCallback(mockRequest as Request, mockResponse as Response);
 
@@ -141,6 +263,8 @@ describe("API Client Controller", () => {
 
     it("should handle missing state parameter", async () => {
       mockRequest.query = { code: "test-code" };
+      mockRequest.headers = {}; // Add empty headers
+      mockResponse.send = jest.fn();
 
       await gmailCallback(mockRequest as Request, mockResponse as Response);
 
@@ -155,6 +279,8 @@ describe("API Client Controller", () => {
         code: "test-code",
         state: "invalid-state",
       };
+      mockRequest.headers = {}; // Add empty headers
+      mockResponse.send = jest.fn();
 
       await gmailCallback(mockRequest as Request, mockResponse as Response);
 

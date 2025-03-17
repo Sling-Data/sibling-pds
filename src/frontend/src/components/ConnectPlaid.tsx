@@ -112,7 +112,7 @@ const ConnectPlaid: React.FC = () => {
       } catch (err) {
         console.error('Error exchanging public token:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to connect bank account';
-        setError(errorMessage + '. Please try connecting to Plaid again.');
+        setError(errorMessage);
         setIsLoading(false);
       }
     },
@@ -126,10 +126,10 @@ const ConnectPlaid: React.FC = () => {
       if (err) {
         console.error('Plaid Link Error:', err);
         const errorMessage = err.error_message || 'An error occurred during Plaid connection';
-        setError(errorMessage + '. Please try connecting to Plaid again.');
+        setError(errorMessage);
       } else {
         // User exited without error
-        setError('Connection cancelled by user. Please try connecting to Plaid again.');
+        setError('Connection cancelled by user');
       }
       
       // Don't navigate away, just update the error state and keep the button visible
@@ -163,8 +163,21 @@ const ConnectPlaid: React.FC = () => {
 
   // Handle cancel button click
   const handleCancel = useCallback(() => {
-    navigate('/profile');
+    // No additional cleanup needed
+  }, []);
+
+  // Handle success navigation
+  const handleSuccess = useCallback((message: string) => {
+    navigate(`/profile?status=success&message=${encodeURIComponent(message)}`);
   }, [navigate]);
+
+  // Format error message to ensure it has the proper suffix
+  const formatErrorMessage = useCallback((error: string) => {
+    if (error.includes('Please try connecting to Plaid again')) {
+      return error;
+    }
+    return `${error}. Please try connecting to Plaid again.`;
+  }, []);
 
   return (
     <ConnectApi
@@ -174,10 +187,13 @@ const ConnectPlaid: React.FC = () => {
       error={error}
       onConnect={handleConnect}
       onCancel={handleCancel}
+      onSuccess={handleSuccess}
       isConnectDisabled={!ready || !linkToken}
       loadingMessage={linkToken ? "Initializing Plaid Link..." : "Initializing connection to Plaid..."}
       connectButtonText="Connect Your Bank Account"
       redirectPath="/profile"
+      successMessage="Bank account connected successfully"
+      formatErrorMessage={formatErrorMessage}
     />
   );
 };

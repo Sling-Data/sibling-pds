@@ -29,7 +29,7 @@ const ConnectGmail: React.FC = () => {
         popupCheckIntervalRef.current = null;
       }
       // Set error but don't disable the button
-      setError('Authentication window was closed. Please try connecting to Gmail again.');
+      setError('Authentication window was closed');
       setIsLoading(false);
     }
   }, []);
@@ -66,7 +66,7 @@ const ConnectGmail: React.FC = () => {
         // Handle authentication error
         if (event.data.type === 'gmail-auth-error') {
           console.log('Authentication failed:', event.data.message);
-          setError((event.data.message || 'Failed to authenticate with Gmail') + '. Please try connecting to Gmail again.');
+          setError(event.data.message || 'Failed to authenticate with Gmail');
           setIsLoading(false);
           
           // Close popup if it's still open
@@ -150,7 +150,7 @@ const ConnectGmail: React.FC = () => {
       // Keep isLoading true only while waiting for authentication
       // Don't disable the connect button
     } else {
-      setError('Failed to open authentication window. Please check your popup blocker settings and try again.');
+      setError('Failed to open authentication window. Please check your popup blocker settings');
       setIsLoading(false);
     }
   }, [checkPopupClosed]);
@@ -217,6 +217,19 @@ const ConnectGmail: React.FC = () => {
     }
   }, []);
 
+  // Handle success navigation
+  const handleSuccess = useCallback((message: string) => {
+    navigate(`/profile?status=success&message=${encodeURIComponent(message)}`);
+  }, [navigate]);
+
+  // Format error message to ensure it has the proper suffix
+  const formatErrorMessage = useCallback((error: string) => {
+    if (error.includes('Please try connecting to Gmail again')) {
+      return error;
+    }
+    return `${error}. Please try connecting to Gmail again.`;
+  }, []);
+
   return (
     <ConnectApi
       title="Connect Your Gmail Account"
@@ -225,10 +238,13 @@ const ConnectGmail: React.FC = () => {
       error={error}
       onConnect={handleConnect}
       onCancel={handleCancel}
+      onSuccess={handleSuccess}
       isConnectDisabled={!authUrl}
       loadingMessage={authUrl ? "Waiting for Gmail authentication..." : "Initializing connection to Gmail..."}
       connectButtonText="Connect Your Gmail Account"
       redirectPath="/profile"
+      successMessage="Gmail connected successfully"
+      formatErrorMessage={formatErrorMessage}
     />
   );
 };

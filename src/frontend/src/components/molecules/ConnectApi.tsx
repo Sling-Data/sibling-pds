@@ -9,12 +9,15 @@ export interface ConnectApiProps {
   error: string | null;
   onConnect: () => void;
   onCancel: () => void;
+  onSuccess?: (message: string) => void;
   isConnectDisabled?: boolean;
   loadingMessage?: string;
   connectButtonText?: string;
   cancelButtonText?: string;
   redirectPath?: string;
   showSpinner?: boolean;
+  successMessage?: string;
+  formatErrorMessage?: (error: string) => string;
 }
 
 const ConnectApi: React.FC<ConnectApiProps> = ({
@@ -29,10 +32,14 @@ const ConnectApi: React.FC<ConnectApiProps> = ({
   connectButtonText = `Connect to ${serviceName}`,
   cancelButtonText = 'Cancel',
   redirectPath = '/profile',
-  showSpinner = true
+  showSpinner = true,
+  formatErrorMessage
 }) => {
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
+
+  // Format error message if needed
+  const formattedError = formatErrorMessage && error ? formatErrorMessage(error) : error;
 
   // Handle navigation back to specified path
   const handleCancel = useCallback(() => {
@@ -46,7 +53,7 @@ const ConnectApi: React.FC<ConnectApiProps> = ({
   return (
     <div className="connect-api-container">
       <h2>{title}</h2>
-      {isLoading ? (
+      {isLoading && !formattedError ? (
         <div className="loading-message">
           {showSpinner && <div className="spinner"></div>}
           <p>{loadingMessage}</p>
@@ -59,9 +66,9 @@ const ConnectApi: React.FC<ConnectApiProps> = ({
       ) : (
         <div className="connect-content">
           {showSpinner && <div className="spinner"></div>}
-          {error && (
+          {formattedError && (
             <div className="error-message">
-              <p><strong>Warning:</strong> {error}</p>
+              <p><strong>Warning:</strong> {formattedError}</p>
             </div>
           )}
           
