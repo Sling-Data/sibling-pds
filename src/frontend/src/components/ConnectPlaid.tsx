@@ -112,9 +112,7 @@ const ConnectPlaid: React.FC = () => {
       } catch (err) {
         console.error('Error exchanging public token:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to connect bank account';
-        setError(errorMessage);
-        navigate(`/profile?error=${encodeURIComponent(errorMessage)}`);
-      } finally {
+        setError(errorMessage + '. Please try connecting to Plaid again.');
         setIsLoading(false);
       }
     },
@@ -124,19 +122,20 @@ const ConnectPlaid: React.FC = () => {
   // Handle Plaid Link exit
   const onExit = useCallback(
     (err?: any) => {
-      // If there's an error, include it in the redirect
+      // If there's an error, include it in the error state
       if (err) {
         console.error('Plaid Link Error:', err);
         const errorMessage = err.error_message || 'An error occurred during Plaid connection';
-        setError(errorMessage);
+        setError(errorMessage + '. Please try connecting to Plaid again.');
       } else {
         // User exited without error
-        setError('Connection cancelled by user');
+        setError('Connection cancelled by user. Please try connecting to Plaid again.');
       }
       
-      navigate('/profile?error=Connection cancelled');
+      // Don't navigate away, just update the error state and keep the button visible
+      setIsLoading(false);
     },
-    [navigate]
+    []
   );
 
   // Always call usePlaidLink unconditionally to follow React hooks rules
@@ -152,10 +151,10 @@ const ConnectPlaid: React.FC = () => {
 
   // Automatically open Plaid Link when ready and token is available
   useEffect(() => {
-    if (!isTestEnvironment() && ready && linkToken) {
+    if (!isTestEnvironment() && ready && linkToken && !error) {
       open();
     }
-  }, [ready, open, linkToken]);
+  }, [ready, open, linkToken, error]);
 
   // Handle connect button click
   const handleConnect = useCallback(() => {
@@ -164,14 +163,14 @@ const ConnectPlaid: React.FC = () => {
 
   // Handle cancel button click
   const handleCancel = useCallback(() => {
-    // No additional logic needed here as the ConnectApi component will handle navigation
-  }, []);
+    navigate('/profile');
+  }, [navigate]);
 
   return (
     <ConnectApi
       title="Connect Your Bank Account"
       serviceName="Plaid"
-      isLoading={isLoading}
+      isLoading={isLoading && !error} // Don't show loading state when there's an error
       error={error}
       onConnect={handleConnect}
       onCancel={handleCancel}

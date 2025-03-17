@@ -5,6 +5,7 @@ import { SignupForm } from './SignupForm';
 import Profile from './Profile';
 import DataInput from './DataInput';
 import ConnectPlaid from './ConnectPlaid';
+import ConnectGmail from './ConnectGmail';
 import { UserProvider, useUser, NotificationProvider } from '../context';
 import { NotificationContainer } from './organisms/NotificationContainer';
 import { NotificationExample, FormExample, ApiRequestExample } from './examples';
@@ -48,6 +49,14 @@ const AppRoutes: React.FC = () => {
         element={
           <PrivateRoute>
             <ConnectPlaid />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/connect-gmail"
+        element={
+          <PrivateRoute>
+            <ConnectGmail />
           </PrivateRoute>
         }
       />

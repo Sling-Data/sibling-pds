@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import { useUser } from '../context/UserContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getAccessToken } from '../utils/TokenManager';
 import '../styles/Profile.css';
 
 // Types
@@ -110,26 +109,8 @@ function Profile() {
       // Refresh token if needed before connecting to Gmail
       const refreshSuccessful = await refreshTokenIfExpired();
       if (refreshSuccessful) {
-        try {
-          // Get the current access token
-          const accessToken = getAccessToken();
-          
-          if (!accessToken) {
-            throw new Error('No access token available');
-          }
-          
-          // The simplest approach: directly navigate to the endpoint
-          // The browser will automatically include the Authorization header
-          // from the current session, and the backend will handle the redirect
-          window.location.href = `${process.env.REACT_APP_API_URL}/api/gmail?userId=${userId}&token=${encodeURIComponent(accessToken)}`;
-          
-        } catch (error) {
-          console.error('Error connecting to Gmail:', error);
-          setAuthStatus({
-            success: false,
-            message: error instanceof Error ? error.message : 'Failed to connect to Gmail'
-          });
-        }
+        // Navigate to the ConnectGmail component using react-router
+        navigate(`/connect-gmail?userId=${userId}`);
       }
     }
   };

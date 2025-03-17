@@ -329,7 +329,29 @@ export class GmailClient {
     }
   }
 
-  generateAuthUrl(state?: string): string {
+  generateAuthUrl(state?: string, isPopup: boolean = false): string {
+    // If isPopup is true, append a popup indicator to the state
+    let finalState = state;
+    if (isPopup && state) {
+      try {
+        // Decode the state
+        const stateJson = Buffer.from(state, "base64").toString();
+        const decodedState = JSON.parse(stateJson);
+
+        // Add popup flag
+        decodedState.popup = true;
+
+        // Re-encode the state
+        finalState = Buffer.from(JSON.stringify(decodedState)).toString(
+          "base64"
+        );
+      } catch (error) {
+        console.error("Error modifying state for popup:", error);
+        // Fall back to original state if there's an error
+        finalState = state;
+      }
+    }
+
     return OAuthHandler.generateAuthUrl(
       {
         provider: "gmail",
@@ -338,7 +360,7 @@ export class GmailClient {
         redirectUri: this.REDIRECT_URI,
         scopes: this.GMAIL_SCOPES,
       },
-      state
+      finalState
     );
   }
 

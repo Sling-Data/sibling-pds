@@ -56,20 +56,15 @@ const ConnectApi: React.FC<ConnectApiProps> = ({
           {showSpinner && <div className="spinner"></div>}
           <p>Redirecting to your profile...</p>
         </div>
-      ) : error ? (
-        <div className="error-message">
-          <p><strong>Error:</strong> {error}</p>
-          <p>Unable to complete the connection to {serviceName}.</p>
-          <button 
-            onClick={handleCancel}
-            className="back-button"
-          >
-            Back to Profile
-          </button>
-        </div>
       ) : (
         <div className="connect-content">
           {showSpinner && <div className="spinner"></div>}
+          {error && (
+            <div className="error-message">
+              <p><strong>Warning:</strong> {error}</p>
+            </div>
+          )}
+          
           <p>Ready to connect to {serviceName}.</p>
           <p>Click the button below to establish the connection:</p>
           <button 
