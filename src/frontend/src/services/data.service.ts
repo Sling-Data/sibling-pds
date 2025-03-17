@@ -24,10 +24,31 @@ import { getUserId } from "../utils/TokenManager";
  * - DELETE /user-data-sources/:id - Disconnect a data source
  */
 export class DataService extends ApiService {
-  // Volunteered Data
+  // =============== Volunteered Data Operations ===============
+
+  /**
+   * Get all volunteered data for the current user
+   * @returns A promise that resolves to the volunteered data
+   */
+  public static async getVolunteeredData(): Promise<
+    ApiResponse<VolunteeredData[]>
+  > {
+    return this.get<VolunteeredData[]>("/volunteered-data");
+  }
+
+  /**
+   * Get volunteered data by ID
+   * @param id The ID of the volunteered data to get
+   * @returns A promise that resolves to the volunteered data
+   */
+  public static async getVolunteeredDataById(
+    id: string
+  ): Promise<ApiResponse<VolunteeredData>> {
+    return this.get<VolunteeredData>(`/volunteered-data/${id}`);
+  }
+
   /**
    * Create a new volunteered data entry
-   * This is the only volunteered data endpoint currently implemented
    * @param data The volunteered data to create
    * @returns A promise that resolves to the created volunteered data
    */
@@ -37,13 +58,48 @@ export class DataService extends ApiService {
     return this.post<VolunteeredData>("/volunteered-data", data);
   }
 
-  // Behavioral Data
+  /**
+   * Update volunteered data
+   * @param id The ID of the volunteered data to update
+   * @param data The updated volunteered data
+   * @returns A promise that resolves to the updated volunteered data
+   */
+  public static async updateVolunteeredData(
+    id: string,
+    data: Partial<VolunteeredData>
+  ): Promise<ApiResponse<VolunteeredData>> {
+    return this.put<VolunteeredData>(`/volunteered-data/${id}`, data);
+  }
+
+  /**
+   * Delete volunteered data
+   * @param id The ID of the volunteered data to delete
+   * @returns A promise that resolves to void
+   */
+  public static async deleteVolunteeredData(
+    id: string
+  ): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/volunteered-data/${id}`);
+  }
+
+  // =============== Behavioral Data Operations ===============
+
+  /**
+   * Get all behavioral data for the current user
+   * @returns A promise that resolves to the behavioral data
+   */
+  public static async getBehavioralData(): Promise<
+    ApiResponse<BehavioralData[]>
+  > {
+    return this.get<BehavioralData[]>("/behavioral-data");
+  }
+
   /**
    * Get behavioral data by ID
    * @param id The ID of the behavioral data to get
    * @returns A promise that resolves to the behavioral data
    */
-  public static async getBehavioralData(
+  public static async getBehavioralDataById(
     id: string
   ): Promise<ApiResponse<BehavioralData>> {
     return this.get<BehavioralData>(`/behavioral-data/${id}`);
@@ -85,76 +141,56 @@ export class DataService extends ApiService {
     return this.post<BehavioralData>("/behavioral-data", data);
   }
 
-  // External Data
-  /**
-   * Create new external data
-   * This is the only external data endpoint currently implemented
-   * @param data The external data to create
-   * @returns A promise that resolves to the created external data
-   */
-  public static async createExternalData(
-    data: Omit<ExternalData, "id" | "userId" | "createdAt" | "updatedAt">
-  ): Promise<ApiResponse<ExternalData>> {
-    return this.post<ExternalData>("/external-data", data);
-  }
+  // =============== External Data Operations ===============
 
-  // User Data
   /**
-   * Get user data by user ID
-   * @param userId The ID of the user to get data for
-   * @returns A promise that resolves to the user data
+   * Get all external data for the current user
+   * @returns A promise that resolves to the external data
    */
-  public static async getUserData(userId: string): Promise<ApiResponse<any>> {
-    return this.get<any>(`/user-data/${userId}`);
+  public static async getExternalData(): Promise<ApiResponse<ExternalData[]>> {
+    return this.get<ExternalData[]>("/external-data");
   }
 
   /**
-   * Get data for the current user
-   * @returns A promise that resolves to the user data
+   * Get external data by source
+   * @param source The source of the external data to get
+   * @returns A promise that resolves to the external data
    */
-  public static async getCurrentUserData(): Promise<ApiResponse<any>> {
-    const userId = getUserId();
-    if (!userId) {
-      return { data: null, error: "User not authenticated" };
-    }
-    return this.getUserData(userId);
+  public static async getExternalDataBySource(
+    source: string
+  ): Promise<ApiResponse<ExternalData[]>> {
+    return this.get<ExternalData[]>(`/external-data/source/${source}`);
   }
 
-  // User Data Sources
+  // =============== Data Sources Operations ===============
+
   /**
-   * Get all user data sources for the current user
-   * @returns A promise that resolves to an array of user data sources
+   * Get all data sources for the current user
+   * @returns A promise that resolves to the data sources
    */
-  public static async getUserDataSources(): Promise<
-    ApiResponse<UserDataSource[]>
-  > {
+  public static async getDataSources(): Promise<ApiResponse<UserDataSource[]>> {
     return this.get<UserDataSource[]>("/user-data-sources");
   }
 
   /**
    * Connect a new data source
-   * @param source The source to connect
-   * @param credentials The credentials for the source
+   * @param source The data source to connect
    * @returns A promise that resolves to the connected data source
    */
   public static async connectDataSource(
-    source: string,
-    credentials: any
+    source: Omit<UserDataSource, "id" | "userId" | "createdAt" | "updatedAt">
   ): Promise<ApiResponse<UserDataSource>> {
-    return this.post<UserDataSource>("/user-data-sources", {
-      source,
-      credentials,
-    });
+    return this.post<UserDataSource>("/user-data-sources", source);
   }
 
   /**
    * Disconnect a data source
    * @param id The ID of the data source to disconnect
-   * @returns A promise that resolves to a success message
+   * @returns A promise that resolves to void
    */
   public static async disconnectDataSource(
     id: string
-  ): Promise<ApiResponse<{ message: string }>> {
-    return this.delete<{ message: string }>(`/user-data-sources/${id}`);
+  ): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/user-data-sources/${id}`);
   }
 }

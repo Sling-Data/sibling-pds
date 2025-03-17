@@ -4,6 +4,227 @@ This directory contains custom React hooks that provide reusable functionality a
 
 ## Available Hooks
 
+### useApi
+
+A powerful hook for making API requests with advanced features like caching, retries, and authentication.
+
+```typescript
+import { useApi } from '../hooks';
+
+// Use without initial fetch
+const { request, loading, error, data } = useApi<User[]>();
+
+// Make a request
+const fetchUsers = async () => {
+  const response = await request('/users', {
+    method: 'GET',
+    showErrorNotification: true
+  });
+  
+  if (response.data) {
+    console.log('Users:', response.data);
+  }
+};
+
+// Use with initial fetch
+const { data: user, loading, error, refetch } = useApi<User>(`/users/123`);
+
+// Refetch data
+const handleRefresh = () => {
+  refetch();
+};
+
+// Use in your component
+return (
+  <div>
+    {loading && <Spinner />}
+    {error && <ErrorMessage message={error.message} />}
+    {data && <UserProfile user={data} />}
+    <Button onClick={handleRefresh} disabled={loading}>Refresh</Button>
+  </div>
+);
+```
+
+### useAuth
+
+A hook for authentication state and operations.
+
+```typescript
+import { useAuth } from '../hooks';
+
+const { 
+  isAuthenticated, 
+  isInitialized,
+  login, 
+  signup, 
+  logout, 
+  checkAuth 
+} = useAuth();
+
+// Log in a user
+const handleLogin = async (credentials) => {
+  const response = await login(credentials);
+  if (response.data) {
+    // Redirect or perform additional actions
+  }
+};
+
+// Sign up a new user
+const handleSignup = async (credentials) => {
+  const response = await signup(credentials);
+  if (response.data) {
+    // Redirect or perform additional actions
+  }
+};
+
+// Log out
+const handleLogout = () => {
+  logout();
+};
+
+// Check if user is authenticated (and redirect if not)
+useEffect(() => {
+  checkAuth('/login');
+}, [checkAuth]);
+
+// Use in your component
+return (
+  <div>
+    {!isInitialized && <Spinner />}
+    {isAuthenticated ? (
+      <Button onClick={handleLogout}>Log Out</Button>
+    ) : (
+      <LoginForm onSubmit={handleLogin} />
+    )}
+  </div>
+);
+```
+
+### useUser
+
+A hook for user data and operations.
+
+```typescript
+import { useUser } from '../hooks';
+
+const { 
+  user, 
+  loading, 
+  error,
+  fetchUserProfile, 
+  updateUserProfile
+} = useUser();
+
+// Fetch user profile on component mount
+useEffect(() => {
+  fetchUserProfile();
+}, [fetchUserProfile]);
+
+// Update user profile
+const handleProfileUpdate = async (userData) => {
+  const response = await updateUserProfile(userData);
+  if (response.data) {
+    // Show success message or perform additional actions
+  }
+};
+
+// Handle navigation based on user state
+const checkUserAndNavigate = async () => {
+  await checkUserDataAndNavigate('/login');
+};
+
+// Use in your component
+return (
+  <div>
+    {loading && <Spinner />}
+    {error && <ErrorMessage message={error} />}
+    {user && (
+      <ProfileForm 
+        initialValues={user} 
+        onSubmit={handleProfileUpdate} 
+        isSubmitting={loading}
+      />
+    )}
+  </div>
+);
+```
+
+### useData
+
+A hook for data operations.
+
+```typescript
+import { useData } from '../hooks';
+
+const { 
+  volunteeredData, 
+  loading, 
+  error,
+  fetchVolunteeredData,
+  createVolunteeredData,
+  updateVolunteeredData,
+  deleteVolunteeredData,
+  fetchDataSources,
+  connectDataSource,
+  disconnectDataSource
+} = useData();
+
+// Fetch data on component mount
+useEffect(() => {
+  fetchVolunteeredData();
+  fetchDataSources();
+}, [fetchVolunteeredData, fetchDataSources]);
+
+// Create new data
+const handleDataSubmit = async (data) => {
+  const response = await createVolunteeredData(data);
+  if (response.data) {
+    // Show success message or perform additional actions
+  }
+};
+
+// Update data
+const handleDataUpdate = async (id, data) => {
+  const response = await updateVolunteeredData(id, data);
+  if (response.data) {
+    // Show success message or perform additional actions
+  }
+};
+
+// Delete data
+const handleDataDelete = async (id) => {
+  const response = await deleteVolunteeredData(id);
+  if (!response.error) {
+    // Show success message or perform additional actions
+  }
+};
+
+// Connect a data source
+const handleConnectSource = async (source) => {
+  const response = await connectDataSource(source);
+  if (response.data) {
+    // Show success message or perform additional actions
+  }
+};
+
+// Use in your component
+return (
+  <div>
+    {loading && <Spinner />}
+    {error && <ErrorMessage message={error} />}
+    <h2>Your Data</h2>
+    {volunteeredData && (
+      <DataTable 
+        data={volunteeredData} 
+        onUpdate={handleDataUpdate}
+        onDelete={handleDataDelete}
+      />
+    )}
+    <DataForm onSubmit={handleDataSubmit} />
+  </div>
+);
+```
+
 ### useNotification
 
 A hook for managing notifications in the application.
@@ -102,99 +323,40 @@ const onSubmit = async (values: FormValues) => {
 </form>
 ```
 
-### useApiRequest
-
-A hook for making API requests with loading, error, and success states.
-
-```typescript
-import { useApiRequest } from '../hooks';
-
-// Initialize the hook with your data type
-const { request, loading, error, data } = useApiRequest<User[]>();
-
-// Make a GET request
-const fetchUsers = async () => {
-  try {
-    await request({
-      url: '/users',
-      method: 'GET',
-      showErrorNotification: true
-    });
-  } catch (error) {
-    console.error('Failed to fetch users:', error);
-  }
-};
-
-// Make a POST request
-const createUser = async (userData: User) => {
-  try {
-    const result = await request({
-      url: '/users',
-      method: 'POST',
-      body: userData,
-      showSuccessNotification: true,
-      successMessage: 'User created successfully!'
-    });
-    return result;
-  } catch (error) {
-    console.error('Failed to create user:', error);
-  }
-};
-
-// Use in your component
-return (
-  <div>
-    {loading && <p>Loading...</p>}
-    {error && <p>Error: {error.message}</p>}
-    {data && (
-      <ul>
-        {data.map(user => (
-          <li key={user.id}>{user.name}</li>
-        ))}
-      </ul>
-    )}
-    <button onClick={fetchUsers} disabled={loading}>
-      Fetch Users
-    </button>
-  </div>
-);
-```
-
 ## Best Practices
 
 1. **Import from the index file**: Always import hooks from the index file rather than directly from their individual files:
 
 ```typescript
 // Good
-import { useForm, useApiRequest } from '../hooks';
+import { useForm, useApi, useAuth } from '../hooks';
 
 // Avoid
 import { useForm } from '../hooks/useForm';
-import { useApiRequest } from '../hooks/useApiRequest';
+import { useApi } from '../hooks/useApi';
 ```
 
 2. **Type your data**: Always provide type parameters to hooks that accept them:
 
 ```typescript
 // Good
-const { request, data } = useApiRequest<User[]>();
+const { request, data } = useApi<User[]>();
 
 // Avoid
-const { request, data } = useApiRequest();
+const { request, data } = useApi();
 ```
 
-3. **Handle errors**: Always handle errors from hooks that can throw them:
+3. **Handle errors**: Always handle errors from hooks:
 
 ```typescript
 // Good
-try {
-  await request({ url: '/users' });
-} catch (error) {
+const { data, error } = await request({ url: '/users' });
+if (error) {
   console.error('Failed to fetch users:', error);
 }
 
-// Avoid
-await request({ url: '/users' });
+// Avoid ignoring errors
+const { data } = await request({ url: '/users' });
 ```
 
 4. **Use with contexts**: Some hooks work best with their corresponding contexts:

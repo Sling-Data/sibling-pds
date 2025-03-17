@@ -19,7 +19,7 @@ export class AuthService extends ApiService {
     credentials: LoginCredentials
   ): Promise<ApiResponse<AuthTokens>> {
     return this.post<AuthTokens>("/auth/login", credentials, {
-      skipAuth: true,
+      requiresAuth: false,
     });
   }
 
@@ -32,7 +32,7 @@ export class AuthService extends ApiService {
     credentials: SignupCredentials
   ): Promise<ApiResponse<AuthTokens>> {
     return this.post<AuthTokens>("/auth/signup", credentials, {
-      skipAuth: true,
+      requiresAuth: false,
     });
   }
 
@@ -47,7 +47,7 @@ export class AuthService extends ApiService {
     return this.post<AuthTokens>(
       "/auth/refresh-token",
       { refreshToken },
-      { skipAuth: true }
+      { requiresAuth: false }
     );
   }
 }

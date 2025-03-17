@@ -1,12 +1,16 @@
-import { useFetch } from "../hooks/useFetch";
 import { ApiResponse } from "../types";
-import { getRefreshToken, storeTokens } from "../utils/TokenManager";
+import { ApiConfig, clearApiCache } from "../hooks/useApi";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 /**
+ * Options for API requests
+ */
+export type ApiRequestOptions = Omit<ApiConfig, "method" | "body">;
+
+/**
  * Base API service for handling API requests
- * This service provides methods for making API requests using the useFetch hook
+ * This service provides methods for making API requests
  */
 export class ApiService {
   /**
@@ -15,179 +19,128 @@ export class ApiService {
    * @returns The full API URL
    */
   protected static formatUrl(endpoint: string): string {
-    return `${API_URL}${endpoint}`;
+    // Remove any leading slash to prevent double slashes
+    const formattedEndpoint = endpoint.startsWith("/")
+      ? endpoint.substring(1)
+      : endpoint;
+
+    return formattedEndpoint;
   }
 
   /**
-   * Refresh the access token
-   * @returns A promise that resolves to a boolean indicating if the refresh was successful
+   * Clear the API cache
    */
-  protected static async refreshToken(): Promise<boolean> {
-    try {
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) {
-        return false;
-      }
-
-      const response = await fetch(`${API_URL}/auth/refresh-token`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const data = await response.json();
-      if (data.accessToken && data.refreshToken) {
-        storeTokens({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Error refreshing token:", error);
-      return false;
-    }
+  public static clearCache(): void {
+    clearApiCache();
   }
 
   /**
    * Make a GET request
    * @param endpoint The API endpoint
-   * @param config Additional configuration for the request
-   * @returns A promise that resolves to the API response
+   * @param options The options for the request
+   * @returns A promise that resolves to the response data
    */
   protected static async get<T>(
     endpoint: string,
-    config: {
-      params?: Record<string, string>;
-      skipAuth?: boolean;
-      skipCache?: boolean;
-    } = {}
+    options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
-    try {
-      // Use the update method of useFetch to make a one-time request
-      const { data, error } = await useFetch<T>(null, {
-        skipAuth: config.skipAuth,
-        skipCache: config.skipCache,
-        params: config.params,
-      }).update(this.formatUrl(endpoint));
-
-      return { data, error };
-    } catch (error) {
-      console.error(`API GET request error for ${endpoint}:`, error);
-      return {
-        data: null,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
+    return this.request<T>(endpoint, {
+      method: "GET",
+      ...options,
+    });
   }
 
   /**
    * Make a POST request
    * @param endpoint The API endpoint
-   * @param data The request body
-   * @param config Additional configuration for the request
-   * @returns A promise that resolves to the API response
+   * @param body The request body
+   * @param options The options for the request
+   * @returns A promise that resolves to the response data
    */
   protected static async post<T>(
     endpoint: string,
-    data: any,
-    config: {
-      skipAuth?: boolean;
-      skipCache?: boolean;
-    } = {}
+    body: any,
+    options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
-    try {
-      // Use the update method of useFetch to make a one-time request
-      const { data: responseData, error } = await useFetch<T>(null, {
-        method: "POST",
-        body: data,
-        skipAuth: config.skipAuth,
-        skipCache: config.skipCache,
-      }).update(this.formatUrl(endpoint));
-
-      return { data: responseData, error };
-    } catch (error) {
-      console.error(`API POST request error for ${endpoint}:`, error);
-      return {
-        data: null,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
+    return this.request<T>(endpoint, {
+      method: "POST",
+      body,
+      ...options,
+    });
   }
 
   /**
    * Make a PUT request
    * @param endpoint The API endpoint
-   * @param data The request body
-   * @param config Additional configuration for the request
-   * @returns A promise that resolves to the API response
+   * @param body The request body
+   * @param options The options for the request
+   * @returns A promise that resolves to the response data
    */
   protected static async put<T>(
     endpoint: string,
-    data: any,
-    config: {
-      skipAuth?: boolean;
-      skipCache?: boolean;
-    } = {}
+    body: any,
+    options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
-    try {
-      // Use the update method of useFetch to make a one-time request
-      const { data: responseData, error } = await useFetch<T>(null, {
-        method: "PUT",
-        body: data,
-        skipAuth: config.skipAuth,
-        skipCache: config.skipCache,
-      }).update(this.formatUrl(endpoint));
-
-      return { data: responseData, error };
-    } catch (error) {
-      console.error(`API PUT request error for ${endpoint}:`, error);
-      return {
-        data: null,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
-    }
+    return this.request<T>(endpoint, {
+      method: "PUT",
+      body,
+      ...options,
+    });
   }
 
   /**
    * Make a DELETE request
    * @param endpoint The API endpoint
-   * @param config Additional configuration for the request
-   * @returns A promise that resolves to the API response
+   * @param options The options for the request
+   * @returns A promise that resolves to the response data
    */
   protected static async delete<T>(
     endpoint: string,
-    config: {
-      skipAuth?: boolean;
-      skipCache?: boolean;
-    } = {}
+    options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
-    try {
-      // Use the update method of useFetch to make a one-time request
-      const { data, error } = await useFetch<T>(null, {
-        method: "DELETE",
-        skipAuth: config.skipAuth,
-        skipCache: config.skipCache,
-      }).update(this.formatUrl(endpoint));
+    return this.request<T>(endpoint, {
+      method: "DELETE",
+      ...options,
+    });
+  }
 
-      return { data, error };
+  /**
+   * Make a request to the API
+   * This is a wrapper that will be implemented by components using the useApi hook
+   * It provides a consistent interface for service methods
+   *
+   * @param endpoint The API endpoint
+   * @param config The request config
+   * @returns A promise that resolves to the response data
+   */
+  protected static async request<T>(
+    endpoint: string,
+    config: ApiConfig
+  ): Promise<ApiResponse<T>> {
+    const url = this.formatUrl(endpoint);
+
+    // This is a placeholder implementation that will be replaced by the hook-based approach
+    // In real components, the request will be made using the useApi hook
+    try {
+      const response = await fetch(`${API_URL}/${url}`, {
+        method: config.method,
+        headers: {
+          ...(config.body && { "Content-Type": "application/json" }),
+          ...config.headers,
+        },
+        body: config.body ? JSON.stringify(config.body) : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return { data, error: null };
     } catch (error) {
-      console.error(`API DELETE request error for ${endpoint}:`, error);
-      return {
-        data: null,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      };
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      return { data: null, error: errorMessage };
     }
   }
 }

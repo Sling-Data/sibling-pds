@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import { BrowserRouter } from 'react-router-dom';
 import { SignupForm } from '../../../components/pages/SignupForm';
 
@@ -162,6 +163,9 @@ describe('SignupForm Component', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
 
+    // Setup fake timers
+    jest.useFakeTimers();
+    
     // Submit form
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
@@ -169,13 +173,18 @@ describe('SignupForm Component', () => {
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('mock-token', 'mock-refresh-token');
       expect(mockSetUserId).toHaveBeenCalledWith(mockUserId);
-      
-      // Check that checkUserDataAndNavigate was called instead of directly navigating
-      // We need to wait a bit because of the setTimeout in the component
-      setTimeout(() => {
-        expect(mockCheckUserDataAndNavigate).toHaveBeenCalled();
-      }, 150);
     });
+      
+    // Fast-forward timers
+    act(() => {
+      jest.runAllTimers();
+    });
+    
+    // Now check that the function was called
+    expect(mockCheckUserDataAndNavigate).toHaveBeenCalled();
+    
+    // Restore real timers
+    jest.useRealTimers();
   });
 
   it('handles submission errors gracefully', async () => {

@@ -46,18 +46,11 @@ export class UserService extends ApiService {
   public static async hasCompletedOnboarding(): Promise<
     ApiResponse<{ completed: boolean }>
   > {
-    // For now, we'll consider a user has completed onboarding if they have a profile
-    const response = await this.getCurrentUser();
-
-    if (response.error) {
-      return { data: null, error: response.error };
+    const userId = getUserId();
+    if (!userId) {
+      return { data: null, error: "User not authenticated" };
     }
 
-    // If we have user data, consider onboarding complete
-    // This is a temporary solution until the backend implements a proper endpoint
-    return {
-      data: { completed: !!response.data },
-      error: null,
-    };
+    return this.get<{ completed: boolean }>(`/users/${userId}/onboarding`);
   }
 }
