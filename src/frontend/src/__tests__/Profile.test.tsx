@@ -278,9 +278,12 @@ describe('Profile Component', () => {
     // Click edit button
     fireEvent.click(screen.getByText('Edit Profile'));
     
-    // Change form values
-    fireEvent.change(screen.getByLabelText('Name:'), { target: { value: 'Updated User' } });
-    fireEvent.change(screen.getByLabelText('Email:'), { target: { value: 'updated@example.com' } });
+    // Change form values - updated to use getByRole instead of getByLabelText
+    const nameInput = screen.getByRole('textbox', { name: /name/i });
+    const emailInput = screen.getByRole('textbox', { name: /email/i });
+    
+    fireEvent.change(nameInput, { target: { value: 'Updated User' } });
+    fireEvent.change(emailInput, { target: { value: 'updated@example.com' } });
     
     // Mock the update request
     mockFetch.mockResolvedValueOnce({

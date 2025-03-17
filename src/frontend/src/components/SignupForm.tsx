@@ -25,7 +25,7 @@ export const SignupForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, setUserId } = useUser();
+  const { login, setUserId, checkUserDataAndNavigate } = useUser();
 
   // Setup useFetch for signup
   const { loading: submitLoading, error: submitError, update: submitSignup } = useFetch<SignupResponse>(
@@ -115,6 +115,9 @@ export const SignupForm: React.FC = () => {
       
       // Set userId from response
       setUserId(data.userId);
+      
+      // Navigate to the appropriate page based on user data
+      checkUserDataAndNavigate();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
       setErrors({

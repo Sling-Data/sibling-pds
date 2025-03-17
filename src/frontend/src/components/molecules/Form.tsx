@@ -11,6 +11,7 @@ interface FormProps {
   error?: string | null;
   children: React.ReactNode;
   noValidate?: boolean;
+  hideSubmitButton?: boolean;
 }
 
 /**
@@ -23,7 +24,8 @@ export const Form: React.FC<FormProps> = ({
   isSubmitting = false,
   error,
   children,
-  noValidate = true
+  noValidate = true,
+  hideSubmitButton = false
 }) => {
   return (
     <div className="form-wrapper">
@@ -41,17 +43,19 @@ export const Form: React.FC<FormProps> = ({
           </div>
         )}
         
-        <div className="form-actions">
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-            isLoading={isSubmitting}
-            variant="primary"
-            fullWidth
-          >
-            {submitText}
-          </Button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="form-actions">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
+              variant="primary"
+              fullWidth
+            >
+              {submitText}
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   );

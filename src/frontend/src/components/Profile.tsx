@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useFetch } from '../hooks/useFetch';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate  } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useFetch } from '../hooks/useFetch';
 import '../styles/Profile.css';
+import { Button } from './atoms/Button';
+import { Card } from './atoms/Card';
+import { Checkbox } from './atoms/Checkbox';
+import { StatusMessage } from './atoms/StatusMessage';
+import { TextInput } from './atoms/TextInput';
+import { Form } from './molecules/Form';
 
 // Types
 interface UserData {
@@ -64,6 +70,7 @@ function Profile() {
     success?: boolean;
     message?: string;
   }>({});
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Update formData when userData changes
   useEffect(() => {
@@ -87,12 +94,13 @@ function Profile() {
     
     const params = new URLSearchParams(location.search);
     const status = params.get('status');
+    const message = params.get('message');
     const error = params.get('error');
 
     if (status === 'success') {
       setAuthStatus({
         success: true,
-        message: 'Connected!'
+        message: message || 'Connected!'
       });
     } else if (error) {
       setAuthStatus({
@@ -104,14 +112,25 @@ function Profile() {
     }
   }, [location]);
 
+  // Add effect to hide success message after a delay
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showSuccessMessage) {
+      timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 5000); // Hide after 5 seconds
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [showSuccessMessage]);
+
   const handleGmailConnect = async () => {
     if (userId) {
       // Refresh token if needed before connecting to Gmail
       const refreshSuccessful = await refreshTokenIfExpired();
       if (refreshSuccessful) {
-        // Navigate to the ConnectGmail component using react-router
-        navigate(`/connect-gmail?userId=${userId}`);
-      }
+        navigate(`/connect-gmail?userId=${userId}`);      }
     }
   };
 
@@ -120,9 +139,7 @@ function Profile() {
       // Refresh token if needed before navigating to Plaid connection
       const refreshSuccessful = await refreshTokenIfExpired();
       if (refreshSuccessful) {
-        // Navigate to the ConnectPlaid component using react-router
-        navigate(`/connect-plaid?userId=${userId}`);
-      }
+        navigate(`/connect-plaid?userId=${userId}`);      }
     }
   };
 
@@ -180,6 +197,7 @@ function Profile() {
           message: 'Profile updated successfully!'
         });
         setIsEditing(false);
+        setShowSuccessMessage(true);
         refetch();
       } catch (error) {
         setSubmitStatus({
@@ -193,19 +211,19 @@ function Profile() {
   };
 
   if (!userId) {
-    return <div className="profile-container">No user ID provided</div>;
+    return <Card className="profile-container">No user ID provided</Card>;
   }
 
   if (fetchLoading) {
-    return <div className="profile-container">Loading user data...</div>;
+    return <Card className="profile-container">Loading user data...</Card>;
   }
 
   if (fetchError) {
     return (
-      <div className="profile-container error">
-        <p>Error: {fetchError}</p>
-        <button onClick={() => refetch()}>Retry</button>
-      </div>
+      <Card className="profile-container">
+        <StatusMessage type="error" message={fetchError} />
+        <Button onClick={() => refetch()} variant="primary">Retry</Button>
+      </Card>
     );
   }
 
@@ -213,130 +231,143 @@ function Profile() {
   const isUpdating = isSubmitting || updateLoading;
 
   // Show any update errors
-  const displayError = updateError || submitStatus.message;
+  const displayError = updateError || (submitStatus.success ? null : submitStatus.message);
 
   return (
     <div className="profile-container">
-      <h2>User Profile</h2>
+      <h1 className="profile-title">User Profile</h1>
       
-      {/* Auth Status Messages */}
-      {authStatus.message && (
-        <div className={`auth-status ${authStatus.success ? 'success' : 'error'}`}>
-          {authStatus.message}
-        </div>
-      )}
-      
-      {/* User Info Display */}
-      {!isEditing && userData && (
-        <div className="user-info">
-          <div className="info-row">
-            <span className="label">Name:</span>
-            <span className="value">{userData.name}</span>
+      <Card>
+        {/* Auth Status Messages */}
+        {authStatus.message && (
+          <StatusMessage 
+            type={authStatus.success ? "success" : "error"} 
+            message={authStatus.message}
+          />
+        )}
+        
+        {/* User Info Display */}
+        {!isEditing && userData && (
+          <div className="user-info">
+            <div className="info-row">
+              <span className="label">Name:</span>
+              <span className="value">{userData.name}</span>
+            </div>
+            <div className="info-row">
+              <span className="label">Email:</span>
+              <span className="value">{userData.email}</span>
+            </div>
+            <Button 
+              onClick={() => setIsEditing(true)}
+              variant="secondary"
+              size="medium"
+            >
+              Edit Profile
+            </Button>
+            
+            {showSuccessMessage && submitStatus.success && (
+              <div className="success-message-container fade-out">
+                <StatusMessage 
+                  type="success" 
+                  message={submitStatus.message || 'Profile updated successfully!'} 
+                />
+              </div>
+            )}
           </div>
-          <div className="info-row">
-            <span className="label">Email:</span>
-            <span className="value">{userData.email}</span>
-          </div>
-          <button 
-            onClick={() => setIsEditing(true)}
-            className="edit-button"
+        )}
+        
+        {/* Edit Form */}
+        {isEditing && (
+          <Form 
+            onSubmit={handleSubmit}
+            submitText={isUpdating ? 'Saving...' : 'Save Changes'}
+            isSubmitting={isUpdating}
+            error={displayError || undefined}
+            hideSubmitButton={true}
           >
-            Edit Profile
-          </button>
-        </div>
-      )}
-      
-      {/* Edit Form */}
-      {isEditing && (
-        <form onSubmit={handleSubmit} className="edit-form">
-          <div className="form-group">
-            <label htmlFor="name">Name:</label>
-            <input
-              type="text"
+            <TextInput
               id="name"
               name="name"
+              label="Name"
               value={formData.name}
               onChange={handleInputChange}
-              className={formErrors.name ? 'error' : ''}
+              error={formErrors.name}
+              required
             />
-            {formErrors.name && <div className="error-message">{formErrors.name}</div>}
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
+            
+            <TextInput
               id="email"
               name="email"
+              type="email"
+              label="Email"
               value={formData.email}
               onChange={handleInputChange}
-              className={formErrors.email ? 'error' : ''}
+              error={formErrors.email}
+              required
             />
-            {formErrors.email && <div className="error-message">{formErrors.email}</div>}
-          </div>
-          
-          <div className="form-actions">
-            <button 
-              type="submit" 
-              disabled={isUpdating}
-              className="save-button"
-            >
-              {isUpdating ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setIsEditing(false)}
-              className="cancel-button"
-            >
-              Cancel
-            </button>
-          </div>
-          
-          {displayError && (
-            <div className={`submit-status ${submitStatus.success ? 'success' : 'error'}`}>
-              {displayError}
+            
+            <div className="form-button-row">
+              <Button 
+                type="button" 
+                onClick={() => setIsEditing(false)}
+                variant="secondary"
+                size="medium"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isUpdating}
+                isLoading={isUpdating}
+                variant="primary"
+                size="medium"
+              >
+                {isUpdating ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
-          )}
-        </form>
-      )}
+          </Form>
+        )}
+      </Card>
       
       {/* Connect Services Section */}
-      <div className="connect-services">
-        <h3>Connect Services</h3>
+      <Card className="connect-services" title="Connect Services">
         <div className="service-buttons">
-          <button 
-            onClick={handleGmailConnect}
-            className="gmail-button"
-          >
-            Connect Gmail
-          </button>
-          <button 
-            onClick={handlePlaidConnect}
-            className="plaid-button"
-          >
-            Connect Bank Account
-          </button>
+          <div className="connect-button-wrapper">
+            <Button 
+                onClick={handleGmailConnect}
+                variant="primary"
+              size="medium"
+            >
+              Connect Gmail
+            </Button>
+          </div>
+          <div className="connect-button-wrapper">
+            <Button 
+              onClick={handlePlaidConnect}
+              variant="primary"
+              size="medium"
+            >
+              Connect Bank Account
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
       
       {/* Privacy Settings */}
-      <div className="privacy-settings">
-        <h3>Privacy Settings</h3>
+      <Card className="privacy-settings" title="Privacy Settings">
         <div className="setting-item">
-          <label htmlFor="dataSharing">
-            <input
-              type="checkbox"
-              id="dataSharing"
-              checked={privacySettings.dataSharing}
-              onChange={(e) => setPrivacySettings({
-                ...privacySettings,
-                dataSharing: e.target.checked
-              })}
-            />
-            Allow data sharing with third-party services
-          </label>
+          <Checkbox
+            id="dataSharing"
+            name="dataSharing"
+            label="Allow data sharing with third-party services"
+            checked={privacySettings.dataSharing}
+            onChange={(e) => setPrivacySettings({
+              ...privacySettings,
+              dataSharing: e.target.checked
+            })}
+          />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
