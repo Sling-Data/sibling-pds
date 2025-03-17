@@ -3,11 +3,11 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import { LoginForm } from '../components/pages/LoginForm';
+import { LoginForm } from '../../../components/pages/LoginForm';
 
 // Mock the UserContext hook
 const mockCheckUserDataAndNavigate = jest.fn();
-jest.mock('../context/UserContext', () => ({
+jest.mock('../../../contexts/UserContext', () => ({
   useUser: () => ({
     login: jest.fn(),
     setUserId: jest.fn(),
@@ -17,7 +17,7 @@ jest.mock('../context/UserContext', () => ({
 
 // Mock the useFetch hook
 const mockUpdate = jest.fn();
-jest.mock('../hooks/useFetch', () => ({
+jest.mock('../../../hooks/useFetch', () => ({
   useFetch: () => ({
     loading: false,
     error: null,
@@ -26,7 +26,7 @@ jest.mock('../hooks/useFetch', () => ({
 }));
 
 // Mock TokenManager
-jest.mock('../utils/TokenManager', () => ({
+jest.mock('../../../utils/TokenManager', () => ({
   getUserId: () => 'test-user'
 }));
 

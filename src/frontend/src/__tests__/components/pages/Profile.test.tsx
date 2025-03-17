@@ -2,8 +2,8 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { act } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import Profile from '../components/pages/Profile';
-import { UserProvider } from '../context/UserContext';
+import Profile from '../../../components/pages/Profile';
+import { UserProvider } from '../../../contexts/UserContext';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
@@ -251,7 +251,7 @@ describe('Profile Component', () => {
     });
     
     // Mock the user ID
-    jest.spyOn(require('../context/UserContext'), 'useUser').mockReturnValue({ 
+    jest.spyOn(require('../../../contexts/UserContext'), 'useUser').mockReturnValue({ 
       userId: 'test-user-id',
       refreshTokenIfExpired: jest.fn().mockResolvedValue(true)
     });

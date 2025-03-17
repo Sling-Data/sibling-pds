@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Notification } from '../../components/molecules/Notification';
+import { Notification } from '../../../components/molecules/Notification';
 
 describe('Notification', () => {
   const mockOnClose = jest.fn();

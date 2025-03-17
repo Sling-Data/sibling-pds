@@ -2,7 +2,7 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { UserProvider, useUser } from '../context/UserContext';
+import { UserProvider, useUser } from '../contexts/UserContext';
 import * as tokenUtils from '../utils/TokenManager';
 
 // Mock TokenManager functions

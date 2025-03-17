@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { NotificationProvider, useNotificationContext } from '../context/NotificationContext';
+import { NotificationProvider, useNotificationContext } from '../../contexts/NotificationContext';
 
 // Test component that uses the notification context
 const TestComponent = () => {

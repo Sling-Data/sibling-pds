@@ -4,7 +4,7 @@ import {
   getRefreshToken,
   shouldRefresh,
 } from "../utils/TokenManager";
-import { useNotificationContext } from "../context";
+import { useNotificationContext } from "../contexts";
 
 interface ApiRequestOptions {
   url: string;

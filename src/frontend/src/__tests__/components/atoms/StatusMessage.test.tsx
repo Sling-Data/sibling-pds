@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { StatusMessage } from '../../components/atoms/StatusMessage';
+import { StatusMessage } from '../../../components/atoms/StatusMessage';
 
 describe('StatusMessage Component', () => {
   const defaultProps = {

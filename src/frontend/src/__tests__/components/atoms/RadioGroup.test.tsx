@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RadioGroup } from '../../components/atoms/RadioGroup';
+import { RadioGroup } from '../../../components/atoms/RadioGroup';
 
 describe('RadioGroup Component', () => {
   const options = [

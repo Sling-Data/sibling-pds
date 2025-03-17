@@ -1,4 +1,4 @@
-import { useUser } from "../context/UserContext";
+import { useUser } from "../contexts/UserContext";
 
 /**
  * Utility function to make authenticated API calls with automatic token refresh

@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { NotificationContainer } from '../../components/organisms/NotificationContainer';
-import { NotificationProvider } from '../../context/NotificationContext';
-import { useNotificationContext } from '../../context/NotificationContext';
+import { NotificationContainer } from '../../../components/organisms/NotificationContainer';
+import { NotificationProvider } from '../../../contexts/NotificationContext';
+import { useNotificationContext } from '../../../contexts/NotificationContext';
 
 // Mock the Notification component
-jest.mock('../../components/molecules/Notification', () => ({
+jest.mock('../../../components/molecules/Notification', () => ({
   Notification: ({ id, message, type, onClose }: any) => (
     <div data-testid={`notification-${id}`} data-type={type}>
       {message}

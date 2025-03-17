@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Checkbox } from '../../components/atoms/Checkbox';
+import { Checkbox } from '../../../components/atoms/Checkbox';
 
 describe('Checkbox Component', () => {
   const defaultProps = {

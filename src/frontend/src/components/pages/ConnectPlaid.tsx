@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser } from '../../context';
+import { useUser } from '../../contexts';
 import { useFetch } from '../../hooks/useFetch';
-import ConnectApi from '../molecules/ConnectApi';
+import ConnectApi from '../templates/ConnectApi';
 
 // Helper to check if we're in a test environment
 const isTestEnvironment = (): boolean => {

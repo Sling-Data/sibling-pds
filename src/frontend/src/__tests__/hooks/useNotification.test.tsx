@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useNotification } from '../hooks/useNotification';
+import { useNotification } from '../../hooks/useNotification';
 
 describe('useNotification', () => {
   beforeEach(() => {

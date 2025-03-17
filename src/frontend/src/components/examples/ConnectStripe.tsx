@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../contexts/UserContext';
 import { useFetch } from '../../hooks/useFetch';
-import ConnectApi from '../molecules/ConnectApi';
+import ConnectApi from '../templates/ConnectApi';
 
 const ConnectStripe: React.FC = () => {
   const location = useLocation();

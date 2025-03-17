@@ -1,6 +1,6 @@
 import React from 'react';
 import { Notification } from '../molecules/Notification';
-import { useNotificationContext } from '../../context';
+import { useNotificationContext } from '../../contexts';
 
 export const NotificationContainer: React.FC = () => {
   const { notifications, removeNotification } = useNotificationContext();

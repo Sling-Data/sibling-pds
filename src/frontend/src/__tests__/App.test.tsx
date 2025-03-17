@@ -11,8 +11,8 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // Mock the UserContext hook
-jest.mock('../context/UserContext', () => ({
-  ...jest.requireActual('../context/UserContext'),
+jest.mock('../contexts/UserContext', () => ({
+  ...jest.requireActual('../contexts/UserContext'),
   useUser: () => ({
     isAuthenticated: false,
     setIsAuthenticated: jest.fn()
@@ -58,7 +58,7 @@ describe('App Component', () => {
   describe('when authenticated', () => {
     beforeEach(() => {
       // Mock the UserContext for authenticated state
-      jest.spyOn(require('../context/UserContext'), 'useUser').mockImplementation(() => ({
+      jest.spyOn(require('../contexts/UserContext'), 'useUser').mockImplementation(() => ({
         isAuthenticated: true,
         setIsAuthenticated: jest.fn()
       }));

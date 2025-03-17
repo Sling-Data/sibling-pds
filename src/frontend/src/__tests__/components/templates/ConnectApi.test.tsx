@@ -2,7 +2,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import ConnectApi from '../components/molecules/ConnectApi';
+import ConnectApi from '../../../components/templates/ConnectApi';
 
 // Mock navigate function
 const mockNavigate = jest.fn();

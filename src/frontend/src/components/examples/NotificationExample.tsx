@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNotificationContext } from '../../context';
+import { useNotificationContext } from '../../contexts';
 import { ExamplesNav } from './ExamplesNav';
 
 export const NotificationExample: React.FC = () => {

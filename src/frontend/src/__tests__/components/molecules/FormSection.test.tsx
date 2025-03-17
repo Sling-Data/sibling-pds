@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { FormSection } from '../../components/molecules/FormSection';
+import { FormSection } from '../../../components/molecules/FormSection';
 
 describe('FormSection Component', () => {
   test('renders children correctly', () => {

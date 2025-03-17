@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForm } from '../../hooks';
-import { useNotificationContext } from '../../context';
+import { useNotificationContext } from '../../contexts';
 import { ExamplesNav } from './ExamplesNav';
 
 interface FormValues {

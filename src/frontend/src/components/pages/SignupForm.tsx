@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../contexts/UserContext';
 import { useFetch } from '../../hooks/useFetch';
 import '../../styles/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';

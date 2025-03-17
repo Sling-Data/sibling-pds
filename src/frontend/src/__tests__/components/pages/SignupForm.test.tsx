@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { SignupForm } from '../components/pages/SignupForm';
+import { SignupForm } from '../../../components/pages/SignupForm';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
@@ -14,7 +14,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 // Mock TokenManager
-jest.mock('../utils/TokenManager', () => ({
+jest.mock('../../../utils/TokenManager', () => ({
   storeTokens: jest.fn(),
   clearTokens: jest.fn(),
   getUserId: jest.fn(),
@@ -26,8 +26,8 @@ const mockLogin = jest.fn();
 const mockSetUserId = jest.fn();
 const mockCheckUserDataAndNavigate = jest.fn();
 
-jest.mock('../context/UserContext', () => ({
-  ...jest.requireActual('../context/UserContext'),
+jest.mock('../../../contexts/UserContext', () => ({
+  ...jest.requireActual('../../../contexts/UserContext'),
   useUser: () => ({
     login: mockLogin,
     setUserId: mockSetUserId,
@@ -36,7 +36,7 @@ jest.mock('../context/UserContext', () => ({
 }));
 
 // Mock useFetch hook
-jest.mock('../hooks/useFetch', () => ({
+jest.mock('../../../hooks/useFetch', () => ({
   useFetch: () => ({
     loading: false,
     error: null,

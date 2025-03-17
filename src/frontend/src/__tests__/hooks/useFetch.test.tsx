@@ -1,7 +1,7 @@
 // @ts-expect-error React is used implicitly with JSX
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
-import { useFetch, clearCache } from '../hooks/useFetch';
+import { useFetch, clearCache } from '../../hooks/useFetch';
 
 interface User {
   _id: string;

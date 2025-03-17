@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ConnectServiceButton } from '../../components/molecules/ConnectServiceButton';
+import { ConnectServiceButton } from '../../../components/molecules/ConnectServiceButton';
 
 // Mock the Button component to avoid testing its implementation
-jest.mock('../../components/atoms/Button', () => ({
+jest.mock('../../../components/atoms/Button', () => ({
   Button: ({ 
     children, 
     onClick, 

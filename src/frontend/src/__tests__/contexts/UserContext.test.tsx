@@ -3,13 +3,13 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { act } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { UserProvider, useUser } from '../context/UserContext';
-import Profile from '../components/pages/Profile';
+import { UserProvider, useUser } from '../../contexts/UserContext';
+import Profile from '../../components/pages/Profile';
 import '@testing-library/jest-dom';
-import * as tokenUtils from '../utils/TokenManager';
+import * as tokenUtils from '../../utils/TokenManager';
 
 // Mock TokenManager functions
-jest.mock('../utils/TokenManager', () => ({
+jest.mock('../../utils/TokenManager', () => ({
   getUserId: jest.fn().mockReturnValue(null),
   isTokenValid: jest.fn().mockReturnValue(false),
   storeTokens: jest.fn(),

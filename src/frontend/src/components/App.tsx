@@ -6,7 +6,7 @@ import Profile from './pages/Profile';
 import DataInput from './pages/DataInput';
 import ConnectPlaid from './pages/ConnectPlaid';
 import ConnectGmail from './pages/ConnectGmail';
-import { UserProvider, useUser, NotificationProvider } from '../context';
+import { UserProvider, useUser, NotificationProvider } from '../contexts';
 import { NotificationContainer } from './organisms/NotificationContainer';
 import { NotificationExample, FormExample, ApiRequestExample } from './examples';
 

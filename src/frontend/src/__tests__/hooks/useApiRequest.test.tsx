@@ -1,11 +1,11 @@
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
-import { useApiRequest } from '../hooks/useApiRequest';
-import { NotificationProvider } from '../context/NotificationContext';
-import * as TokenManager from '../utils/TokenManager';
+import { useApiRequest } from '../../hooks/useApiRequest';
+import { NotificationProvider } from '../../contexts/NotificationContext';
+import * as TokenManager from '../../utils/TokenManager';
 
 // Mock the TokenManager functions
-jest.mock('../utils/TokenManager', () => ({
+jest.mock('../../utils/TokenManager', () => ({
   getAccessToken: jest.fn(),
   getRefreshToken: jest.fn(),
   isTokenValid: jest.fn(),
@@ -16,7 +16,7 @@ jest.mock('../utils/TokenManager', () => ({
 global.fetch = jest.fn();
 
 // Mock the notification context
-jest.mock('../context/NotificationContext', () => ({
+jest.mock('../../contexts/NotificationContext', () => ({
   useNotificationContext: () => ({
     addNotification: jest.fn()
   }),
