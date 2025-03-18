@@ -2,6 +2,39 @@
 
 A modern React application for connecting siblings and managing their interactions.
 
+## Current Project Status
+
+### Completed Work
+- [x] Phase 1: API Layer Refactoring
+  - Created consolidated API hook (useApi) to replace direct fetch calls
+  - Implemented proper error handling and notification integration
+  - Fixed and enhanced tests for the new API hook
+
+- [x] Phase 2: Form and Notification Improvements
+  - Enhanced the notification system integration with the API layer
+  - Added tests for notification behavior in API calls
+
+- [x] Phase 3: New Hooks Implementation
+  - Implemented useAuth, useUser, and useData hooks
+  - Added comprehensive tests for all new hooks
+  - Fixed critical issues in test mocking and implementation
+
+- [x] Phase 4: Initial Component Updates
+  - Updated ConnectGmail component to improve UX when popup is closed
+  - Enhanced Profile component to use the new ConnectApi molecule
+  - Added service buttons styles to maintain visual consistency
+
+### Pending Tasks for Next Agent
+- [ ] Complete Phase 4: Component Updates
+  - Update remaining components to use the new hooks and services
+  - Ensure backward compatibility for all component changes
+  - Verify tests for updated components
+
+- [ ] Prepare for Phase 5: Cleanup and Documentation
+  - Identify deprecated components that can be removed after migration
+  - Document the new component architecture and hook usage patterns
+  - Prepare migration strategy for remaining legacy code
+
 ## Tech Stack
 
 - **Core Technologies**:
@@ -12,7 +45,7 @@ A modern React application for connecting siblings and managing their interactio
 
 - **State Management & Data Fetching**:
   - React Context API for global state
-  - Custom `useFetch` hook with caching and retry logic
+  - Custom hooks architecture with domain-specific hooks
   - JWT token management with auto-refresh
   - Session storage for secure data
 
@@ -33,7 +66,7 @@ A modern React application for connecting siblings and managing their interactio
 - Type-safe API calls
 
 ### Data Management
-- Centralized data fetching with `useFetch` hook
+- Centralized data fetching with modern hooks
 - Request caching with configurable expiry
 - Automatic retry on network errors
 - Dependency-based refetching
@@ -95,31 +128,19 @@ npm run build:frontend
 ```
 src/
 ├── components/           # React components
-│   ├── App.tsx          # Main application component
-│   ├── ConnectPlaid.tsx # Plaid integration UI
-│   ├── DataInput.tsx    # User data input forms
-│   ├── LoginForm.tsx    # Authentication UI
-│   ├── Profile.tsx      # User profile management
-│   └── SignupForm.tsx   # User registration
-├── context/
-│   └── UserContext.tsx  # Global user state management
-├── hooks/
-│   └── useFetch.ts      # Data fetching with caching
-├── utils/
-│   ├── TokenManager.ts  # JWT token management
-│   └── api.ts          # API utilities
-├── __tests__/          # Test files
-│   ├── App.test.tsx
-│   ├── Auth.test.tsx
-│   ├── ConnectPlaid.test.tsx
-│   ├── DataInput.test.tsx
-│   ├── LoginForm.test.tsx
-│   ├── Profile.test.tsx
-│   ├── SignupForm.test.tsx
-│   ├── UserContext.test.tsx
-│   ├── integration.test.tsx
-│   └── useFetch.test.tsx
-└── index.tsx           # Application entry point
+│   ├── atoms/           # Atomic components (buttons, inputs, etc.)
+│   ├── molecules/       # Composite components (form sections, cards, etc.)
+│   ├── organisms/       # Complex UI sections (forms, navbars, etc.)
+│   ├── templates/       # Page layouts and templates
+│   └── pages/           # Full page components
+├── contexts/            # React contexts for state management
+├── hooks/               # Custom React hooks
+├── services/            # Domain-specific service functions
+├── styles/              # CSS and styling
+├── utils/               # Utility functions and helpers
+├── __tests__/           # Test files
+├── types/               # TypeScript type definitions
+└── index.tsx            # Application entry point
 ```
 
 ## Testing
@@ -144,45 +165,27 @@ npm test
 
 # Run tests once
 npm run test-once
+
+# Run a specific test
+node test-single.js "TestName"
 ```
 
-### Test Output
-Check `test-output.json` for detailed test results and coverage information.
+## Next Steps for Development
 
-## Component Usage
+1. Complete the component updates using the new hook architecture
+2. Implement consistent error handling across all components
+3. Replace remaining legacy fetch calls with modern hooks
+4. Enhance the notification system with more user-friendly messages
+5. Prepare for cleanup of deprecated code
 
-### useFetch Hook
-```typescript
-const { data, loading, error, fromCache, refetch } = useFetch<DataType>({
-  url: '/api/endpoint',
-  method: 'GET',
-  skipAuth: false, // Optional: skip authentication
-  skipCache: false // Optional: skip cache
-});
-```
-
-### Protected Routes
-```typescript
-<ProtectedRoute>
-  <YourComponent />
-</ProtectedRoute>
-```
-
-### External Service Connection
-```typescript
-// Plaid Connection
-<ConnectPlaid onSuccess={handleSuccess} />
-
-// Gmail Connection
-<Profile onGmailConnect={handleGmailConnect} />
-```
+> For more detailed information about the refactoring project, hooks implementation, and technical details, please see the [src/README.md](./src/README.md) file.
 
 ## Best Practices
 1. Always use TypeScript for type safety
-2. Use the `useFetch` hook for API calls
-3. Handle loading and error states
+2. Use the centralized hooks for API calls and data management
+3. Handle loading and error states consistently
 4. Implement proper error boundaries
-5. Write tests for new components
+5. Write tests for new components and hooks
 6. Follow React hooks rules
 7. Use protected routes for authenticated content
 

@@ -45,7 +45,10 @@ jest.mock('../../../hooks/useFetch', () => ({
     update: jest.fn().mockImplementation(async (url, options) => {
       if (url.includes('/auth/signup')) {
         if (options?.body?.email === 'existing@example.com') {
-          return { data: null, error: 'Email already exists' };
+          return {
+            data: null, 
+            error: 'Email already exists'
+          };
         }
         return {
           data: {
@@ -56,7 +59,10 @@ jest.mock('../../../hooks/useFetch', () => ({
           error: null
         };
       }
-      return { data: null, error: 'Unexpected error' };
+      return { 
+        data: null, 
+        error: 'Unexpected error' 
+      };
     }),
     refetch: jest.fn(),
     fromCache: false

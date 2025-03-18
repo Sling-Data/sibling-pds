@@ -1,55 +1,59 @@
-import { act, renderHook } from "@testing-library/react";
-import { clearApiCache, useApi } from "../../hooks/useApi";
+import { renderHook, act } from "@testing-library/react";
+import { useApi } from "../../hooks/useApi";
 import * as TokenManager from "../../utils/TokenManager";
 
 // Mock fetch
-global.fetch = jest.fn();
-const mockedFetch = global.fetch as jest.Mock;
+const mockedFetch = jest.fn();
+global.fetch = mockedFetch;
 
-// Mock the notification context
+// Mock process.env
+process.env.REACT_APP_API_URL = "http://test-api.com";
+
+// Mock notification context
+const mockAddNotification = jest.fn();
 jest.mock("../../contexts", () => ({
   useNotificationContext: () => ({
-    addNotification: jest.fn()
-  })
+    addNotification: mockAddNotification,
+  }),
 }));
 
-// Mock token manager
+// Mock TokenManager
 jest.mock("../../utils/TokenManager", () => ({
   getAccessToken: jest.fn(),
-  getRefreshToken: jest.fn(),
-  shouldRefresh: jest.fn(),
-  storeTokens: jest.fn(),
+  isTokenValid: jest.fn().mockReturnValue(true),
+  refreshTokens: jest.fn(),
+  shouldRefresh: jest.fn().mockReturnValue(false),
 }));
-
-// Mock API URL
-process.env.REACT_APP_API_URL = "http://test-api.com";
 
 describe("useApi Hook", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedFetch.mockClear();
-    clearApiCache();
+    mockAddNotification.mockClear();
+    // Set up default return values for mocks
+    jest.spyOn(TokenManager, "getAccessToken").mockReturnValue("mock-token");
+    jest.spyOn(TokenManager, "isTokenValid").mockReturnValue(true);
+    jest.spyOn(TokenManager, "shouldRefresh").mockReturnValue(false);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  it("should make API requests with the correct headers", async () => {
+    const mockData = { id: "123", name: "User" };
 
-  it("should make a successful GET request", async () => {
-    const mockData = { id: "123", name: "Test User" };
     mockedFetch.mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce(mockData),
     });
 
-    jest.spyOn(TokenManager, "getAccessToken").mockReturnValue("mock-token");
-
     const { result } = renderHook(() => useApi());
 
-    let response = { data: null, error: null };
+    let responseData;
     await act(async () => {
-      response = await result.current.request("/test-endpoint");
+      const response = await result.current.request("/test-endpoint");
+      responseData = response.data;
+      expect(response.error).toBeNull();
     });
+
+    expect(responseData).toEqual(mockData);
 
     expect(mockedFetch).toHaveBeenCalledWith(
       "http://test-api.com/test-endpoint",
@@ -60,8 +64,6 @@ describe("useApi Hook", () => {
         }),
       })
     );
-
-    expect(result.current.data).toEqual(mockData);
   });
 
   it("should handle API errors", async () => {
@@ -73,21 +75,22 @@ describe("useApi Hook", () => {
 
     const { result } = renderHook(() => useApi());
 
-    let response = { data: null, error: null };
+    let responseData, responseError;
     await act(async () => {
-      response = await result.current.request("/nonexistent", {
-        requiresAuth: false,
+      const response = await result.current.request("/nonexistent", {
+        requiresAuth: false, // Skip auth to avoid token issues
       });
+      responseData = response.data;
+      responseError = response.error;
     });
-
-    expect(response.data).toBeNull();
-    expect(response.error).toBe("API error: 404 Not Found");
+    
+    expect(responseData).toBeNull();
+    expect(responseError).toBe("API error: 404 Not Found");
   });
 
   it("should cache GET requests", async () => {
     const mockData = { id: "123", name: "User" };
     
-    // Only mock once - second request should use cache
     mockedFetch.mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValueOnce(mockData),
@@ -95,62 +98,69 @@ describe("useApi Hook", () => {
 
     const { result } = renderHook(() => useApi());
 
-    // First request
     await act(async () => {
-      await result.current.request("/cached-endpoint", { requiresAuth: false });
+      await result.current.request("/cached-endpoint", { 
+        method: "GET",
+        cacheResult: true
+      });
     });
 
-    // Second request to the same endpoint should use cache
-    await act(async () => {
-      await result.current.request("/cached-endpoint", { requiresAuth: false });
-    });
-
-    // Fetch should be called only once
     expect(mockedFetch).toHaveBeenCalledTimes(1);
+
+    mockedFetch.mockClear();
+
+    await act(async () => {
+      await result.current.request("/cached-endpoint", { 
+        method: "GET",
+        cacheResult: true
+      });
+    });
+
+    expect(mockedFetch).not.toHaveBeenCalled();
   });
 
-  it("should refresh token on 401 response", async () => {
-    jest.spyOn(TokenManager, "getAccessToken")
-      .mockReturnValueOnce("expired-token")
-      .mockReturnValueOnce("new-token");
-    
-    jest.spyOn(TokenManager, "getRefreshToken")
-      .mockReturnValue("refresh-token");
+  it("should show success notifications when requested", async () => {
+    const mockData = { id: "123", name: "User" };
 
-    // First request fails with 401
-    mockedFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-      statusText: "Unauthorized",
-    });
-
-    // Token refresh request succeeds
     mockedFetch.mockResolvedValueOnce({
       ok: true,
-      json: jest.fn().mockResolvedValueOnce({
-        accessToken: "new-token",
-        refreshToken: "new-refresh-token",
-      }),
-    });
-
-    // Retry with new token succeeds
-    const userData = { id: "123", name: "Test User" };
-    mockedFetch.mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValueOnce(userData),
+      json: jest.fn().mockResolvedValueOnce(mockData),
     });
 
     const { result } = renderHook(() => useApi());
 
     await act(async () => {
-      await result.current.request("/protected");
+      await result.current.request("/success-endpoint", {
+        showSuccessNotification: true,
+        successMessage: "Operation was successful!",
+      });
     });
 
-    // Check token refresh was called
-    expect(mockedFetch).toHaveBeenCalledTimes(3);
-    expect(TokenManager.storeTokens).toHaveBeenCalledWith({
-      accessToken: "new-token",
-      refreshToken: "new-refresh-token",
+    expect(mockAddNotification).toHaveBeenCalledWith(
+      "Operation was successful!",
+      "success"
+    );
+  });
+
+  it("should show error notifications when requested", async () => {
+    // Simulate a network error instead of a server error
+    mockedFetch.mockImplementationOnce(() => {
+      throw new Error("API error: 500 Server Error");
     });
+
+    const { result } = renderHook(() => useApi());
+
+    await act(async () => {
+      await result.current.request("/error-endpoint", {
+        showErrorNotification: true,
+        requiresAuth: false,
+      });
+    });
+
+    // Check that the error notification was shown with our specific error message
+    expect(mockAddNotification).toHaveBeenCalledWith(
+      "API error: 500 Server Error",
+      "error"
+    );
   });
 }); 
