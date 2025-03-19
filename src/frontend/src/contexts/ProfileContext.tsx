@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useFetch } from '../hooks/useFetch';
-import { useUser } from './UserContext';
+import { useUser } from './UserContextOld';
 
 interface UserProfile {
   id: string;

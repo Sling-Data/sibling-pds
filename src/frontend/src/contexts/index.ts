@@ -1,4 +1,5 @@
-export { UserProvider, useUser } from "./UserContext";
+export { UserProvider, useUser } from "./UserContextOld";
+export { UserProviderNew, useUserContextNew } from "./UserContextNew";
 export { UserDataProvider, useUserData } from "./UserDataContext";
 export {
   UserDataSourcesProvider,

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../contexts/UserContextOld';
 
 /**
  * Header component for the application

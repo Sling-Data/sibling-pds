@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import ConnectPlaid from '../../../components/pages/ConnectPlaid';
-import { UserProvider } from '../../../contexts/UserContext';
+import { UserProvider } from '../../../contexts/UserContextOld';
 
 // Mock react-router-dom hooks
 jest.mock('react-router-dom', () => {

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useUser } from '../../contexts/UserContext';
-import { useFetch } from '../../hooks/useFetch';
 import '../../styles/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';
 import { Form } from '../molecules/Form';
+import { useAuth } from '../../hooks/useAuth';
+import { useUser } from '../../hooks/useUser';
 
 interface FormErrors {
   name?: string;
@@ -12,31 +12,27 @@ interface FormErrors {
   submit?: string;
 }
 
-interface SignupResponse {
-  userId: string;
-  token: string;
-  refreshToken: string;
-  message?: string;
-}
-
 export const SignupForm: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, setUserId, checkUserDataAndNavigate } = useUser();
-
-  // Setup useFetch for signup
-  const { loading: submitLoading, error: submitError, update: submitSignup } = useFetch<SignupResponse>(
-    null,
-    {
-      method: 'POST',
-      skipCache: true,
-      retryOnAuth: false,
-      skipAuth: true
-    }
-  );
+  
+  // Get auth methods from useAuth
+  const { signup, checkUserDataAndNavigate } = useAuth();
+  
+  // Get the setUserId method from useUser if available
+  // Note: This is wrapped in a try/catch because useUser needs to be
+  // used within UserProviderNew, and we don't want to crash if it's not available
+  let setUserId: ((id: string | null) => void) | undefined;
+  try {
+    const userHook = useUser();
+    setUserId = userHook.setUserId;
+  } catch (error) {
+    // If useUser can't be used, we'll rely only on useAuth
+    console.log('UserProviderNew not available, using only AuthContext');
+  }
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -89,17 +85,12 @@ export const SignupForm: React.FC = () => {
     setErrors({});
     
     try {
-      const result = await submitSignup(
-        `${process.env.REACT_APP_API_URL}/auth/signup`,
-        {
-          method: 'POST',
-          body: {
-            name,
-            email,
-            password,
-          }
-        }
-      );
+      // Use the signup method from useAuth
+      const result = await signup({
+        name,
+        email,
+        password
+      });
 
       if (result.error) {
         throw new Error(result.error);
@@ -110,14 +101,13 @@ export const SignupForm: React.FC = () => {
         throw new Error('No response data received');
       }
 
-      // Store tokens using context
-      login(data.token, data.refreshToken);
-      
-      // Set userId from response
-      setUserId(data.userId);
+      // If useUser is available, set the userId - ensuring it's not undefined
+      if (setUserId && data.userId) {
+        setUserId(data.userId);
+      }
       
       // Navigate to the appropriate page based on user data
-      checkUserDataAndNavigate();
+      await checkUserDataAndNavigate();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to sign up';
       setErrors({
@@ -128,17 +118,14 @@ export const SignupForm: React.FC = () => {
     }
   };
 
-  // Get the submit error message
-  const submitErrorMessage = errors.submit || (submitError ? getFormattedErrorMessage(submitError) : null);
-
   return (
     <div className="auth-form-container">
       <Form
         onSubmit={handleSubmit}
         title="Create Your Account"
-        submitText={isSubmitting || submitLoading ? 'Creating Account...' : 'Create Account'}
-        isSubmitting={isSubmitting || submitLoading}
-        error={submitErrorMessage}
+        submitText={isSubmitting ? 'Creating Account...' : 'Create Account'}
+        isSubmitting={isSubmitting}
+        error={errors.submit}
       >
         <div className="form-group">
           <TextInput

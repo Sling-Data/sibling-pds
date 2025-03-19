@@ -1,6 +1,6 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { UserProvider } from '../contexts/UserContext';
+import { UserProvider } from '../contexts/UserContextOld';
 import { useFetch, clearCache } from '../hooks/useFetch';
 
 // Mock the environment variable

@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { act } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { UserProvider, useUser } from '../../contexts/UserContext';
+import { UserProvider, useUser } from '../../contexts/UserContextOld';
 import Profile from '../../components/pages/Profile';
 import '@testing-library/jest-dom';
 import * as tokenUtils from '../../utils/TokenManager';

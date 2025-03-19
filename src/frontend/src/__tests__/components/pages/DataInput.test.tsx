@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import DataInput from '../../../components/pages/DataInput';
-import { UserProvider } from '../../../contexts/UserContext';
+import { UserProvider } from '../../../contexts/UserContextOld';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
@@ -35,8 +35,8 @@ jest.mock('../../../hooks/useFetch', () => ({
 
 // Mock UserContext
 const mockUserId = 'test-user-123';
-jest.mock('../../../contexts/UserContext', () => ({
-  ...jest.requireActual('../../../contexts/UserContext'),
+jest.mock('../../../contexts/UserContextOld', () => ({
+  ...jest.requireActual('../../../contexts/UserContextOld'),
   useUser: () => ({
     userId: mockUserId
   })

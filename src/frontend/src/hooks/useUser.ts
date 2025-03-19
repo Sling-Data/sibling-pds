@@ -1,18 +1,18 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiResponse, User } from "../types";
 import { getUserId } from "../utils/TokenManager";
-import { useApi } from "./useApi";
-
-interface UserState {
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-  hasCompletedOnboarding: boolean;
-}
+import { useUserContextNew } from "../contexts";
+import { UserService } from "../services/user.service";
+import { useAuth } from "./useAuth";
 
 /**
  * Hook for user data and operations
+ *
+ * This hook combines:
+ * - UserContext for state management
+ * - UserService for API calls
+ * - Navigation for redirects
  *
  * Provides functionality for:
  * - Getting and updating user profile
@@ -20,49 +20,47 @@ interface UserState {
  * - Managing user state
  */
 export function useUser() {
-  const [state, setState] = useState<UserState>({
-    user: null,
-    loading: false,
-    error: null,
-    hasCompletedOnboarding: false,
-  });
+  const {
+    user,
+    userId,
+    loading,
+    error,
+    hasCompletedOnboarding,
+    setUserId,
+    setLoading,
+    setError,
+    setHasCompletedOnboarding,
+    updateUserState,
+  } = useUserContextNew();
 
-  const { request } = useApi();
+  const { refreshTokens, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   /**
    * Fetch the current user's profile
    */
   const fetchUserProfile = useCallback(async (): Promise<ApiResponse<User>> => {
-    const userId = getUserId();
-    if (!userId) {
-      return { data: null, error: "User not authenticated" };
-    }
+    setLoading(true);
+    setError(null);
 
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-
-    const response = await request<User>(`/users/${userId}`, {
-      method: "GET",
-      showErrorNotification: false,
-    });
+    const response = await UserService.getCurrentUser();
 
     if (response.data) {
-      setState((prev) => ({
-        ...prev,
+      updateUserState({
         user: response.data,
+        userId: response.data.id,
         loading: false,
         error: null,
-      }));
+      });
     } else {
-      setState((prev) => ({
-        ...prev,
+      updateUserState({
         loading: false,
         error: response.error,
-      }));
+      });
     }
 
     return response;
-  }, [request]);
+  }, [setLoading, setError, updateUserState]);
 
   /**
    * Update the current user's profile
@@ -70,66 +68,40 @@ export function useUser() {
    */
   const updateUserProfile = useCallback(
     async (userData: Partial<User>): Promise<ApiResponse<User>> => {
-      const userId = getUserId();
-      if (!userId) {
-        return { data: null, error: "User not authenticated" };
-      }
+      setLoading(true);
+      setError(null);
 
-      setState((prev) => ({ ...prev, loading: true, error: null }));
-
-      const response = await request<User>(`/users/${userId}`, {
-        method: "PUT",
-        body: userData,
-        showSuccessNotification: true,
-        successMessage: "Profile updated successfully!",
-      });
+      const response = await UserService.updateCurrentUser(userData);
 
       if (response.data) {
-        setState((prev) => ({
-          ...prev,
+        updateUserState({
           user: response.data,
           loading: false,
           error: null,
-        }));
+        });
       } else {
-        setState((prev) => ({
-          ...prev,
+        updateUserState({
           loading: false,
           error: response.error,
-        }));
+        });
       }
 
       return response;
     },
-    [request]
+    [setLoading, setError, updateUserState]
   );
 
   /**
    * Check if the user has completed the onboarding process
    */
   const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
-    const userId = getUserId();
-    if (!userId) {
-      return false;
-    }
-
-    const response = await request<{ completed: boolean }>(
-      `/users/${userId}/onboarding`,
-      {
-        method: "GET",
-        showErrorNotification: false,
-      }
-    );
+    const response = await UserService.hasCompletedOnboarding();
 
     const hasCompleted = !!response.data?.completed;
-
-    setState((prev) => ({
-      ...prev,
-      hasCompletedOnboarding: hasCompleted,
-    }));
+    setHasCompletedOnboarding(hasCompleted);
 
     return hasCompleted;
-  }, [request]);
+  }, [setHasCompletedOnboarding]);
 
   /**
    * Navigate to the appropriate page based on user data and authentication status
@@ -137,45 +109,79 @@ export function useUser() {
    */
   const checkUserDataAndNavigate = useCallback(
     async (fallbackPath: string = "/login") => {
-      const userId = getUserId();
-
-      if (!userId) {
+      const currentUserId = getUserId();
+      if (!currentUserId) {
         navigate(fallbackPath);
         return;
       }
 
-      const userResponse = await fetchUserProfile();
-
-      if (!userResponse.data) {
-        navigate(fallbackPath);
-        return;
+      // Check if token is valid, refresh if needed
+      if (!isAuthenticated) {
+        const refreshSuccessful = await refreshTokens();
+        if (!refreshSuccessful) {
+          navigate(fallbackPath);
+          return;
+        }
       }
 
-      const hasCompletedOnboarding = await checkOnboardingStatus();
+      try {
+        // First, fetch user profile
+        const userResponse = await fetchUserProfile();
 
-      if (!hasCompletedOnboarding) {
-        navigate("/onboarding");
-        return;
+        if (!userResponse.data) {
+          navigate(fallbackPath);
+          return;
+        }
+
+        // Then check onboarding status
+        const hasCompletedOnboarding = await checkOnboardingStatus();
+
+        if (!hasCompletedOnboarding) {
+          navigate("/onboarding");
+          return;
+        }
+
+        // Now check user data
+        const userDataResponse = await UserService.getUserData(currentUserId);
+
+        if (!userDataResponse.data) {
+          navigate("/data-input");
+          return;
+        }
+
+        // Check if user has volunteered data
+        if (
+          userDataResponse.data.volunteeredData &&
+          userDataResponse.data.volunteeredData.length > 0
+        ) {
+          // User has volunteered data, navigate to profile
+          navigate("/profile");
+        } else {
+          // User doesn't have volunteered data, navigate to data input
+          navigate("/data-input");
+        }
+      } catch (error) {
+        console.error("Error checking user data:", error);
+        // If there's an error, default to data input page
+        navigate("/data-input");
       }
-
-      navigate("/dashboard");
     },
-    [fetchUserProfile, checkOnboardingStatus, navigate]
+    [
+      fetchUserProfile,
+      checkOnboardingStatus,
+      navigate,
+      isAuthenticated,
+      refreshTokens,
+    ]
   );
 
-  /**
-   * Set the user ID (only for testing or special cases)
-   * @param userId The user ID to set
-   */
-  const setUserId = useCallback((userId: string) => {
-    setState((prev) => ({
-      ...prev,
-      user: prev.user ? { ...prev.user, id: userId } : null,
-    }));
-  }, []);
-
   return {
-    ...state,
+    user,
+    userId,
+    loading,
+    error,
+    hasCompletedOnboarding,
+    isAuthenticated,
     fetchUserProfile,
     updateUserProfile,
     checkOnboardingStatus,

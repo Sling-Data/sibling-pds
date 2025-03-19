@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useFetch } from '../hooks/useFetch';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from './UserContextOld';
 import { VolunteeredData, BehavioralData, ExternalData } from '../types';
 
 interface UserDataContextType {

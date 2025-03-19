@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
+import { useUser } from '../../contexts/UserContextOld';
 import { useFetch } from '../../hooks/useFetch';
 import '../../styles/Profile.css';
 import { Button } from '../atoms/Button';

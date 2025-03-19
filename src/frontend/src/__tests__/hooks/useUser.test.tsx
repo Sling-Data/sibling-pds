@@ -2,40 +2,53 @@ import { renderHook, act } from "@testing-library/react";
 import { useUser } from "../../hooks/useUser";
 import * as TokenManager from "../../utils/TokenManager";
 import { useNavigate } from "react-router-dom";
-import { NotificationProvider } from "../../contexts";
+import { UserProviderNew } from "../../contexts";
 import { User } from "../../types";
+import { UserService } from "../../services/user.service";
 
 // Mock hooks
 jest.mock("react-router-dom", () => ({
   useNavigate: jest.fn(),
 }));
 
-// Mock contexts
-jest.mock("../../contexts", () => ({
-  ...jest.requireActual("../../contexts"),
-  useNotificationContext: jest.fn().mockReturnValue({
-    addNotification: jest.fn(),
-  }),
+// Mock token manager - default mocks which tests can override
+jest.mock("../../utils/TokenManager", () => {
+  return {
+    getUserId: jest.fn().mockReturnValue("user-123"),
+    isTokenValid: jest.fn().mockReturnValue(true),
+    getRefreshToken: jest.fn().mockReturnValue("mock-refresh-token"),
+    getAccessToken: jest.fn().mockReturnValue("mock-access-token"),
+    clearTokens: jest.fn(),
+    storeTokens: jest.fn(),
+    shouldRefresh: jest.fn().mockReturnValue(false)
+  };
+});
+
+// Mock UserService
+jest.mock("../../services/user.service", () => ({
+  UserService: {
+    getCurrentUser: jest.fn(),
+    updateCurrentUser: jest.fn(),
+    getUserData: jest.fn(),
+    hasCompletedOnboarding: jest.fn()
+  }
 }));
 
-// Set up mock request function
-const mockRequest = jest.fn();
+// Create a manual mock for the useAuth hook
+const mockRefreshTokens = jest.fn().mockResolvedValue(true);
 
-// Mock API hook
-jest.mock("../../hooks/useApi", () => ({
-  useApi: () => ({
-    request: mockRequest,
-  }),
+// Mock useAuth hook with a variable we can update in tests
+let mockIsAuthenticated = true;
+jest.mock("../../hooks/useAuth", () => ({
+  useAuth: () => ({
+    isAuthenticated: mockIsAuthenticated,
+    refreshTokens: mockRefreshTokens
+  })
 }));
 
-// Mock token manager
-jest.mock("../../utils/TokenManager", () => ({
-  getUserId: jest.fn(),
-}));
-
-// Test wrapper
+// Test wrapper 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <NotificationProvider>{children}</NotificationProvider>
+  <UserProviderNew>{children}</UserProviderNew>
 );
 
 describe("useUser Hook", () => {
@@ -49,6 +62,10 @@ describe("useUser Hook", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
+    // Reset to default auth state
+    mockIsAuthenticated = true;
+    // Ensure getUserId returns a valid ID by default
+    (TokenManager.getUserId as jest.Mock).mockReturnValue("user-123");
   });
 
   it("should initialize with default values", () => {
@@ -61,9 +78,7 @@ describe("useUser Hook", () => {
   });
 
   it("should fetch user profile successfully", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
-    mockRequest.mockResolvedValueOnce({
+    (UserService.getCurrentUser as jest.Mock).mockResolvedValueOnce({
       data: mockUser,
       error: null,
     });
@@ -74,24 +89,18 @@ describe("useUser Hook", () => {
       await result.current.fetchUserProfile();
     });
 
-    // Check if request was made with correct params
-    expect(mockRequest).toHaveBeenCalledWith(
-      "/users/user-123",
-      expect.objectContaining({
-        method: "GET",
-      })
-    );
+    // Check if service was called
+    expect(UserService.getCurrentUser).toHaveBeenCalled();
 
     // Check if state was updated
     expect(result.current.user).toEqual(mockUser);
+    expect(result.current.userId).toEqual(mockUser.id);
     expect(result.current.loading).toBeFalsy();
     expect(result.current.error).toBeNull();
   });
 
   it("should handle fetch profile errors", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
-    mockRequest.mockResolvedValueOnce({
+    (UserService.getCurrentUser as jest.Mock).mockResolvedValueOnce({
       data: null,
       error: "User not found",
     });
@@ -108,35 +117,13 @@ describe("useUser Hook", () => {
     expect(result.current.error).toBe("User not found");
   });
 
-  it("should handle unauthenticated state when fetching profile", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue(null);
-
-    const { result } = renderHook(() => useUser(), { wrapper });
-
-    let response;
-    await act(async () => {
-      response = await result.current.fetchUserProfile();
-    });
-
-    // Request should not be called
-    expect(mockRequest).not.toHaveBeenCalled();
-    
-    // Should return error
-    expect(response).toEqual({
-      data: null,
-      error: "User not authenticated",
-    });
-  });
-
   it("should update user profile successfully", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
     const updatedUser = {
       ...mockUser,
       name: "Updated Name",
     };
 
-    mockRequest.mockResolvedValueOnce({
+    (UserService.updateCurrentUser as jest.Mock).mockResolvedValueOnce({
       data: updatedUser,
       error: null,
     });
@@ -147,14 +134,8 @@ describe("useUser Hook", () => {
       await result.current.updateUserProfile({ name: "Updated Name" });
     });
 
-    // Check if request was made with correct params
-    expect(mockRequest).toHaveBeenCalledWith(
-      "/users/user-123",
-      expect.objectContaining({
-        method: "PUT",
-        body: { name: "Updated Name" },
-      })
-    );
+    // Check if service was called with correct params
+    expect(UserService.updateCurrentUser).toHaveBeenCalledWith({ name: "Updated Name" });
 
     // Check if state was updated
     expect(result.current.user).toEqual(updatedUser);
@@ -163,9 +144,7 @@ describe("useUser Hook", () => {
   });
 
   it("should check onboarding status successfully", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
-    mockRequest.mockResolvedValueOnce({
+    (UserService.hasCompletedOnboarding as jest.Mock).mockResolvedValueOnce({
       data: { completed: true },
       error: null,
     });
@@ -177,31 +156,35 @@ describe("useUser Hook", () => {
       hasCompleted = await result.current.checkOnboardingStatus();
     });
 
-    // Check if request was made with correct params
-    expect(mockRequest).toHaveBeenCalledWith(
-      "/users/user-123/onboarding",
-      expect.objectContaining({
-        method: "GET",
-      })
-    );
+    // Check if service was called
+    expect(UserService.hasCompletedOnboarding).toHaveBeenCalled();
 
     // Check if state and return value were updated
     expect(result.current.hasCompletedOnboarding).toBeTruthy();
     expect(hasCompleted).toBeTruthy();
   });
 
-  it("should handle user data and navigate appropriately when authenticated", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
+  it("should handle user data and navigate appropriately", async () => {
+    // Explicitly ensure getUserId returns a valid ID
+    (TokenManager.getUserId as jest.Mock).mockReturnValue("user-123");
+    
     // Mock successful profile fetch
-    mockRequest.mockResolvedValueOnce({
+    (UserService.getCurrentUser as jest.Mock).mockResolvedValueOnce({
       data: mockUser,
       error: null,
     });
 
     // Mock completed onboarding
-    mockRequest.mockResolvedValueOnce({
+    (UserService.hasCompletedOnboarding as jest.Mock).mockResolvedValueOnce({
       data: { completed: true },
+      error: null,
+    });
+
+    // Mock user data with volunteered data
+    (UserService.getUserData as jest.Mock).mockResolvedValueOnce({
+      data: {
+        volunteeredData: ["some-data"],
+      },
       error: null,
     });
 
@@ -211,21 +194,56 @@ describe("useUser Hook", () => {
       await result.current.checkUserDataAndNavigate();
     });
 
-    // Should navigate to dashboard
-    expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
+    // Should navigate to profile since user has volunteered data
+    expect(mockNavigate).toHaveBeenCalledWith("/profile");
+  });
+
+  it("should navigate to data input if no volunteered data", async () => {
+    // Explicitly ensure getUserId returns a valid ID
+    (TokenManager.getUserId as jest.Mock).mockReturnValue("user-123");
+    
+    // Mock successful profile fetch
+    (UserService.getCurrentUser as jest.Mock).mockResolvedValueOnce({
+      data: mockUser,
+      error: null,
+    });
+
+    // Mock completed onboarding
+    (UserService.hasCompletedOnboarding as jest.Mock).mockResolvedValueOnce({
+      data: { completed: true },
+      error: null,
+    });
+
+    // Mock user data with no volunteered data
+    (UserService.getUserData as jest.Mock).mockResolvedValueOnce({
+      data: {
+        volunteeredData: [],
+      },
+      error: null,
+    });
+
+    const { result } = renderHook(() => useUser(), { wrapper });
+
+    await act(async () => {
+      await result.current.checkUserDataAndNavigate();
+    });
+
+    // Should navigate to data input since user has no volunteered data
+    expect(mockNavigate).toHaveBeenCalledWith("/data-input");
   });
 
   it("should redirect to onboarding if onboarding not completed", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
+    // Explicitly ensure getUserId returns a valid ID
+    (TokenManager.getUserId as jest.Mock).mockReturnValue("user-123");
+    
     // Mock successful profile fetch
-    mockRequest.mockResolvedValueOnce({
+    (UserService.getCurrentUser as jest.Mock).mockResolvedValueOnce({
       data: mockUser,
       error: null,
     });
 
     // Mock incomplete onboarding
-    mockRequest.mockResolvedValueOnce({
+    (UserService.hasCompletedOnboarding as jest.Mock).mockResolvedValueOnce({
       data: { completed: false },
       error: null,
     });
@@ -241,26 +259,12 @@ describe("useUser Hook", () => {
   });
 
   it("should redirect to login if not authenticated", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue(null);
-
-    const { result } = renderHook(() => useUser(), { wrapper });
-
-    await act(async () => {
-      await result.current.checkUserDataAndNavigate();
-    });
-
-    // Should navigate to login
-    expect(mockNavigate).toHaveBeenCalledWith("/login");
-  });
-
-  it("should redirect to login if user profile fetch fails", async () => {
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
-    // Mock failed profile fetch
-    mockRequest.mockResolvedValueOnce({
-      data: null,
-      error: "User not found",
-    });
+    // Override for this test
+    mockIsAuthenticated = false;
+    mockRefreshTokens.mockResolvedValueOnce(false);
+    
+    // Override the getUserId mock for this test only
+    (TokenManager.getUserId as jest.Mock).mockReturnValue(null);
 
     const { result } = renderHook(() => useUser(), { wrapper });
 
