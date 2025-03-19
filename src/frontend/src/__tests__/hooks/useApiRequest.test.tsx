@@ -108,7 +108,7 @@ describe('useApiRequest', () => {
         return {
           ok: true,
           json: async () => ({
-            accessToken: 'new-access-token',
+            token: 'new-access-token',
             refreshToken: 'new-refresh-token'
           })
         };
@@ -151,7 +151,7 @@ describe('useApiRequest', () => {
     })).mockImplementationOnce(async () => ({
       ok: true,
       json: async () => ({
-        accessToken: 'new-access-token',
+        token: 'new-access-token',
         refreshToken: 'new-refresh-token'
       })
     })).mockImplementationOnce(async () => ({

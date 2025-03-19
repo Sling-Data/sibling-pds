@@ -398,7 +398,7 @@ jest.mock('../../hooks/useAuth', () => ({
   useAuth: () => ({
     isAuthenticated: false,
     login: jest.fn().mockResolvedValue({
-      data: { accessToken: 'test-token', userId: 'user-123' },
+      data: { token: 'test-token', userId: 'user-123' },
       error: null
     }),
     logout: jest.fn(),

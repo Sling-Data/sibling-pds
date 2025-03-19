@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { useUser } from '../../contexts/UserContext';
-import { useFetch } from '../../hooks/useFetch';
-import { getUserId } from '../../utils/TokenManager';
+import { useAuth } from '../../hooks/useAuth';
 import '../../styles/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';
 import { Form } from '../molecules/Form';
@@ -10,30 +8,15 @@ interface LoginFormProps {
   onSuccess?: () => void;
 }
 
-interface LoginResponse {
-  token: string;
-  refreshToken: string;
-  message?: string;
-}
-
 export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{email?: string; password?: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, setUserId: setContextUserId, checkUserDataAndNavigate } = useUser();
 
-  // Setup useFetch for login
-  const { loading: submitLoading, error: submitError, update: submitLogin } = useFetch<LoginResponse>(
-    null,
-    {
-      method: 'POST',
-      skipCache: true,
-      retryOnAuth: false,
-      skipAuth: true
-    }
-  );
+
+  const { login, checkUserDataAndNavigate } = useAuth();
 
   // Format error message to be more user-friendly
   const getFormattedErrorMessage = (errorMsg: string) => {
@@ -80,31 +63,15 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      const result = await submitLogin(
-        `${process.env.REACT_APP_API_URL}/auth/login`,
-        {
-          method: 'POST',
-          body: { email, password }
-        }
-      );
+      const result = await login({
+        email,
+        password
+      });
 
-      if (result.error) {
-        throw new Error(result.error);
+      if (!result.data) {
+        throw new Error(result.error || 'Login failed');
       }
 
-      const data = result.data;
-      if (!data) {
-        throw new Error('No response data received');
-      }
-
-      login(data.token, data.refreshToken);
-      
-      // Get userId from the token after login
-      const userId = getUserId();
-      if (userId) {
-        setContextUserId(userId);
-      }
-      
       if (onSuccess) {
         onSuccess();
       } else {
@@ -118,18 +85,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   };
 
-  // Format any submit error from useFetch
-  const formattedSubmitError = submitError ? getFormattedErrorMessage(submitError) : null;
-  const displayError = error || formattedSubmitError;
-
   return (
     <div className="auth-form-container">
       <Form 
         onSubmit={handleSubmit}
         title="Log In to Your Account"
         submitText="Log In"
-        isSubmitting={isSubmitting || submitLoading}
-        error={displayError}
+        isSubmitting={isSubmitting}
+        error={error}
       >
         <div className="form-group">
           <TextInput

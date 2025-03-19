@@ -2,6 +2,8 @@ import { renderHook, act } from "@testing-library/react";
 import { useAuth } from "../../hooks/useAuth";
 import * as TokenManager from "../../utils/TokenManager";
 import { useNavigate } from "react-router-dom";
+import { AuthService } from "../../services/auth.service";
+import { UserService } from "../../services/user.service";
 
 // Mock hooks
 jest.mock("react-router-dom", () => ({
@@ -16,14 +18,20 @@ jest.mock("../../contexts", () => ({
   }),
 }));
 
-// Set up mock request function
-const mockRequest = jest.fn();
+// Mock AuthService
+jest.mock("../../services/auth.service", () => ({
+  AuthService: {
+    login: jest.fn(),
+    signup: jest.fn(),
+    refreshTokens: jest.fn(),
+  },
+}));
 
-// Mock API hook
-jest.mock("../../hooks/useApi", () => ({
-  useApi: () => ({
-    request: mockRequest,
-  }),
+// Mock UserService
+jest.mock("../../services/user.service", () => ({
+  UserService: {
+    getUserData: jest.fn(),
+  },
 }));
 
 // Mock token manager
@@ -33,6 +41,32 @@ jest.mock("../../utils/TokenManager", () => ({
   clearTokens: jest.fn(),
   storeTokens: jest.fn(),
   getUserId: jest.fn(),
+  isTokenValid: jest.fn(),
+}));
+
+// Mock the AuthContext
+const mockStoreAuthTokens = jest.fn();
+const mockClearAuthTokens = jest.fn();
+const mockSetIsRefreshing = jest.fn();
+const mockGetCurrentRefreshToken = jest.fn().mockReturnValue("mock-refresh-token");
+const mockHandleTokenRefreshSuccess = jest.fn();
+const mockHandleTokenRefreshFailure = jest.fn();
+const mockNeedsTokenRefresh = jest.fn().mockReturnValue(false);
+
+jest.mock("../../contexts/AuthContext", () => ({
+  useAuthContext: () => ({
+    isAuthenticated: true,
+    isInitialized: true,
+    userId: "user-123",
+    isRefreshing: false,
+    storeAuthTokens: mockStoreAuthTokens,
+    clearAuthTokens: mockClearAuthTokens,
+    setIsRefreshing: mockSetIsRefreshing,
+    getCurrentRefreshToken: mockGetCurrentRefreshToken,
+    handleTokenRefreshSuccess: mockHandleTokenRefreshSuccess,
+    handleTokenRefreshFailure: mockHandleTokenRefreshFailure,
+    needsTokenRefresh: mockNeedsTokenRefresh
+  }),
 }));
 
 // Simple wrapper component
@@ -45,6 +79,13 @@ describe("useAuth Hook", () => {
     jest.clearAllMocks();
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate);
     mockAddNotification.mockClear();
+    mockStoreAuthTokens.mockClear();
+    mockClearAuthTokens.mockClear();
+    mockSetIsRefreshing.mockClear();
+    mockGetCurrentRefreshToken.mockClear();
+    mockHandleTokenRefreshSuccess.mockClear();
+    mockHandleTokenRefreshFailure.mockClear();
+    mockNeedsTokenRefresh.mockClear();
   });
 
   it("should initialize with correct authentication state", () => {
@@ -59,14 +100,11 @@ describe("useAuth Hook", () => {
   });
 
   it("should handle login successfully", async () => {
-    // Mock getUserId to return user-123
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-    
     // Mock API response
-    mockRequest.mockResolvedValueOnce({
+    (AuthService.login as jest.Mock).mockResolvedValueOnce({
       success: true,
       data: {
-        accessToken: "mock-token",
+        token: "mock-token",
         refreshToken: "mock-refresh-token",
         userId: "user-123",
       },
@@ -81,9 +119,9 @@ describe("useAuth Hook", () => {
       });
     });
 
-    // Verify token storage and state update - note we need to include userId
-    expect(TokenManager.storeTokens).toHaveBeenCalledWith({
-      accessToken: "mock-token", 
+    // Verify token storage called
+    expect(mockStoreAuthTokens).toHaveBeenCalledWith({
+      token: "mock-token", 
       refreshToken: "mock-refresh-token",
       userId: "user-123"
     });
@@ -92,14 +130,11 @@ describe("useAuth Hook", () => {
   });
 
   it("should handle signup successfully", async () => {
-    // Mock getUserId to return user-123
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-    
     // Mock API response
-    mockRequest.mockResolvedValueOnce({
+    (AuthService.signup as jest.Mock).mockResolvedValueOnce({
       success: true,
       data: {
-        accessToken: "mock-token",
+        token: "mock-token",
         refreshToken: "mock-refresh-token",
         userId: "user-123",
       },
@@ -115,9 +150,9 @@ describe("useAuth Hook", () => {
       });
     });
 
-    // Verify token storage and state update - note we need to include userId
-    expect(TokenManager.storeTokens).toHaveBeenCalledWith({
-      accessToken: "mock-token", 
+    // Verify token storage called
+    expect(mockStoreAuthTokens).toHaveBeenCalledWith({
+      token: "mock-token", 
       refreshToken: "mock-refresh-token",
       userId: "user-123"
     });
@@ -126,10 +161,6 @@ describe("useAuth Hook", () => {
   });
 
   it("should handle logout correctly", async () => {
-    // Mock authenticated state
-    jest.spyOn(TokenManager, "getAccessToken").mockReturnValue("mock-token");
-    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
-
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await act(async () => {
@@ -137,59 +168,55 @@ describe("useAuth Hook", () => {
     });
 
     // Verify tokens cleared and state update
-    expect(TokenManager.clearTokens).toHaveBeenCalled();
-    expect(result.current.isAuthenticated).toBeFalsy();
-    expect(result.current.userId).toBeNull();
+    expect(mockClearAuthTokens).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 
   it("should refresh tokens correctly", async () => {
-    // Setup the getRefreshToken mock to return a refresh token
-    jest.spyOn(TokenManager, "getRefreshToken").mockReturnValue("old-refresh-token");
-    
-    // Mock API response
-    mockRequest.mockResolvedValueOnce({
+    // Mock successful token refresh
+    (AuthService.refreshTokens as jest.Mock).mockResolvedValueOnce({
       success: true,
       data: {
-        accessToken: "new-access-token",
-        refreshToken: "new-refresh-token",
-        userId: "user-123",
-      },
+        token: "new-mock-token",
+        refreshToken: "new-mock-refresh-token",
+        userId: "user-123"
+      }
     });
-
+    
+    // Need to mock getCurrentRefreshToken to return a value
+    mockGetCurrentRefreshToken.mockReturnValue("mock-refresh-token");
+    
     const { result } = renderHook(() => useAuth(), { wrapper });
 
+    let success;
     await act(async () => {
-      const success = await result.current.refreshTokens();
-      expect(success).toBeTruthy();
+      success = await result.current.refreshTokens();
     });
-
-    // Verify tokens updated
-    expect(TokenManager.storeTokens).toHaveBeenCalledWith({
-      accessToken: "new-access-token", 
-      refreshToken: "new-refresh-token",
+    
+    // Verify success
+    expect(success).toBeTruthy();
+    
+    // Verify refresh tokens was called correctly
+    expect(mockGetCurrentRefreshToken).toHaveBeenCalled();
+    expect(AuthService.refreshTokens).toHaveBeenCalledWith("mock-refresh-token");
+    expect(mockHandleTokenRefreshSuccess).toHaveBeenCalledWith({
+      token: "new-mock-token",
+      refreshToken: "new-mock-refresh-token",
       userId: "user-123"
     });
   });
 
   it("should handle token refresh failure correctly", async () => {
-    // Mock initial state for the test
-    // We need to set the initial state to match what would happen before a refresh attempt
-    // (which would typically be a potentially authenticated state)
-    jest.spyOn(TokenManager, "getAccessToken").mockReturnValue("some-token");
-    jest.spyOn(TokenManager, "getRefreshToken").mockReturnValue("old-refresh-token");
-    
-    // Mock API error response
-    mockRequest.mockResolvedValueOnce({
+    // Mock failed token refresh
+    (AuthService.refreshTokens as jest.Mock).mockResolvedValueOnce({
       success: false,
-      error: "Invalid refresh token",
-      data: null
+      error: "Invalid refresh token"
     });
+    
+    // Need to mock getCurrentRefreshToken to return a value
+    mockGetCurrentRefreshToken.mockReturnValue("invalid-refresh-token");
 
     const { result } = renderHook(() => useAuth(), { wrapper });
-    
-    // Verify initial state
-    expect(result.current.isAuthenticated).toBeTruthy();
     
     // Attempt to refresh tokens
     let refreshSuccess;
@@ -199,13 +226,7 @@ describe("useAuth Hook", () => {
     
     // Verify refresh failed
     expect(refreshSuccess).toBeFalsy();
-    
-    // The isAuthenticated state should remain unchanged after a failed refresh
-    // The hook preserves the existing state on refresh failure
-    expect(result.current.isAuthenticated).toBeTruthy(); 
-    
-    // Verify that storeTokens was not called with new tokens
-    expect(TokenManager.storeTokens).not.toHaveBeenCalled();
+    expect(mockHandleTokenRefreshFailure).toHaveBeenCalled();
   });
 
   it("should check auth and redirect if not authenticated", async () => {
@@ -236,5 +257,89 @@ describe("useAuth Hook", () => {
 
     // Verify no navigation occurred
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("should navigate to profile when user has volunteered data", async () => {
+    // Mock authenticated state
+    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
+    jest.spyOn(TokenManager, "isTokenValid").mockReturnValue(true);
+    
+    // Mock user data with volunteered data
+    (UserService.getUserData as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {
+        volunteeredData: ["some-data"],
+      },
+    });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await act(async () => {
+      await result.current.checkUserDataAndNavigate();
+    });
+
+    // Verify navigation to profile
+    expect(mockNavigate).toHaveBeenCalledWith("/profile");
+  });
+
+  it("should navigate to data input when user has no volunteered data", async () => {
+    // Mock authenticated state
+    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
+    jest.spyOn(TokenManager, "isTokenValid").mockReturnValue(true);
+    
+    // Mock user data with no volunteered data
+    (UserService.getUserData as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {
+        volunteeredData: [],
+      },
+    });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await act(async () => {
+      await result.current.checkUserDataAndNavigate();
+    });
+
+    // Verify navigation to data input
+    expect(mockNavigate).toHaveBeenCalledWith("/data-input");
+  });
+
+  it("should attempt token refresh when token is invalid during data check", async () => {
+    // Mock authenticated state but invalid token
+    jest.spyOn(TokenManager, "getUserId").mockReturnValue("user-123");
+    jest.spyOn(TokenManager, "isTokenValid").mockReturnValue(false);
+    
+    // Mock successful token refresh
+    (AuthService.refreshTokens as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {
+        token: "new-mock-token",
+        refreshToken: "new-mock-refresh-token",
+        userId: "user-123"
+      }
+    });
+    
+    // Need to mock getCurrentRefreshToken to return a value
+    mockGetCurrentRefreshToken.mockReturnValue("mock-refresh-token");
+    
+    // Mock user data with volunteered data
+    (UserService.getUserData as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: {
+        volunteeredData: ["some-data"],
+      },
+    });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await act(async () => {
+      await result.current.checkUserDataAndNavigate();
+    });
+
+    // Verify token refresh was attempted and navigation to profile
+    expect(mockGetCurrentRefreshToken).toHaveBeenCalled();
+    expect(AuthService.refreshTokens).toHaveBeenCalledWith("mock-refresh-token");
+    expect(mockNavigate).toHaveBeenCalledWith("/profile");
   });
 }); 

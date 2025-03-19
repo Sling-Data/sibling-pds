@@ -39,6 +39,18 @@ export class UserService extends ApiService {
   }
 
   /**
+   * Get user data including volunteered data
+   * @param userId The user ID
+   * @returns A promise that resolves to the user data
+   */
+  public static async getUserData(userId: string): Promise<ApiResponse<any>> {
+    if (!userId) {
+      return { data: null, error: "User ID is required" };
+    }
+    return this.get<any>(`/user-data/${userId}`);
+  }
+
+  /**
    * Check if the current user has completed the onboarding process
    * This is a placeholder until the backend implements this endpoint
    * @returns A promise that resolves to a boolean indicating if the user has completed onboarding

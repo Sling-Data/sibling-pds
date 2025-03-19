@@ -97,9 +97,9 @@ export function useApi<T = any>(
       }
 
       const data = await response.json();
-      if (data.accessToken && data.refreshToken) {
+      if (data.token && data.refreshToken) {
         storeTokens({
-          accessToken: data.accessToken,
+          token: data.token,
           refreshToken: data.refreshToken,
         });
         return true;

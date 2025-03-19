@@ -14,7 +14,7 @@ interface UserContextType {
   userId: string | null;
   isAuthenticated: boolean;
   setUserId: (userId: string | null) => void;
-  login: (accessToken: string, refreshToken: string) => void;
+  login: (token: string, refreshToken: string) => void;
   logout: () => void;
   refreshTokenIfExpired: () => Promise<boolean>;
   checkUserDataAndNavigate: () => Promise<void>;
@@ -39,9 +39,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const navigate = useNavigateOrNoop();
 
-  const login = useCallback((accessToken: string, refreshToken: string) => {
+  const login = useCallback((token: string, refreshToken: string) => {
     // First store the tokens
-    storeTokens({ accessToken, refreshToken });
+    storeTokens({ token, refreshToken });
     
     // Update the state immediately
     const userId = getUserId();
@@ -95,10 +95,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Parse response and update tokens
       const data = await response.json();
-      if (data.accessToken && data.refreshToken) {
+      if (data.token && data.refreshToken) {
         // Store tokens first
         storeTokens({
-          accessToken: data.accessToken,
+          token: data.token,
           refreshToken: data.refreshToken,
         });
         
@@ -146,15 +146,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const accessToken = getAccessToken();
-      if (!accessToken) {
+      const token = getAccessToken();
+      if (!token) {
         navigate('/login');
         return;
       }
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/user-data/${currentUserId}`, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
 

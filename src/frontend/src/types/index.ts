@@ -11,8 +11,10 @@ export interface User {
 
 // Authentication related types
 export interface AuthTokens {
-  accessToken: string;
+  token?: string; // Used by backend
+  accessToken?: string; // Used internally
   refreshToken: string;
+  userId?: string;
   expiresIn?: number;
 }
 

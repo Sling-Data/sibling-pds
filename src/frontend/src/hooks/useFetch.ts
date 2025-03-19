@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { 
+import {
   getAccessToken,
   getRefreshToken,
   shouldRefresh,
@@ -12,7 +12,10 @@ interface FetchResponse<T> {
   error: string | null;
   fromCache: boolean;
   refetch: () => Promise<void>;
-  update: (overrideUrl?: string | null, overrideConfig?: FetchConfig) => Promise<{ data: T | null; error: string | null }>;
+  update: (
+    overrideUrl?: string | null,
+    overrideConfig?: FetchConfig
+  ) => Promise<{ data: T | null; error: string | null }>;
 }
 
 interface CacheEntry<T> {
@@ -34,7 +37,7 @@ interface FetchConfig {
   headers?: Record<string, string>;
   body?: any;
   params?: Record<string, string>;
-  accessToken?: string;
+  token?: string;
   retryOnAuth?: boolean;
   skipAuth?: boolean;
   skipCache?: boolean;
@@ -48,34 +51,40 @@ const refreshToken = async (): Promise<boolean> => {
       return false;
     }
 
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+    const response = await fetch(
+      `${process.env.REACT_APP_API_URL}/auth/refresh-token`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+      }
+    );
 
     if (!response.ok) {
       return false;
     }
 
     const data = await response.json();
-    if (data.accessToken && data.refreshToken) {
+    if (data.token && data.refreshToken) {
       storeTokens({
-        accessToken: data.accessToken,
+        token: data.token,
         refreshToken: data.refreshToken,
       });
       return true;
     }
     return false;
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    console.error("Error refreshing token:", error);
     return false;
   }
 };
 
-const fetchWithRetry = async (url: string, config: FetchConfig = {}): Promise<Response> => {
+const fetchWithRetry = async (
+  url: string,
+  config: FetchConfig = {}
+): Promise<Response> => {
   let attempt = 1;
   const maxAttempts = 3;
   let authRetried = false;
@@ -88,7 +97,7 @@ const fetchWithRetry = async (url: string, config: FetchConfig = {}): Promise<Re
   };
 
   if (!config.skipAuth) {
-    const token = config.accessToken || getAccessToken();
+    const token = config.token || getAccessToken();
     if (token) {
       fetchOptions.headers = {
         ...fetchOptions.headers,
@@ -117,7 +126,9 @@ const fetchWithRetry = async (url: string, config: FetchConfig = {}): Promise<Re
         queryParams.append(key, String(value));
       }
     });
-    finalUrl = `${url}${url.includes("?") ? "&" : "?"}${queryParams.toString()}`;
+    finalUrl = `${url}${
+      url.includes("?") ? "&" : "?"
+    }${queryParams.toString()}`;
   }
 
   while (attempt <= maxAttempts) {
@@ -160,7 +171,9 @@ const fetchWithRetry = async (url: string, config: FetchConfig = {}): Promise<Re
       if (response.status >= 500 || response.status === 429) {
         if (attempt < maxAttempts) {
           const delayTime = response.status === 429 ? 1000 : 100 * attempt;
-          console.log(`Retrying after ${delayTime}ms due to status ${response.status}`);
+          console.log(
+            `Retrying after ${delayTime}ms due to status ${response.status}`
+          );
           await delay(delayTime);
           attempt++;
           continue;
@@ -194,7 +207,10 @@ export function useFetch<T>(
   // We need to memoize the config to ensure consistent behavior
   // The JSON.stringify is necessary to detect changes in the config object
   const configString = JSON.stringify(config);
-  const memoizedConfig = useMemo(() => JSON.parse(configString), [configString]);
+  const memoizedConfig = useMemo(
+    () => JSON.parse(configString),
+    [configString]
+  );
 
   const fetchData = useCallback(
     async (
@@ -216,10 +232,15 @@ export function useFetch<T>(
       };
 
       // Prepare cache key - include relevant parts of config that affect the response
-      const cacheKey = `${targetUrl}${finalConfig.params ? JSON.stringify(finalConfig.params) : ""}${finalConfig.method || "GET"}`;
+      const cacheKey = `${targetUrl}${
+        finalConfig.params ? JSON.stringify(finalConfig.params) : ""
+      }${finalConfig.method || "GET"}`;
 
       // Check cache first unless skipCache is true or not a GET request
-      if (!finalConfig.skipCache && (!finalConfig.method || finalConfig.method === "GET")) {
+      if (
+        !finalConfig.skipCache &&
+        (!finalConfig.method || finalConfig.method === "GET")
+      ) {
         const cachedEntry = cache.get(cacheKey);
         if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_EXPIRY) {
           console.log(`Cache hit for ${cacheKey}`);
@@ -238,19 +259,23 @@ export function useFetch<T>(
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         let jsonData;
         try {
           jsonData = await response.json();
         } catch (jsonError) {
           if (jsonError instanceof SyntaxError) {
-            throw new Error('Invalid JSON response from server');
+            throw new Error("Invalid JSON response from server");
           }
           throw jsonError;
         }
 
         // Only cache GET requests or if cacheResult is true
-        if ((!finalConfig.method || finalConfig.method === "GET" || finalConfig.cacheResult)) {
+        if (
+          !finalConfig.method ||
+          finalConfig.method === "GET" ||
+          finalConfig.cacheResult
+        ) {
           console.log(`Updating cache for ${cacheKey}`);
           cache.set(cacheKey, { data: jsonData, timestamp: Date.now() });
         }
@@ -258,8 +283,11 @@ export function useFetch<T>(
         setData(jsonData);
         return { data: jsonData, error: null };
       } catch (err) {
-        console.error(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
-        const errorMessage = err instanceof Error ? err.message : "Unknown error";
+        console.error(
+          `Error: ${err instanceof Error ? err.message : "Unknown error"}`
+        );
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
         setError(errorMessage);
         return { data: null, error: errorMessage };
       } finally {

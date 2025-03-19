@@ -67,7 +67,7 @@ describe('User Authentication Context', () => {
 
     // Verify state updates
     expect(tokenUtils.storeTokens).toHaveBeenCalledWith({
-      accessToken: 'test-access',
+      token: 'test-access',
       refreshToken: 'test-refresh',
     });
     expect(screen.getByTestId('user-id')).toHaveTextContent('test-user-123');

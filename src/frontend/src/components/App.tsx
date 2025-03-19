@@ -7,6 +7,7 @@ import DataInput from './pages/DataInput';
 import ConnectPlaid from './pages/ConnectPlaid';
 import ConnectGmail from './pages/ConnectGmail';
 import { UserProvider, useUser, NotificationProvider } from '../contexts';
+import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationContainer } from './organisms/NotificationContainer';
 import { NotificationExample, FormExample, ApiRequestExample } from './examples';
 
@@ -81,10 +82,12 @@ const App: React.FC = () => {
   return (
     <Router>
       <NotificationProvider>
-        <UserProvider>
-          <AppRoutes />
-          <NotificationContainer />
-        </UserProvider>
+        <AuthProvider>
+          <UserProvider>
+            <AppRoutes />
+            <NotificationContainer />
+          </UserProvider>
+        </AuthProvider>
       </NotificationProvider>
     </Router>
   );

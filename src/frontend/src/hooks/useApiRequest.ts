@@ -58,7 +58,7 @@ export function useApiRequest<T = any>() {
       const data = await response.json();
 
       // Store the new tokens
-      sessionStorage.setItem("accessToken", data.accessToken);
+      sessionStorage.setItem("token", data.token);
       sessionStorage.setItem("refreshToken", data.refreshToken);
 
       return true;

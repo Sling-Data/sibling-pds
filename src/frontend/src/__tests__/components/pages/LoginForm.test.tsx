@@ -5,68 +5,74 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { LoginForm } from '../../../components/pages/LoginForm';
 
-// Mock the UserContext hook
+// Mock the useAuth hook
+const mockLogin = jest.fn();
 const mockCheckUserDataAndNavigate = jest.fn();
-jest.mock('../../../contexts/UserContext', () => ({
-  useUser: () => ({
-    login: jest.fn(),
-    setUserId: jest.fn(),
+const mockNavigate = jest.fn();
+
+// Mock AuthContext
+jest.mock('../../../contexts/AuthContext', () => ({
+  useAuthContext: () => ({
+    isAuthenticated: false,
+    isInitialized: true,
+    userId: null
+  })
+}));
+
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate
+}));
+
+jest.mock('../../../hooks/useAuth', () => ({
+  useAuth: () => ({
+    login: mockLogin,
+    isAuthenticated: false,
     checkUserDataAndNavigate: mockCheckUserDataAndNavigate
   })
 }));
 
-// Mock the useFetch hook
-const mockUpdate = jest.fn();
-jest.mock('../../../hooks/useFetch', () => ({
-  useFetch: () => ({
-    loading: false,
-    error: null,
-    update: mockUpdate
-  })
-}));
-
-// Mock TokenManager
-jest.mock('../../../utils/TokenManager', () => ({
-  getUserId: () => 'test-user'
-}));
-
 describe('LoginForm Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders without crashing', () => {
     render(<MemoryRouter><LoginForm /></MemoryRouter>);
     expect(screen.getByRole('heading', { name: /log in to your account/i })).toBeInTheDocument();
   });
 
   it('successful login redirects to profile', async () => {
-    render(<MemoryRouter initialEntries={['/login']}><LoginForm /></MemoryRouter>);
-
-    mockUpdate.mockImplementation(async () => ({
-      data: { token: 'mock-token', refreshToken: 'mock-refresh-token' },
+    mockLogin.mockResolvedValueOnce({
+      data: {
+        token: 'mock-token',
+        refreshToken: 'mock-refresh-token',
+        userId: 'test-user'
+      },
+      success: true,
       error: null
-    }));
+    });
+
+    render(<MemoryRouter initialEntries={['/login']}><LoginForm /></MemoryRouter>);
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 
     await waitFor(() => {
-      expect(mockUpdate).toHaveBeenCalledWith(
-        `${process.env.REACT_APP_API_URL}/auth/login`,
-        expect.objectContaining({
-          method: 'POST',
-          body: { email: 'test@example.com', password: 'password123' }
-        })
-      );
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123'
+      });
     });
 
-    // Assuming successful login redirects to /profile
+    // Verify checkUserDataAndNavigate is called instead of direct navigation
     expect(mockCheckUserDataAndNavigate).toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('displays error message on failed login', async () => {
-    mockUpdate.mockImplementation(async () => ({
-      data: null,
-      error: 'Invalid credentials'
-    }));
+    mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
 
     render(<MemoryRouter initialEntries={['/login']}><LoginForm /></MemoryRouter>);
 
@@ -77,5 +83,35 @@ describe('LoginForm Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
     });
+  });
+
+  it('calls onSuccess callback when provided', async () => {
+    const mockOnSuccess = jest.fn();
+    mockLogin.mockResolvedValueOnce({
+      data: {
+        token: 'mock-token',
+        refreshToken: 'mock-refresh-token',
+        userId: 'test-user'
+      },
+      success: true,
+      error: null
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <LoginForm onSuccess={mockOnSuccess} />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+
+    await waitFor(() => {
+      expect(mockOnSuccess).toHaveBeenCalled();
+    });
+
+    // Should not navigate when onSuccess is provided
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

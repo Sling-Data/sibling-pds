@@ -1,4 +1,5 @@
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
+import { AuthTokens } from "../types";
 
 interface TokenPayload {
   userId: string;
@@ -6,19 +7,21 @@ interface TokenPayload {
   iat: number;
 }
 
-interface Tokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
 // Constants
-const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
+const ACCESS_TOKEN_KEY = "token";
+const REFRESH_TOKEN_KEY = "refreshToken";
 
 // Functions
-export function storeTokens(tokens: Tokens): void {
-  sessionStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-  sessionStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+export function storeTokens(tokens: AuthTokens): void {
+  // Use token from API response, or accessToken as fallback
+  const tokenToStore = tokens.token || tokens.accessToken;
+  if (tokenToStore) {
+    sessionStorage.setItem(ACCESS_TOKEN_KEY, tokenToStore);
+  }
+
+  if (tokens.refreshToken) {
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+  }
 }
 
 export function clearTokens(): void {
@@ -42,7 +45,7 @@ export function isTokenValid(): boolean {
     const decoded = jwtDecode<TokenPayload>(token);
     const currentTime = Math.floor(Date.now() / 1000);
     // Add a small buffer (2 seconds) to account for any clock differences
-    return decoded.exp > (currentTime + 2);
+    return decoded.exp > currentTime + 2;
   } catch {
     return false;
   }
@@ -71,7 +74,7 @@ export function shouldRefresh(): boolean {
   return timeRemaining < 30;
 }
 
-export function getUserId(): string | null {  
+export function getUserId(): string | null {
   const token = getAccessToken();
   if (!token) return null;
 
