@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContextOld';
+import { useUser } from '../../hooks/useUser';
 import { useFetch } from '../../hooks/useFetch';
 import '../../styles/Profile.css';
 import { Button } from '../atoms/Button';
@@ -9,6 +9,7 @@ import { Checkbox } from '../atoms/Checkbox';
 import { StatusMessage } from '../atoms/StatusMessage';
 import { TextInput } from '../atoms/TextInput';
 import { Form } from '../molecules/Form';
+import { useAuth } from '../../hooks/useAuth';
 
 // Types
 interface UserData {
@@ -39,9 +40,11 @@ const useLocationSafe = () => {
 };
 
 function Profile() {
-  const { userId, refreshTokenIfExpired } = useUser();
+  const { userId } = useUser();
+  const { refreshTokens } = useAuth();
   const location = useLocationSafe();
   const navigate = useNavigate();
+  
   const { data: userData, loading: fetchLoading, error: fetchError, refetch } = useFetch<UserData>(
     userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null
   );
@@ -82,9 +85,9 @@ function Profile() {
   // Check token validity and refresh if needed on component mount
   useEffect(() => {
     if (userId) {
-      refreshTokenIfExpired();
+        refreshTokens();
     }
-  }, [userId, refreshTokenIfExpired]);
+  }, [userId, refreshTokens]);
 
   // Parse query parameters on component mount or location change
   useEffect(() => {
@@ -128,7 +131,7 @@ function Profile() {
   const handleGmailConnect = async () => {
     if (userId) {
       // Refresh token if needed before connecting to Gmail
-      const refreshSuccessful = await refreshTokenIfExpired();
+      const refreshSuccessful = await refreshTokens();
       if (refreshSuccessful) {
         navigate(`/connect-gmail?userId=${userId}`);      }
     }
@@ -137,7 +140,7 @@ function Profile() {
   const handlePlaidConnect = async () => {
     if (userId) {
       // Refresh token if needed before navigating to Plaid connection
-      const refreshSuccessful = await refreshTokenIfExpired();
+      const refreshSuccessful = await refreshTokens();
       if (refreshSuccessful) {
         navigate(`/connect-plaid?userId=${userId}`);      }
     }
@@ -173,7 +176,7 @@ function Profile() {
       setIsSubmitting(true);
       try {
         // Refresh token if needed before submitting form
-        const refreshSuccessful = await refreshTokenIfExpired();
+        const refreshSuccessful = await refreshTokens();
         if (!refreshSuccessful) {
           throw new Error('Authentication failed. Please log in again.');
         }

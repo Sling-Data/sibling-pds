@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 @userId = 67d57a523fa3b977604aac0e
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2Q1N2E1MjNmYTNiOTc3NjA0YWFjMGUiLCJpYXQiOjE3NDIwNDkwODIsImV4cCI6MTc0MjA1MjY4Mn0.gh82wW4QGPamCnvMoD-wo-HPTCPgbXvB4fmyqA4LBlw
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2Q1N2E1MjNmYTNiOTc3NjA0YWFjMGUiLCJpYXQiOjE3NDIzOTg2NjksImV4cCI6MTc0MjQwMjI2OX0.gDpKCOIJoD3F4Euc1x5L5BdydOgtd3xsa-5WtEACxLo
 @refreshToken = 8cd890e348485a400d7168db60b640864d9c160cb26c606536c42caa2762e9b1c92bdb9568e2e3d2
 
 ### ==========================================

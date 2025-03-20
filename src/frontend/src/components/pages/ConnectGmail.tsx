@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts';
+import { useUser, useAuth } from '../../hooks';
 import { useFetch } from '../../hooks/useFetch';
 import ConnectApi from '../templates/ConnectApi';
 
 
 const ConnectGmail: React.FC = () => {
   const navigate = useNavigate();
-  const { userId, refreshTokenIfExpired } = useUser();
+  const { userId } = useUser();
+  const { refreshTokens } = useAuth();
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -167,7 +168,7 @@ const ConnectGmail: React.FC = () => {
 
       try {
         // Refresh token if needed before making the API call
-        const refreshSuccessful = await refreshTokenIfExpired();
+        const refreshSuccessful = await refreshTokens();
         if (!refreshSuccessful) {
           throw new Error('Authentication failed. Please log in again.');
         }
@@ -196,7 +197,7 @@ const ConnectGmail: React.FC = () => {
     };
 
     getAuthUrl();
-  }, [userId, refreshTokenIfExpired, fetchAuthUrl, openAuthPopup]);
+  }, [userId, refreshTokens, fetchAuthUrl, openAuthPopup]);
 
   // Handle connect button click
   const handleConnect = useCallback(() => {

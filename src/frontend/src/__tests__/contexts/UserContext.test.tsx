@@ -1,12 +1,12 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react';
-import { UserProviderNew, useUserContextNew } from '../../contexts/UserContextNew';
+import { UserProvider, useUserContext } from '../../contexts/UserContext';
 
 describe('UserContextNew', () => {
   // Test component that uses the context
   const TestComponent = () => {
-    const { userId, user, loading, error, hasCompletedOnboarding, setUserId } = useUserContextNew();
+    const { userId, user, loading, error, hasCompletedOnboarding, setUserId } = useUserContext();
     
     return (
       <div>
@@ -24,9 +24,9 @@ describe('UserContextNew', () => {
 
   test('provides initial state', () => {
     render(
-      <UserProviderNew>
+      <UserProvider>
         <TestComponent />
-      </UserProviderNew>
+      </UserProvider>
     );
 
     expect(screen.getByTestId('userId')).toHaveTextContent('no-user-id');
@@ -38,10 +38,10 @@ describe('UserContextNew', () => {
 
   test('setUserId updates userId in the context', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     act(() => {
       result.current.setUserId('test-user-id');
@@ -52,10 +52,10 @@ describe('UserContextNew', () => {
 
   test('setUser updates user in the context', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     const mockUser = {
       id: 'user-123',
@@ -72,10 +72,10 @@ describe('UserContextNew', () => {
 
   test('setLoading updates loading state', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     act(() => {
       result.current.setLoading(true);
@@ -86,10 +86,10 @@ describe('UserContextNew', () => {
 
   test('setError updates error state', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     act(() => {
       result.current.setError('Test error message');
@@ -100,10 +100,10 @@ describe('UserContextNew', () => {
 
   test('setHasCompletedOnboarding updates onboarding state', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     act(() => {
       result.current.setHasCompletedOnboarding(true);
@@ -114,10 +114,10 @@ describe('UserContextNew', () => {
 
   test('updateUserState updates multiple state properties at once', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     const mockUser = {
       id: 'user-123',
@@ -144,10 +144,10 @@ describe('UserContextNew', () => {
 
   test('resetUserState resets state to initial values', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <UserProviderNew>{children}</UserProviderNew>
+      <UserProvider>{children}</UserProvider>
     );
     
-    const { result } = renderHook(() => useUserContextNew(), { wrapper });
+    const { result } = renderHook(() => useUserContext(), { wrapper });
     
     // First set some values
     act(() => {
@@ -177,8 +177,8 @@ describe('UserContextNew', () => {
     const originalError = console.error;
     console.error = jest.fn();
     
-    expect(() => renderHook(() => useUserContextNew())).toThrow(
-      'useUserContextNew must be used within a UserProviderNew'
+    expect(() => renderHook(() => useUserContext())).toThrow(
+      'useUserContext must be used within a UserProvider'
     );
     
     // Restore console.error

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import '../../styles/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';
 import { Form } from '../molecules/Form';
-import { useAuth } from '../../hooks/useAuth';
-import { useUser } from '../../hooks/useUser';
+import { useAuth, useUser } from '../../hooks';
 
 interface FormErrors {
   name?: string;

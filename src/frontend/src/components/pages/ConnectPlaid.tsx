@@ -1,19 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts';
+import { useUser, useAuth } from '../../hooks';
 import { useFetch } from '../../hooks/useFetch';
 import ConnectApi from '../templates/ConnectApi';
-
-// Helper to check if we're in a test environment
-const isTestEnvironment = (): boolean => {
-  return process.env.NODE_ENV === 'test';
-};
 
 const ConnectPlaid: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { userId, refreshTokenIfExpired } = useUser();
+  const { userId } = useUser();
+  const { refreshTokens } = useAuth();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -51,7 +47,7 @@ const ConnectPlaid: React.FC = () => {
 
       try {
         // Refresh token if needed before making the API call
-        const refreshSuccessful = await refreshTokenIfExpired();
+        const refreshSuccessful = await refreshTokens();
         if (!refreshSuccessful) {
           throw new Error('Authentication failed. Please log in again.');
         }
@@ -78,7 +74,7 @@ const ConnectPlaid: React.FC = () => {
     };
 
     getLinkToken();
-  }, [location.search, userId, refreshTokenIfExpired, fetchLinkToken]);
+  }, [location.search, userId, refreshTokens, fetchLinkToken]);
 
   // Handle successful Plaid Link connection
   const onSuccess = useCallback(
@@ -87,7 +83,7 @@ const ConnectPlaid: React.FC = () => {
         setIsLoading(true);
         
         // Refresh token if needed before making the API call
-        const refreshSuccessful = await refreshTokenIfExpired();
+        const refreshSuccessful = await refreshTokens();
         if (!refreshSuccessful) {
           throw new Error('Authentication failed. Please log in again.');
         }
@@ -116,7 +112,7 @@ const ConnectPlaid: React.FC = () => {
         setIsLoading(false);
       }
     },
-    [userId, navigate, refreshTokenIfExpired, exchangePublicToken]
+    [userId, navigate, refreshTokens, exchangePublicToken]
   );
 
   // Handle Plaid Link exit
@@ -145,21 +141,18 @@ const ConnectPlaid: React.FC = () => {
     onExit,
   });
   
-  // Use these variables based on environment
-  const open = isTestEnvironment() ? jest.fn() : plaidOpen;
-  const ready = isTestEnvironment() ? true : plaidReady;
 
   // Automatically open Plaid Link when ready and token is available
   useEffect(() => {
-    if (!isTestEnvironment() && ready && linkToken && !error) {
-      open();
+    if (plaidReady && linkToken && !error) {
+      plaidOpen();
     }
-  }, [ready, open, linkToken, error]);
+  }, [plaidReady, plaidOpen, linkToken, error]);
 
   // Handle connect button click
   const handleConnect = useCallback(() => {
-    open();
-  }, [open]);
+    plaidOpen();
+  }, [plaidOpen]);
 
   // Handle cancel button click
   const handleCancel = useCallback(() => {
@@ -188,7 +181,7 @@ const ConnectPlaid: React.FC = () => {
       onConnect={handleConnect}
       onCancel={handleCancel}
       onSuccess={handleSuccess}
-      isConnectDisabled={!ready || !linkToken}
+      isConnectDisabled={!plaidReady || !linkToken}
       loadingMessage={linkToken ? "Initializing Plaid Link..." : "Initializing connection to Plaid..."}
       connectButtonText="Connect Your Bank Account"
       redirectPath="/profile"

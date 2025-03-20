@@ -6,8 +6,13 @@ import {
   SignupCredentials,
   ApiResponse,
 } from "../types";
-import { getAccessToken, getUserId, isTokenValid } from "../utils/TokenManager";
-import { useNotificationContext } from "../contexts";
+import {
+  getAccessToken,
+  getUserId,
+  isTokenValid,
+  shouldRefresh,
+} from "../utils/TokenManager";
+import { useNotificationContext, useUserContext } from "../contexts";
 import { useAuthContext } from "../contexts/AuthContext";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../services/user.service";
@@ -40,7 +45,10 @@ export function useAuth() {
     handleTokenRefreshSuccess,
     handleTokenRefreshFailure,
     needsTokenRefresh,
+    setAuthState,
   } = useAuthContext();
+
+  const { setUserId } = useUserContext();
 
   const navigate = useNavigate();
   const { addNotification } = useNotificationContext();
@@ -56,11 +64,18 @@ export function useAuth() {
 
       if (response.data) {
         storeAuthTokens(response.data);
+        // Update the state immediately
+        const userId = getUserId();
+        setUserId(userId);
+        setAuthState({
+          isAuthenticated: true,
+          userId: userId,
+        });
       }
 
       return response;
     },
-    [storeAuthTokens]
+    [storeAuthTokens, setUserId, setAuthState]
   );
 
   /**
@@ -105,6 +120,11 @@ export function useAuth() {
     const refreshToken = getCurrentRefreshToken();
     if (!refreshToken) {
       return false;
+    }
+
+    // Check if token should be refreshed (less than 30 seconds remaining)
+    if (!shouldRefresh()) {
+      return true; // Token is still valid, no need to refresh
     }
 
     setIsRefreshing(true);
@@ -178,19 +198,26 @@ export function useAuth() {
     try {
       // Use UserService to fetch user data
       const response = await UserService.getUserData(currentUserId);
-
       if (!response.data) {
         throw new Error("Failed to fetch user data");
       }
 
       const data = response.data;
 
+      console.log("data", {
+        volunteeredData: data.volunteeredData,
+        hasVolunteeredData:
+          data.volunteeredData && data.volunteeredData.length > 0,
+      });
+
       // Check if user has volunteered data
       if (data.volunteeredData && data.volunteeredData.length > 0) {
         // User has volunteered data, navigate to profile
+        console.log("navigating to profile");
         navigate("/profile");
       } else {
         // User doesn't have volunteered data, navigate to data input
+        console.log("navigating to data input");
         navigate("/data-input");
       }
     } catch (error) {

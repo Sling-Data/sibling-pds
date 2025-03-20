@@ -20,7 +20,6 @@ jest.mock("@backend/controllers/authController");
 describe("Auth Routes", () => {
   let app: Express;
   let mongoServer: MongoMemoryServer;
-  let testUserId: string;
   let email: string;
 
   beforeAll(async () => {
@@ -91,8 +90,6 @@ describe("Auth Routes", () => {
       email: encryptedEmail,
       password: encryptedPassword,
     };
-
-    testUserId = mockUser._id.toString();
 
     // Mock UserModel.findById to return the mock user
     (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);

@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { act } from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Profile from '../../../components/pages/Profile';
-import { UserProvider } from '../../../contexts/UserContextOld';
+import { UserProvider } from '../../../contexts';
+import { AuthProvider } from '../../../contexts/AuthContext';
+import { NotificationProvider, ApiProvider } from '../../../contexts';
 
 // Mock environment variable
 process.env.REACT_APP_API_URL = 'http://localhost:3000';
@@ -36,11 +37,17 @@ describe('Profile Component', () => {
 
   const renderWithProvider = () => {
     return render(
-      <BrowserRouter>
-        <UserProvider>
-          <Profile />
-        </UserProvider>
-      </BrowserRouter>
+    <BrowserRouter>
+      <NotificationProvider>
+        <AuthProvider>
+          <ApiProvider>
+            <UserProvider>
+              <Profile />
+            </UserProvider>
+          </ApiProvider>
+        </AuthProvider>
+      </NotificationProvider>
+  </BrowserRouter>
     );
   };
 
@@ -73,13 +80,7 @@ describe('Profile Component', () => {
     });
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <UserProvider>
-            <Profile />
-          </UserProvider>
-        </BrowserRouter>
-      );
+      renderWithProvider();
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
@@ -98,13 +99,7 @@ describe('Profile Component', () => {
     });
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <UserProvider>
-            <Profile />
-          </UserProvider>
-        </BrowserRouter>
-      );
+      renderWithProvider();
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
@@ -123,13 +118,7 @@ describe('Profile Component', () => {
     });
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <UserProvider>
-            <Profile />
-          </UserProvider>
-        </BrowserRouter>
-      );
+      renderWithProvider();
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
@@ -167,13 +156,7 @@ describe('Profile Component', () => {
     });
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <UserProvider>
-            <Profile />
-          </UserProvider>
-        </BrowserRouter>
-      );
+    renderWithProvider();
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
@@ -194,13 +177,7 @@ describe('Profile Component', () => {
       .mockRejectedValueOnce(new Error('Update failed'));
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <UserProvider>
-            <Profile />
-          </UserProvider>
-        </BrowserRouter>
-      );
+      renderWithProvider();
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
@@ -219,13 +196,7 @@ describe('Profile Component', () => {
     });
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <UserProvider>
-            <Profile />
-          </UserProvider>
-        </BrowserRouter>
-      );
+      renderWithProvider();
     });
 
     expect(screen.getByText('No user ID provided')).toBeInTheDocument();
@@ -251,19 +222,16 @@ describe('Profile Component', () => {
     });
     
     // Mock the user ID
-    jest.spyOn(require('../../../contexts/UserContextOld'), 'useUser').mockReturnValue({ 
+    jest.spyOn(require('../../../contexts/UserContext'), 'useUserContext').mockReturnValue({ 
       userId: 'test-user-id',
-      refreshTokenIfExpired: jest.fn().mockResolvedValue(true)
+    });
+    
+    jest.spyOn(require('../../../hooks/useAuth'), 'useAuth').mockReturnValue({
+        refreshTokens: jest.fn().mockResolvedValue(true)
     });
     
     // Render the component
-    render(
-      <BrowserRouter>
-        <UserProvider>
-          <Profile />
-        </UserProvider>
-      </BrowserRouter>
-    );
+        renderWithProvider();
     
     // Wait for initial data to load
     await act(async () => {

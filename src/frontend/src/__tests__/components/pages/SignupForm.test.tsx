@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { SignupForm } from '../../../components/pages/SignupForm';
 import { AuthProvider } from '../../../contexts/AuthContext';

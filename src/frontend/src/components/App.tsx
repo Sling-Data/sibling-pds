@@ -1,33 +1,37 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginForm } from './pages/LoginForm';
-import { SignupForm } from './pages/SignupForm';
-import Profile from './pages/Profile';
-import DataInput from './pages/DataInput';
-import ConnectPlaid from './pages/ConnectPlaid';
-import ConnectGmail from './pages/ConnectGmail';
-import { UserProvider, useUser, NotificationProvider } from '../contexts';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { useAuth } from '../hooks';
+import { ApiProvider, NotificationProvider, UserProvider } from '../contexts';
 import { AuthProvider } from '../contexts/AuthContext';
+import { ApiRequestExample, FormExample, NotificationExample } from './examples';
 import { NotificationContainer } from './organisms/NotificationContainer';
-import { NotificationExample, FormExample, ApiRequestExample } from './examples';
+import ConnectGmail from './pages/ConnectGmail';
+import ConnectPlaid from './pages/ConnectPlaid';
+import DataInput from './pages/DataInput';
+import { LoginForm } from './pages/LoginForm';
+import Profile from './pages/Profile';
+import { SignupForm } from './pages/SignupForm';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useUser();
+  const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated } = useUser();
 
   return (
     <Routes>
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/profile" /> : <LoginForm />}
+        element={
+            <LoginForm />
+        }
       />
       <Route
         path="/signup"
-        element={isAuthenticated ? <Navigate to="/data-input" /> : <SignupForm />}
+        element={
+            <SignupForm />
+        }
       />
       <Route
         path="/profile"
@@ -83,10 +87,12 @@ const App: React.FC = () => {
     <Router>
       <NotificationProvider>
         <AuthProvider>
-          <UserProvider>
-            <AppRoutes />
-            <NotificationContainer />
-          </UserProvider>
+          <ApiProvider>
+              <UserProvider>
+                <AppRoutes />
+                <NotificationContainer />
+              </UserProvider>
+          </ApiProvider>
         </AuthProvider>
       </NotificationProvider>
     </Router>

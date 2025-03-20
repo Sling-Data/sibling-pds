@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks';
 import '../../styles/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';
 import { Form } from '../molecules/Form';

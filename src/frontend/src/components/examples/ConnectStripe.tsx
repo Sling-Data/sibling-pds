@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContextOld';
+import { useUser, useAuth } from '../../hooks';
 import { useFetch } from '../../hooks/useFetch';
 import ConnectApi from '../templates/ConnectApi';
 
 const ConnectStripe: React.FC = () => {
   const location = useLocation();
 //   const navigate = useNavigate();
-  const { userId, refreshTokenIfExpired } = useUser();
+  const { userId } = useUser();
+  const { refreshTokens } = useAuth();
   const [stripeUrl, setStripeUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -34,7 +35,7 @@ const ConnectStripe: React.FC = () => {
 
       try {
         // Refresh token if needed before making the API call
-        const refreshSuccessful = await refreshTokenIfExpired();
+        const refreshSuccessful = await refreshTokens();
         if (!refreshSuccessful) {
           throw new Error('Authentication failed. Please log in again.');
         }
@@ -61,7 +62,7 @@ const ConnectStripe: React.FC = () => {
     };
 
     getStripeUrl();
-  }, [location.search, userId, refreshTokenIfExpired, fetchStripeUrl]);
+  }, [location.search, userId, refreshTokens, fetchStripeUrl]);
 
   // Handle connect button click
   const handleConnect = useCallback(() => {

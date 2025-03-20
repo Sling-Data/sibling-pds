@@ -1,7 +1,5 @@
 import { ApiResponse } from "../types";
-import { ApiConfig, clearApiCache } from "../hooks/useApi";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+import { ApiConfig, clearApiCache, sharedApiRequest } from "../hooks/useApi";
 
 /**
  * Options for API requests
@@ -105,9 +103,8 @@ export class ApiService {
   }
 
   /**
-   * Make a request to the API
-   * This is a wrapper that will be implemented by components using the useApi hook
-   * It provides a consistent interface for service methods
+   * Make a request to the API using the shared API request function
+   * This leverages all the features from useApi (auth, caching, retries, etc.)
    *
    * @param endpoint The API endpoint
    * @param config The request config
@@ -118,29 +115,6 @@ export class ApiService {
     config: ApiConfig
   ): Promise<ApiResponse<T>> {
     const url = this.formatUrl(endpoint);
-
-    // This is a placeholder implementation that will be replaced by the hook-based approach
-    // In real components, the request will be made using the useApi hook
-    try {
-      const response = await fetch(`${API_URL}/${url}`, {
-        method: config.method,
-        headers: {
-          ...(config.body && { "Content-Type": "application/json" }),
-          ...config.headers,
-        },
-        body: config.body ? JSON.stringify(config.body) : undefined,
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return { data, error: null };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      return { data: null, error: errorMessage };
-    }
+    return sharedApiRequest<T>(url, config);
   }
 }

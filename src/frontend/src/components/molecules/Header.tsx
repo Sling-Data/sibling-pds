@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
-import { useUser } from '../../contexts/UserContextOld';
+import { useUser } from '../../hooks';
+import { useAuth } from '../../hooks';
 
 /**
  * Header component for the application
  */
 export const Header: React.FC = () => {
-  const { isAuthenticated, logout } = useUser();
+  const { isAuthenticated } = useUser();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

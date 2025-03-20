@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContextOld';
+import { useUser } from '../../hooks/useUser';
 import { useFetch } from '../../hooks/useFetch';
 import { CheckboxOption, RadioOption, SelectOption } from '../../types';
 import { StatusMessage } from '../atoms/StatusMessage';

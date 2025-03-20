@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
+import { render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import ConnectPlaid from '../../../components/pages/ConnectPlaid';
-import { UserProvider } from '../../../contexts/UserContextOld';
+import { ApiProvider, NotificationProvider, UserProvider } from '../../../contexts';
+import { AuthProvider } from '../../../contexts/AuthContext';
 
 // Mock react-router-dom hooks
 jest.mock('react-router-dom', () => {
@@ -39,11 +40,17 @@ describe('ConnectPlaid Component', () => {
     (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
     render(
-      <BrowserRouter>
-        <UserProvider >
-          <ConnectPlaid />
-        </UserProvider>
-      </BrowserRouter>
+      <MemoryRouter>
+        <NotificationProvider>
+          <AuthProvider>
+            <ApiProvider>
+              <UserProvider>          
+                <ConnectPlaid />
+              </UserProvider>
+            </ApiProvider>
+          </AuthProvider>
+        </NotificationProvider>
+      </MemoryRouter>
     );
     
     expect(screen.getByText(/Initializing connection to Plaid/i)).toBeInTheDocument();
@@ -56,20 +63,32 @@ describe('ConnectPlaid Component', () => {
       pathname: '/connect-plaid'
     });
 
-    // Mock fetch to reject
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('API Error'));
+    // Mock fetch to reject with an authentication error
+    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Authentication failed. Please log in again.'));
 
     render(
-      <BrowserRouter>
-        <UserProvider >
-          <ConnectPlaid />
-        </UserProvider>
-      </BrowserRouter>
+      <MemoryRouter>
+        <NotificationProvider>
+          <AuthProvider>
+            <ApiProvider>
+              <UserProvider>          
+                <ConnectPlaid />
+              </UserProvider>
+            </ApiProvider>
+          </AuthProvider>
+        </NotificationProvider>
+      </MemoryRouter>
     );
     
     // Wait for the error to be displayed
     await waitFor(() => {
-      expect(screen.getByText(/API Error/i)).toBeInTheDocument();
+      // The error message is displayed with "Warning:" prefix
+      const warningElement = screen.getByText(/Warning:/i);
+      expect(warningElement).toBeInTheDocument();
+      
+      // Check that the parent container has the error message text
+      const errorContainer = warningElement.closest('.error-message');
+      expect(errorContainer).toHaveTextContent(/Authentication failed/i);
     });
   });
 
@@ -87,11 +106,17 @@ describe('ConnectPlaid Component', () => {
     });
 
     render(
-      <BrowserRouter>
-        <UserProvider >
-          <ConnectPlaid />
-        </UserProvider>
-      </BrowserRouter>
+      <MemoryRouter>
+        <NotificationProvider>
+          <AuthProvider>
+            <ApiProvider>
+              <UserProvider>          
+                <ConnectPlaid />
+              </UserProvider>
+            </ApiProvider>
+          </AuthProvider>
+        </NotificationProvider>
+      </MemoryRouter>
     );
     
     // Wait for the button to be displayed

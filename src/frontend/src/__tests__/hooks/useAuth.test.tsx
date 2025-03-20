@@ -16,6 +16,10 @@ jest.mock("../../contexts", () => ({
   useNotificationContext: () => ({
     addNotification: mockAddNotification,
   }),
+  useUserContext: () => ({
+    userId: "user-123",
+    setUserId: jest.fn(),
+  }),
 }));
 
 // Mock AuthService
@@ -42,6 +46,7 @@ jest.mock("../../utils/TokenManager", () => ({
   storeTokens: jest.fn(),
   getUserId: jest.fn(),
   isTokenValid: jest.fn(),
+  shouldRefresh: jest.fn(),
 }));
 
 // Mock the AuthContext
@@ -52,6 +57,7 @@ const mockGetCurrentRefreshToken = jest.fn().mockReturnValue("mock-refresh-token
 const mockHandleTokenRefreshSuccess = jest.fn();
 const mockHandleTokenRefreshFailure = jest.fn();
 const mockNeedsTokenRefresh = jest.fn().mockReturnValue(false);
+const mockSetAuthState = jest.fn();
 
 jest.mock("../../contexts/AuthContext", () => ({
   useAuthContext: () => ({
@@ -65,7 +71,8 @@ jest.mock("../../contexts/AuthContext", () => ({
     getCurrentRefreshToken: mockGetCurrentRefreshToken,
     handleTokenRefreshSuccess: mockHandleTokenRefreshSuccess,
     handleTokenRefreshFailure: mockHandleTokenRefreshFailure,
-    needsTokenRefresh: mockNeedsTokenRefresh
+    needsTokenRefresh: mockNeedsTokenRefresh,
+    setAuthState: mockSetAuthState,
   }),
 }));
 
@@ -182,6 +189,8 @@ describe("useAuth Hook", () => {
         userId: "user-123"
       }
     });
+
+    jest.spyOn(TokenManager, "shouldRefresh").mockReturnValue(true);
     
     // Need to mock getCurrentRefreshToken to return a value
     mockGetCurrentRefreshToken.mockReturnValue("mock-refresh-token");

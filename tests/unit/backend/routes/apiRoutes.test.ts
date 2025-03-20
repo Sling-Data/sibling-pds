@@ -1,25 +1,15 @@
 import request from "supertest";
 import express, { Express, NextFunction, Request, Response } from "express";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose, { Document } from "mongoose";
+import mongoose from "mongoose";
 import api from "@backend/routes/apiClientRoutes";
 import { errorHandler } from "@backend/middleware/errorHandler";
 import { hashPassword } from "@backend/utils/userUtils";
 import * as encryption from "@backend/utils/encryption";
 import UserModel from "@backend/models/UserModel";
-
-// Define interface for User Document
-interface UserDocument extends Document {
-  _id: mongoose.Types.ObjectId;
-  name: any;
-  email: any;
-  password: any;
-}
-
 describe("API Routes", () => {
   let app: Express;
   let mongoServer: MongoMemoryServer;
-  let testUserId: string;
   let validToken: string;
   let invalidToken: string;
 
@@ -85,13 +75,11 @@ describe("API Routes", () => {
     const hashedPassword = await hashPassword("testPassword123");
     const encryptedPassword = encryption.encrypt(hashedPassword);
 
-    const user = (await UserModel.create({
+    await UserModel.create({
       name: encryptedName,
       email: encryptedEmail,
       password: encryptedPassword,
-    })) as UserDocument;
-
-    testUserId = user._id.toString();
+    });
 
     // Create test tokens
     validToken = "valid.token.string";

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User } from '../types';
+import { getUserId } from '../utils/TokenManager';
 
 /**
  * User Context - Manages user state only
@@ -47,8 +48,19 @@ const initialState: UserState = {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProviderNew: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<UserState>(initialState);
+
+  // Initialize userId from token on mount
+  useEffect(() => {
+    // If userId is not set but exists in token, initialize it
+    if (!state.userId) {
+      const tokenUserId = getUserId();
+      if (tokenUserId) {
+        setState(prev => ({ ...prev, userId: tokenUserId }));
+      }
+    }
+  }, []); // Empty dependency array means this runs once on mount
 
   // Individual setters
   const setUser = useCallback((user: User | null) => {
@@ -95,10 +107,10 @@ export const UserProviderNew: React.FC<{ children: React.ReactNode }> = ({ child
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
-export const useUserContextNew = (): UserContextType => {
+export const useUserContext = (): UserContextType => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUserContextNew must be used within a UserProviderNew');
+    throw new Error('useUserContext must be used within a UserProvider');
   }
   return context;
 }; 

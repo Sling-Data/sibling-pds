@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiResponse, User } from "../types";
 import { getUserId } from "../utils/TokenManager";
-import { useUserContextNew } from "../contexts";
+import { useUserContext } from "../contexts";
 import { UserService } from "../services/user.service";
 import { useAuth } from "./useAuth";
 
@@ -16,7 +16,7 @@ import { useAuth } from "./useAuth";
  *
  * Provides functionality for:
  * - Getting and updating user profile
- * - Checking onboarding status
+ * - Navigating based on user data and authentication status
  * - Managing user state
  */
 export function useUser() {
@@ -29,9 +29,8 @@ export function useUser() {
     setUserId,
     setLoading,
     setError,
-    setHasCompletedOnboarding,
     updateUserState,
-  } = useUserContextNew();
+  } = useUserContext();
 
   const { refreshTokens, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -92,18 +91,6 @@ export function useUser() {
   );
 
   /**
-   * Check if the user has completed the onboarding process
-   */
-  const checkOnboardingStatus = useCallback(async (): Promise<boolean> => {
-    const response = await UserService.hasCompletedOnboarding();
-
-    const hasCompleted = !!response.data?.completed;
-    setHasCompletedOnboarding(hasCompleted);
-
-    return hasCompleted;
-  }, [setHasCompletedOnboarding]);
-
-  /**
    * Navigate to the appropriate page based on user data and authentication status
    * @param fallbackPath The path to navigate to if the user is not authenticated
    */
@@ -133,14 +120,6 @@ export function useUser() {
           return;
         }
 
-        // Then check onboarding status
-        const hasCompletedOnboarding = await checkOnboardingStatus();
-
-        if (!hasCompletedOnboarding) {
-          navigate("/onboarding");
-          return;
-        }
-
         // Now check user data
         const userDataResponse = await UserService.getUserData(currentUserId);
 
@@ -166,13 +145,7 @@ export function useUser() {
         navigate("/data-input");
       }
     },
-    [
-      fetchUserProfile,
-      checkOnboardingStatus,
-      navigate,
-      isAuthenticated,
-      refreshTokens,
-    ]
+    [fetchUserProfile, navigate, isAuthenticated, refreshTokens]
   );
 
   return {
@@ -184,7 +157,6 @@ export function useUser() {
     isAuthenticated,
     fetchUserProfile,
     updateUserProfile,
-    checkOnboardingStatus,
     checkUserDataAndNavigate,
     setUserId,
   };
