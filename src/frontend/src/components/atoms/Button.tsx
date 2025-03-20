@@ -1,6 +1,6 @@
 import React from 'react';
 import { ButtonProps } from '../../types';
-import './Button.css';
+import '../../styles/atoms/Button.css';
 
 /**
  * Button component for user interactions

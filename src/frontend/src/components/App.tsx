@@ -3,7 +3,6 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 import { useAuth } from '../hooks';
 import { ApiProvider, NotificationProvider, UserProvider } from '../contexts';
 import { AuthProvider } from '../contexts/AuthContext';
-import { ApiRequestExample, FormExample, NotificationExample } from './examples';
 import { NotificationContainer } from './organisms/NotificationContainer';
 import ConnectGmail from './pages/ConnectGmail';
 import ConnectPlaid from './pages/ConnectPlaid';
@@ -64,18 +63,6 @@ const AppRoutes: React.FC = () => {
             <ConnectGmail />
           </PrivateRoute>
         }
-      />
-      <Route
-        path="/notification-example"
-        element={<NotificationExample />}
-      />
-      <Route
-        path="/form-example"
-        element={<FormExample />}
-      />
-      <Route
-        path="/api-example"
-        element={<ApiRequestExample />}
       />
       <Route path="/" element={<Navigate to="/login" />} />
     </Routes>

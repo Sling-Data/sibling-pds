@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextInputProps } from '../../types';
-import './TextInput.css';
+import '../../styles/atoms/TextInput.css';
 
 /**
  * TextInput component for form inputs

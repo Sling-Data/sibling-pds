@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../hooks/useUser';
-import { useFetch } from '../../hooks/useFetch';
+import { useApi } from '../../hooks/useApi';
 import { CheckboxOption, RadioOption, SelectOption } from '../../types';
 import { StatusMessage } from '../atoms/StatusMessage';
+import { Alert } from '../atoms/Alert';
 import { Form } from '../molecules/Form';
-import '../../styles/DataInput.css';
+import '../../styles/pages/DataInput.css';
 
 interface FormData {
   interests: string[];
@@ -46,12 +47,7 @@ const DataInput: React.FC = () => {
     age: ''
   });
 
-  const { loading: submitLoading, error: submitError, update: submitForm } = useFetch<{ message: string }>(
-    null,
-    {
-      method: 'POST'
-    }
-  );
+  const { loading: submitLoading, error: submitError, request: submitForm } = useApi<{ message: string }>();
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -189,19 +185,20 @@ const DataInput: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // Prevent default form submission which would append URL parameters
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
+    // Run validation and only proceed if valid
+    const isValid = validateForm();
+    if (!isValid) {
+      return; // Stop here if validation fails, keeping error messages visible
     }
-
+    
     setIsSubmitting(true);
-    setSubmitStatus({});
-
+    
     try {
-      console.log('Submitting data with userId:', userId);
-      const result = await submitForm(
-        `${process.env.REACT_APP_API_URL}/volunteered-data`,
+      const response = await submitForm(
+        '/volunteered-data',
         {
           method: 'POST',
           body: {
@@ -212,38 +209,17 @@ const DataInput: React.FC = () => {
         }
       );
 
-      if (result.error) {
-        throw new Error(result.error);
+      if (response.data) {
+        setSubmitStatus({ success: true, message: 'Form submitted successfully!' });
+        navigate('/profile');
+      } else if (response.error) {
+        setSubmitStatus({ success: false, message: typeof response.error === 'string' ? response.error : 'Failed to submit form. Please try again.' });
       }
-
-      console.log('Submission response:', result.data);
-      
-      setSubmitStatus({
-        success: true,
-        message: 'Form submitted successfully!'
-      });
-      
-      // Reset form
-      setFormData({
-        interests: [],
-        primaryGoal: '',
-        location: '',
-        profession: '',
-        communicationStyle: '',
-        dailyAvailability: [],
-        fitnessLevel: '',
-        learningStyle: [],
-        age: ''
-      });
-
-      // Navigate to profile page
-      navigate('/profile');
     } catch (error) {
-      setSubmitStatus({
-        success: false,
-        message: 'Failed to submit form. Please try again.'
+      setSubmitStatus({ 
+        success: false, 
+        message: 'Failed to submit form. Please try again.' 
       });
-      console.error('Submission error:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -268,7 +244,7 @@ const DataInput: React.FC = () => {
   };
 
   // Display status message if there's a submission status or error
-  const statusMessage = submitStatus.message || submitError;
+  const statusMessage = submitStatus.message || (submitError ? (typeof submitError === 'string' ? submitError : 'An error occurred') : '');
   const statusType = submitStatus.success ? 'success' : 'error';
 
   return (
@@ -305,7 +281,7 @@ const DataInput: React.FC = () => {
               </div>
             ))}
           </div>
-          {errors.interests && <div className="error-message">{errors.interests}</div>}
+          {errors.interests && <Alert type="error" message={errors.interests} variant="inline" />}
         </div>
 
         {/* Primary Goal - Dropdown */}
@@ -322,7 +298,7 @@ const DataInput: React.FC = () => {
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-          {errors.primaryGoal && <div className="error-message">{errors.primaryGoal}</div>}
+          {errors.primaryGoal && <Alert type="error" message={errors.primaryGoal} variant="inline" />}
         </div>
 
         {/* Location - Text Input */}
@@ -337,7 +313,7 @@ const DataInput: React.FC = () => {
             placeholder="Enter your location"
             className={errors.location ? 'error' : ''}
           />
-          {errors.location && <div className="error-message">{errors.location}</div>}
+          {errors.location && <Alert type="error" message={errors.location} variant="inline" />}
         </div>
 
         {/* Profession - Dropdown */}
@@ -354,7 +330,7 @@ const DataInput: React.FC = () => {
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-          {errors.profession && <div className="error-message">{errors.profession}</div>}
+          {errors.profession && <Alert type="error" message={errors.profession} variant="inline" />}
         </div>
 
         {/* Communication Style - Radio */}
@@ -375,7 +351,7 @@ const DataInput: React.FC = () => {
               </div>
             ))}
           </div>
-          {errors.communicationStyle && <div className="error-message">{errors.communicationStyle}</div>}
+          {errors.communicationStyle && <Alert type="error" message={errors.communicationStyle} variant="inline" />}
         </div>
 
         {/* Daily Availability - Checkboxes */}
@@ -403,7 +379,7 @@ const DataInput: React.FC = () => {
               </div>
             ))}
           </div>
-          {errors.dailyAvailability && <div className="error-message">{errors.dailyAvailability}</div>}
+          {errors.dailyAvailability && <Alert type="error" message={errors.dailyAvailability} variant="inline" />}
         </div>
 
         {/* Fitness Level - Dropdown */}
@@ -420,7 +396,7 @@ const DataInput: React.FC = () => {
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-          {errors.fitnessLevel && <div className="error-message">{errors.fitnessLevel}</div>}
+          {errors.fitnessLevel && <Alert type="error" message={errors.fitnessLevel} variant="inline" />}
         </div>
 
         {/* Learning Style - Checkboxes */}
@@ -448,33 +424,22 @@ const DataInput: React.FC = () => {
               </div>
             ))}
           </div>
-          {errors.learningStyle && <div className="error-message">{errors.learningStyle}</div>}
+          {errors.learningStyle && <Alert type="error" message={errors.learningStyle} variant="inline" />}
         </div>
 
-        {/* Age - Number Input */}
+        {/* Age - Text Input */}
         <div className="form-group">
           <label htmlFor="age">Age</label>
           <input
             id="age"
             name="age"
-            type="number"
-            min="13"
-            max="100"
+            type="text"
             value={formData.age}
-            onChange={(e) => {
-              const value = e.target.value;
-              handleInputChange('age', value);
-              
-              // Validate age on change
-              if (value) {
-                const ageError = validateAge(value);
-                setErrors(prev => ({ ...prev, age: ageError || undefined }));
-              }
-            }}
+            onChange={(e) => handleInputChange('age', e.target.value)}
             placeholder="Enter your age"
             className={errors.age ? 'error' : ''}
           />
-          {errors.age && <div className="error-message">{errors.age}</div>}
+          {errors.age && <Alert type="error" message={errors.age} variant="inline" />}
         </div>
 
         {statusMessage && (

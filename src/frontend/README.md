@@ -2,39 +2,6 @@
 
 A modern React application for connecting siblings and managing their interactions.
 
-## Current Project Status
-
-### Completed Work
-- [x] Phase 1: API Layer Refactoring
-  - Created consolidated API hook (useApi) to replace direct fetch calls
-  - Implemented proper error handling and notification integration
-  - Fixed and enhanced tests for the new API hook
-
-- [x] Phase 2: Form and Notification Improvements
-  - Enhanced the notification system integration with the API layer
-  - Added tests for notification behavior in API calls
-
-- [x] Phase 3: New Hooks Implementation
-  - Implemented useAuth, useUser, and useData hooks
-  - Added comprehensive tests for all new hooks
-  - Fixed critical issues in test mocking and implementation
-
-- [x] Phase 4: Initial Component Updates
-  - Updated ConnectGmail component to improve UX when popup is closed
-  - Enhanced Profile component to use the new ConnectApi molecule
-  - Added service buttons styles to maintain visual consistency
-
-### Pending Tasks for Next Agent
-- [ ] Complete Phase 4: Component Updates
-  - Update remaining components to use the new hooks and services
-  - Ensure backward compatibility for all component changes
-  - Verify tests for updated components
-
-- [ ] Prepare for Phase 5: Cleanup and Documentation
-  - Identify deprecated components that can be removed after migration
-  - Document the new component architecture and hook usage patterns
-  - Prepare migration strategy for remaining legacy code
-
 ## Tech Stack
 
 - **Core Technologies**:
@@ -44,8 +11,9 @@ A modern React application for connecting siblings and managing their interactio
   - Create React App with react-scripts 5.0.1
 
 - **State Management & Data Fetching**:
-  - React Context API for global state
+  - React Context API for global state (UserContext)
   - Custom hooks architecture with domain-specific hooks
+  - Modern API handling with useApi hook 
   - JWT token management with auto-refresh
   - Session storage for secure data
 
@@ -62,17 +30,18 @@ A modern React application for connecting siblings and managing their interactio
 - JWT-based authentication with automatic token refresh
 - Protected routes with authentication guards
 - Session-based token storage
-- OAuth2 integration for external services
+- OAuth2 integration for external services (Gmail, Plaid)
 - Type-safe API calls
 
 ### Data Management
-- Centralized data fetching with modern hooks
+- Centralized API handling with useApi hook
 - Request caching with configurable expiry
 - Automatic retry on network errors
 - Dependency-based refetching
 - Error boundary implementation
 
 ### User Interface
+- Atomic design pattern (atoms, molecules, organisms, templates, pages)
 - Responsive design with mobile-first approach
 - Form validation and error handling
 - Loading states and error messages
@@ -130,18 +99,64 @@ src/
 ├── components/           # React components
 │   ├── atoms/           # Atomic components (buttons, inputs, etc.)
 │   ├── molecules/       # Composite components (form sections, cards, etc.)
-│   ├── organisms/       # Complex UI sections (forms, navbars, etc.)
+│   ├── organisms/       # Complex UI sections (forms, containers, etc.)
 │   ├── templates/       # Page layouts and templates
 │   └── pages/           # Full page components
 ├── contexts/            # React contexts for state management
 ├── hooks/               # Custom React hooks
+│   ├── useApi.ts        # API interaction hook
+│   ├── useAuth.ts       # Authentication hook
+│   ├── useUser.ts       # User data hook
+│   └── useNotification.ts # Notification hook
 ├── services/            # Domain-specific service functions
 ├── styles/              # CSS and styling
+│   ├── atoms/           # Styles for atomic components
+│   ├── molecules/       # Styles for molecular components
+│   ├── pages/           # Styles for page components
+│   ├── templates/       # Styles for template components
+│   └── index.css        # Global styles
 ├── utils/               # Utility functions and helpers
 ├── __tests__/           # Test files
 ├── types/               # TypeScript type definitions
 └── index.tsx            # Application entry point
 ```
+
+## API Architecture
+
+The application has been refactored to use a centralized API handling approach:
+
+### useApi Hook
+
+The `useApi` hook replaces the legacy `useFetch` hook and provides:
+
+- Consistent API interaction patterns across the application
+- Automatic token refresh for authenticated requests
+- Better error handling and type safety
+- Support for different request methods (GET, POST, PUT, DELETE)
+- Request caching with configurable options
+- Loading state management
+- Automatic retries for failed requests
+- Dependency tracking for refetching
+
+### Components Migration
+
+All major components have been migrated from `useFetch` to `useApi`:
+
+- `Profile.tsx`: User profile management
+- `ConnectGmail.tsx`: Gmail integration
+- `ConnectPlaid.tsx`: Financial data integration
+- `DataInput.tsx`: User data input forms
+
+## CSS Architecture
+
+The application uses a structured CSS organization based on the atomic design pattern:
+
+- `/styles/atoms/`: Styles for atomic components
+- `/styles/molecules/`: Styles for molecular components
+- `/styles/pages/`: Styles for page components
+- `/styles/templates/`: Styles for template components
+
+This organization mirrors the component structure and improves maintainability.
 
 ## Testing
 
@@ -170,24 +185,16 @@ npm run test-once
 node test-single.js "TestName"
 ```
 
-## Next Steps for Development
-
-1. Complete the component updates using the new hook architecture
-2. Implement consistent error handling across all components
-3. Replace remaining legacy fetch calls with modern hooks
-4. Enhance the notification system with more user-friendly messages
-5. Prepare for cleanup of deprecated code
-
-> For more detailed information about the refactoring project, hooks implementation, and technical details, please see the [src/README.md](./src/README.md) file.
-
 ## Best Practices
 1. Always use TypeScript for type safety
-2. Use the centralized hooks for API calls and data management
-3. Handle loading and error states consistently
-4. Implement proper error boundaries
-5. Write tests for new components and hooks
-6. Follow React hooks rules
-7. Use protected routes for authenticated content
+2. Use the useApi hook for all API calls
+3. Follow the atomic design pattern for components
+4. Handle loading and error states consistently
+5. Implement proper error boundaries
+6. Write tests for new components and hooks
+7. Follow React hooks rules and best practices
+8. Use protected routes for authenticated content
+9. Place CSS files in the appropriate styles directory
 
 ## Learn More
 - [React Documentation](https://reactjs.org/)

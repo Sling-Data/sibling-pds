@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import ConnectPlaid from '../../../components/pages/ConnectPlaid';
+import ConnectGmail from '../../../components/pages/ConnectGmail';
 
 // Mock the hooks
 jest.mock('../../../hooks/useUser', () => ({
@@ -22,7 +22,7 @@ jest.mock('../../../hooks/useApi', () => ({
     loading: false,
     error: null,
     refetch: jest.fn(),
-    request: jest.fn().mockResolvedValue({ data: { link_token: 'test-link-token' }, error: null })
+    request: jest.fn().mockResolvedValue({ data: { authUrl: 'https://example.com/auth' }, error: null })
   })
 }));
 
@@ -31,26 +31,24 @@ jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
-    useLocation: jest.fn().mockReturnValue({ search: '' }),
     useNavigate: jest.fn().mockReturnValue(jest.fn())
   };
 });
 
-// Mock react-plaid-link
-jest.mock('react-plaid-link', () => ({
-  usePlaidLink: jest.fn().mockReturnValue({
-    open: jest.fn(),
-    ready: true
-  })
-}));
+// Mock window.open
+window.open = jest.fn().mockReturnValue({ 
+  closed: false, 
+  close: jest.fn(),
+  focus: jest.fn()
+});
 
-describe('ConnectPlaid Component', () => {
+describe('ConnectGmail Component', () => {
   it('renders without crashing', () => {
     render(
       <BrowserRouter>
-        <ConnectPlaid />
+        <ConnectGmail />
       </BrowserRouter>
     );
     // Test passes if no errors are thrown
   });
-});
+}); 

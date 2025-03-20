@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '../atoms/Button';
-import { ErrorIcon } from '../atoms/Icons';
-import './Form.css';
+import { Alert } from '../atoms/Alert';
+import '../../styles/molecules/Form.css';
 
 interface FormProps {
   onSubmit: (e: React.FormEvent) => void;
@@ -35,12 +35,12 @@ export const Form: React.FC<FormProps> = ({
         {children}
         
         {error && (
-          <div className="error-container">
-            <div className="error-message">
-              <ErrorIcon className="error-icon" />
-              {error}
-            </div>
-          </div>
+          <Alert 
+            type="error" 
+            message={error} 
+            variant="standard" 
+            className="mb-4"
+          />
         )}
         
         {!hideSubmitButton && (

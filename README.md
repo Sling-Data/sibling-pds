@@ -361,23 +361,34 @@ REACT_APP_API_URL=http://localhost:3000
   - Core Technologies:
     - React 18.2.0 with TypeScript 4.9.5
     - React DOM 18.2.0
+    - React Router DOM 6.20.0 for navigation
     - Create React App with react-scripts 5.0.1
-    - React Router DOM for navigation
   - Modern React Features:
     - Context API for state management (UserContext)
-    - Custom hooks for data fetching (useFetch with caching, retry logic)
+    - Custom hooks architecture with domain-specific hooks
+    - Modern API handling with useApi hook (replacing legacy useFetch)
     - Functional components with hooks (useState, useEffect, useCallback)
     - Protected route handling
+  - Component Architecture:
+    - Atomic design pattern (atoms, molecules, organisms, templates, pages)
+    - Modular component structure
+    - Consistent styling approach
+    - Reusable UI components
+  - CSS Organization:
+    - Structured by component type (/styles/atoms, /styles/molecules, etc.)
+    - Consistent naming conventions
+    - Component-scoped styles
   - Authentication & Security:
     - JWT token management with automatic refresh
     - Session storage for secure token handling
     - OAuth2 integration for external services
     - Type-safe API calls with TypeScript
   - Data Management:
-    - Centralized data fetching with useFetch hook
+    - Centralized API handling with useApi hook
     - Request caching with configurable expiry
     - Automatic retry on network errors
     - Dependency-based refetching
+    - Loading and error state management
   - External Integrations:
     - Plaid for financial data (ConnectPlaid component)
     - Gmail API for email data

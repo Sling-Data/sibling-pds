@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUser } from '../../hooks/useUser';
-import { useFetch } from '../../hooks/useFetch';
-import '../../styles/Profile.css';
+import { useApi } from '../../hooks/useApi';
+import '../../styles/pages/Profile.css';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Checkbox } from '../atoms/Checkbox';
@@ -45,18 +45,22 @@ function Profile() {
   const location = useLocationSafe();
   const navigate = useNavigate();
   
-  const { data: userData, loading: fetchLoading, error: fetchError, refetch } = useFetch<UserData>(
-    userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null
+  // Using useApi with similar interface as the old useFetch for minimal changes
+  const { 
+    data: userData, 
+    loading: fetchLoading, 
+    error: fetchError, 
+    refetch 
+  } = useApi<UserData>(
+    userId ? `users/${userId}` : undefined
   );
 
-  // For profile updates, we'll use a separate useFetch instance with a null URL initially
-  const { loading: updateLoading, error: updateError, update: updateProfile } = useFetch<{ message: string }>(
-    null,
-    {
-      method: 'PUT',
-      skipCache: true
-    }
-  );
+  // For profile updates
+  const { 
+    loading: updateLoading, 
+    error: updateError, 
+    request: updateProfile 
+  } = useApi<{ message: string }>();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserData>({ name: '', email: '' });
@@ -183,7 +187,7 @@ function Profile() {
 
         // Call updateProfile with the URL and body
         const result = await updateProfile(
-          userId ? `${process.env.REACT_APP_API_URL}/users/${userId}` : null,
+          userId ? `users/${userId}` : '',
           {
             method: 'PUT',
             body: formData,
@@ -224,7 +228,7 @@ function Profile() {
   if (fetchError) {
     return (
       <Card className="profile-container">
-        <StatusMessage type="error" message={fetchError} />
+        <StatusMessage type="error" message={fetchError instanceof Error ? fetchError.message : String(fetchError)} />
         <Button onClick={() => refetch()} variant="primary">Retry</Button>
       </Card>
     );
@@ -233,8 +237,10 @@ function Profile() {
   // Show loading state during update
   const isUpdating = isSubmitting || updateLoading;
 
-  // Show any update errors
-  const displayError = updateError || (submitStatus.success ? null : submitStatus.message);
+  // Show any update errors - convert Error objects to strings
+  const displayError = updateError 
+    ? (updateError instanceof Error ? updateError.message : String(updateError)) 
+    : (submitStatus.success ? null : submitStatus.message);
 
   return (
     <div className="profile-container">

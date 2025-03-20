@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUser, useAuth } from '../../hooks';
-import { useFetch } from '../../hooks/useFetch';
+import { useUser } from '../../hooks/useUser';
+import { useAuth } from '../../hooks/useAuth';
+import { useApi } from '../../hooks/useApi';
 import ConnectApi from '../templates/ConnectApi';
+import '../../styles/pages/ConnectPlaid.css';
 
 const ConnectPlaid: React.FC = () => {
   const location = useLocation();
@@ -14,24 +16,11 @@ const ConnectPlaid: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Setup useFetch for getting link token
-  const { update: fetchLinkToken } = useFetch<{ link_token: string }>(
-    null,
-    {
-      method: 'GET'
-    }
-  );
+  // Setup useApi for getting link token
+  const { request: fetchLinkToken } = useApi<{ link_token: string }>();
 
-  // Setup useFetch for exchanging public token
-  const { update: exchangePublicToken } = useFetch<{ success: boolean }>(
-    null,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    }
-  );
+  // Setup useApi for exchanging public token
+  const { request: exchangePublicToken } = useApi<{ success: boolean }>();
 
   // Fetch link token from the API
   useEffect(() => {
@@ -53,7 +42,11 @@ const ConnectPlaid: React.FC = () => {
         }
 
         const { data, error: fetchError } = await fetchLinkToken(
-          `${process.env.REACT_APP_API_URL}/api/plaid/create-link-token?userId=${userIdFromParams}`
+          `api/plaid/create-link-token`,
+          {
+            method: 'GET',
+            params: { userId: userIdFromParams }
+          }
         );
         
         if (fetchError) {
@@ -90,99 +83,86 @@ const ConnectPlaid: React.FC = () => {
 
         // Exchange the public token for an access token
         const { error: exchangeError } = await exchangePublicToken(
-          `${process.env.REACT_APP_API_URL}/api/plaid/exchange-public-token`,
+          `api/plaid/exchange-public-token`,
           {
+            method: 'POST',
             body: {
               public_token,
               userId: userId || ''
-            },
+            }
           }
         );
 
         if (exchangeError) {
-          throw new Error(exchangeError || 'Failed to exchange token');
+          throw new Error(`Failed to exchange public token: ${exchangeError}`);
         }
 
-        // Redirect to profile with success message
+        // Navigate back to profile page with success status
         navigate('/profile?status=success&message=Bank account connected successfully');
       } catch (err) {
         console.error('Error exchanging public token:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to connect bank account';
-        setError(errorMessage);
+        setError(err instanceof Error ? err.message : 'Failed to connect bank account');
         setIsLoading(false);
       }
     },
-    [userId, navigate, refreshTokens, exchangePublicToken]
+    [exchangePublicToken, navigate, refreshTokens, userId]
   );
 
-  // Handle Plaid Link exit
-  const onExit = useCallback(
-    (err?: any) => {
-      // If there's an error, include it in the error state
-      if (err) {
-        console.error('Plaid Link Error:', err);
-        const errorMessage = err.error_message || 'An error occurred during Plaid connection';
-        setError(errorMessage);
-      } else {
-        // User exited without error
-        setError('Connection cancelled by user');
-      }
-      
-      // Don't navigate away, just update the error state and keep the button visible
-      setIsLoading(false);
-    },
-    []
-  );
-
-  // Always call usePlaidLink unconditionally to follow React hooks rules
-  const { open: plaidOpen, ready: plaidReady } = usePlaidLink({
+  // Initialize Plaid Link
+  const { open, ready } = usePlaidLink({
     token: linkToken || '',
     onSuccess,
-    onExit,
+    onExit: () => {
+      setIsLoading(false);
+    },
+    onEvent: (eventName, metadata) => {
+      console.log('Plaid event:', eventName, metadata);
+    },
   });
-  
 
-  // Automatically open Plaid Link when ready and token is available
+  // Open Plaid Link automatically when it's ready and we have a token
   useEffect(() => {
-    if (plaidReady && linkToken && !error) {
-      plaidOpen();
+    if (ready && linkToken && !error) {
+      open();
     }
-  }, [plaidReady, plaidOpen, linkToken, error]);
+  }, [ready, linkToken, open, error]);
 
   // Handle connect button click
   const handleConnect = useCallback(() => {
-    plaidOpen();
-  }, [plaidOpen]);
+    if (ready && linkToken) {
+      open();
+    }
+  }, [ready, linkToken, open]);
 
   // Handle cancel button click
   const handleCancel = useCallback(() => {
-    // No additional cleanup needed
-  }, []);
+    navigate('/profile');
+  }, [navigate]);
 
   // Handle success navigation
   const handleSuccess = useCallback((message: string) => {
     navigate(`/profile?status=success&message=${encodeURIComponent(message)}`);
   }, [navigate]);
 
-  // Format error message to ensure it has the proper suffix
+  // Format error message to ensure it has proper context
   const formatErrorMessage = useCallback((error: string) => {
-    if (error.includes('Please try connecting to Plaid again')) {
+    if (error.includes('Please try connecting your bank account again')) {
       return error;
     }
-    return `${error}. Please try connecting to Plaid again.`;
+    return `${error}. Please try connecting your bank account again.`;
   }, []);
 
   return (
     <ConnectApi
       title="Connect Your Bank Account"
       serviceName="Plaid"
-      isLoading={isLoading && !error} // Don't show loading state when there's an error
+      isLoading={isLoading}
       error={error}
       onConnect={handleConnect}
       onCancel={handleCancel}
       onSuccess={handleSuccess}
-      isConnectDisabled={!plaidReady || !linkToken}
-      loadingMessage={linkToken ? "Initializing Plaid Link..." : "Initializing connection to Plaid..."}
+      isConnectDisabled={!linkToken || !ready}
+      loadingMessage="Connecting to your bank account..."
       connectButtonText="Connect Your Bank Account"
       redirectPath="/profile"
       successMessage="Bank account connected successfully"

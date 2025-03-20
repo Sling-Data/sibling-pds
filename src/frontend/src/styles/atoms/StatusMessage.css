@@ -1,0 +1,119 @@
+.status-message {
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Type styles */
+.status-message-success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.status-message-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.status-message-info {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.status-message-warning {
+  background-color: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fef3c7;
+}
+
+/* Content wrapper styles */
+.status-message-content-wrapper {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Icon wrapper styles */
+.status-message-icon-wrapper {
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+/* Icon styles */
+.status-message-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.status-message-icon-success {
+  color: #34d399;
+}
+
+.status-message-icon-error {
+  color: #f87171;
+}
+
+.status-message-icon-info {
+  color: #60a5fa;
+}
+
+.status-message-icon-warning {
+  color: #fbbf24;
+}
+
+/* Content styles */
+.status-message-content {
+  margin-left: 0.75rem;
+  flex-grow: 1;
+}
+
+.status-message-text {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Dismiss button styles */
+.status-message-dismiss {
+  margin-left: auto;
+  margin: -0.375rem;
+  background-color: transparent;
+  color: #9ca3af;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+}
+
+.status-message-dismiss:hover {
+  color: #6b7280;
+}
+
+.status-message-dismiss:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.status-message-dismiss-icon {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

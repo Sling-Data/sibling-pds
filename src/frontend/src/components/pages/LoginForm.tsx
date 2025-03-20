@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks';
-import '../../styles/AuthForm.css';
+import '../../styles/pages/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';
+import { Alert } from '../atoms/Alert';
 import { Form } from '../molecules/Form';
 
 interface LoginFormProps {
@@ -105,7 +106,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             placeholder="Enter your email"
             required={false}
           />
-          {fieldErrors.email && <div className="error-message">{fieldErrors.email}</div>}
+          {fieldErrors.email && <Alert type="error" message={fieldErrors.email} variant="inline" />}
         </div>
         
         <div className="form-group">
@@ -119,7 +120,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             placeholder="Enter your password"
             required={false}
           />
-          {fieldErrors.password && <div className="error-message">{fieldErrors.password}</div>}
+          {fieldErrors.password && <Alert type="error" message={fieldErrors.password} variant="inline" />}
         </div>
         
         <div className="text-center text-sm text-gray-600 mt-4">

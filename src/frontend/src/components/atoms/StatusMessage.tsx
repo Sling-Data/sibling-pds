@@ -1,7 +1,7 @@
 import React from 'react';
 import { StatusMessageProps } from '../../types';
 import { SuccessIcon, ErrorIcon, InfoIcon, WarningIcon, CloseIcon } from './Icons';
-import './StatusMessage.css';
+import '../../styles/atoms/StatusMessage.css';
 
 /**
  * StatusMessage component for displaying status messages

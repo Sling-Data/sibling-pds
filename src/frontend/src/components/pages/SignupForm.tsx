@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import '../../styles/AuthForm.css';
+import '../../styles/pages/AuthForm.css';
 import { TextInput } from '../atoms/TextInput';
+import { Alert } from '../atoms/Alert';
 import { Form } from '../molecules/Form';
 import { useAuth, useUser } from '../../hooks';
 
@@ -137,7 +138,7 @@ export const SignupForm: React.FC = () => {
             placeholder="Enter your name"
             required={false}
           />
-          {errors.name && <div className="error-message">{errors.name}</div>}
+          {errors.name && <Alert type="error" message={errors.name} variant="inline" />}
         </div>
         
         <div className="form-group">
@@ -151,7 +152,7 @@ export const SignupForm: React.FC = () => {
             placeholder="Enter your email"
             required={false}
           />
-          {errors.email && <div className="error-message">{errors.email}</div>}
+          {errors.email && <Alert type="error" message={errors.email} variant="inline" />}
         </div>
         
         <div className="form-group">
@@ -165,7 +166,7 @@ export const SignupForm: React.FC = () => {
             placeholder="Enter your password"
             required={false}
           />
-          {errors.password && <div className="error-message">{errors.password}</div>}
+          {errors.password && <Alert type="error" message={errors.password} variant="inline" />}
         </div>
         
         <div className="text-center text-sm text-gray-600 mt-4">

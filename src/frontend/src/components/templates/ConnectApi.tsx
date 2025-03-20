@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/ConnectApi.css';
+import '../../styles/templates/ConnectApi.css';
 
 export interface ConnectApiProps {
   title: string;

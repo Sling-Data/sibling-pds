@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '../../hooks';
-import { useFetch } from '../../hooks/useFetch';
+import { useApi } from '../../hooks/useApi';
 import ConnectApi from '../templates/ConnectApi';
 
 
@@ -15,13 +15,8 @@ const ConnectGmail: React.FC = () => {
   const popupRef = useRef<Window | null>(null);
   const popupCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Setup useFetch for getting Gmail auth URL
-  const { update: fetchAuthUrl } = useFetch<{ authUrl: string }>(
-    null,
-    {
-      method: 'GET'
-    }
-  );
+  // Setup useApi for getting Gmail auth URL
+  const { request: fetchAuthUrl } = useApi<{ authUrl: string }>();
 
   // Function to check if popup is closed
   const checkPopupClosed = useCallback(() => {
@@ -174,7 +169,11 @@ const ConnectGmail: React.FC = () => {
         }
 
         const { data, error: fetchError } = await fetchAuthUrl(
-          `${process.env.REACT_APP_API_URL}/api/gmail/auth-url?popup=true`
+          `api/gmail/auth-url`,
+          {
+            method: 'GET',
+            params: { popup: 'true' }
+          }
         );
         
         if (fetchError) {
