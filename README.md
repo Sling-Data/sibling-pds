@@ -369,6 +369,13 @@ REACT_APP_API_URL=http://localhost:3000
     - Modern API handling with useApi hook (replacing legacy useFetch)
     - Functional components with hooks (useState, useEffect, useCallback)
     - Protected route handling
+  - Hook Architecture:
+    - useApi: Foundation for all API interactions with caching, error handling, and automatic token refresh
+    - useAuth: Authentication management with login, signup, logout, and token operations
+    - useUser: User data operations connected to UserContext for global state management
+    - useNotification: Notification system integrated with NotificationContext
+    - Hierarchical hook dependencies with clear separation of concerns
+    - Centralized state management through React Context
   - Component Architecture:
     - Atomic design pattern (atoms, molecules, organisms, templates, pages)
     - Modular component structure

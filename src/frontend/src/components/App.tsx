@@ -3,7 +3,6 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 import { useAuth } from '../hooks';
 import { ApiProvider, NotificationProvider, UserProvider } from '../contexts';
 import { AuthProvider } from '../contexts/AuthContext';
-import { NotificationContainer } from './organisms/NotificationContainer';
 import ConnectGmail from './pages/ConnectGmail';
 import ConnectPlaid from './pages/ConnectPlaid';
 import DataInput from './pages/DataInput';
@@ -77,7 +76,6 @@ const App: React.FC = () => {
           <ApiProvider>
               <UserProvider>
                 <AppRoutes />
-                <NotificationContainer />
               </UserProvider>
           </ApiProvider>
         </AuthProvider>

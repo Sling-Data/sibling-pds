@@ -147,6 +147,182 @@ All major components have been migrated from `useFetch` to `useApi`:
 - `ConnectPlaid.tsx`: Financial data integration
 - `DataInput.tsx`: User data input forms
 
+## Hook Architecture
+
+The application uses a modular hook-based architecture that provides separation of concerns and reusable functionality:
+
+### Core Hooks
+
+#### useApi
+
+The `useApi` hook serves as the foundation for all API interactions:
+
+- Manages API requests and responses with proper typing
+- Handles authentication headers and token refresh
+- Provides loading states, error handling, and data caching
+- Abstracts fetch logic to provide a consistent interface
+- Depends on the authentication context for token management
+
+```typescript
+// Example usage
+const { data, loading, error, makeRequest } = useApi();
+
+// GET request
+const fetchData = async () => {
+  const result = await makeRequest({
+    url: '/api/data',
+    method: 'GET'
+  });
+  // Handle result
+};
+
+// POST request with payload
+const submitData = async (payload) => {
+  const result = await makeRequest({
+    url: '/api/data',
+    method: 'POST',
+    data: payload
+  });
+  // Handle result
+};
+```
+
+#### useAuth
+
+The `useAuth` hook provides authentication functionality:
+
+- Handles user login, signup, and logout processes
+- Manages JWT tokens and refresh operations
+- Provides current authentication state
+- Interacts with the UserContext for user data updates
+- Leverages useApi for authentication API calls
+
+```typescript
+// Example usage
+const { login, signup, logout, refreshToken, isAuthenticated } = useAuth();
+
+// Login user
+const handleLogin = async (credentials) => {
+  try {
+    await login(credentials);
+    // Handle successful login
+  } catch (error) {
+    // Handle login error
+  }
+};
+```
+
+#### useUser
+
+The `useUser` hook provides access to user data and operations:
+
+- Retrieves and updates user profile information
+- Manages user state through UserContext
+- Tracks loading, error, and data states
+- Provides methods for user data operations
+- Uses useApi for data fetching and updates
+
+```typescript
+// Example usage
+const { user, loading, error, updateUser } = useUser();
+
+// Update user profile
+const handleProfileUpdate = async (profileData) => {
+  try {
+    await updateUser(profileData);
+    // Handle successful update
+  } catch (error) {
+    // Handle update error
+  }
+};
+```
+
+#### useNotification
+
+The `useNotification` hook manages application notifications:
+
+- Creates, displays, and removes notifications
+- Supports different notification types (success, error, info, warning)
+- Manages notification timeouts and dismissals
+- Accesses NotificationContext for global notification state
+- Provides a clean interface for component notifications
+
+```typescript
+// Example usage
+const { addNotification, removeNotification } = useNotification();
+
+// Show success notification
+const handleSuccess = () => {
+  addNotification({
+    type: 'success',
+    message: 'Operation completed successfully',
+    duration: 5000 // Auto-dismiss after 5 seconds
+  });
+};
+```
+
+### Context Integration
+
+The hooks work with React Contexts to provide global state management:
+
+#### UserContext
+
+The `UserContext` maintains user state across the application:
+
+- Stores user ID, profile data, and authentication status
+- Provides methods for updating user state
+- Tracks loading and error states for user operations
+- Used by useUser and useAuth hooks for data access and updates
+- Serves as the single source of truth for user information
+
+#### NotificationContext
+
+The `NotificationContext` manages global notification state:
+
+- Maintains a queue of active notifications
+- Provides methods for adding and removing notifications
+- Handles automatic notification dismissal through timeouts
+- Consumed by the NotificationContainer component for rendering
+- Accessed through the useNotification hook
+
+### Hook Dependencies and Relationships
+
+The hooks form a hierarchy of dependencies:
+
+1. **useApi**: Base hook for all API communications
+   - Independent of other hooks but requires authentication tokens
+
+2. **useAuth**: Authentication management
+   - Depends on useApi for API calls
+   - Interacts with UserContext to update user state
+
+3. **useUser**: User data management
+   - Depends on useApi for API calls
+   - Reads from and writes to UserContext
+   - May indirectly use useAuth for token validation
+
+4. **useNotification**: Notification management
+   - Independent of API and auth hooks
+   - Reads from and writes to NotificationContext
+
+### Combined Workflow Example
+
+Here's how the hooks work together in a user profile update scenario:
+
+1. Component uses useUser to access current user data and update method
+2. When update is triggered, useUser leverages useApi for the API call
+3. useApi ensures valid authentication via tokens (refreshed if needed)
+4. On successful update, useUser updates the UserContext
+5. Component uses useNotification to show success message
+6. NotificationContext manages the notification lifecycle
+
+This modular approach provides:
+- Clear separation of concerns
+- Reusable functionality across components
+- Consistent API interaction patterns
+- Centralized state management
+- Type-safe operations throughout the application
+
 ## CSS Architecture
 
 The application uses a structured CSS organization based on the atomic design pattern:
